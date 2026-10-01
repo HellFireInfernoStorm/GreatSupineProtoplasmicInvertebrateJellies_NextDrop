@@ -1,0 +1,28 @@
+# Git hooks and CI checks
+
+Enforcement is by git hooks (lefthook), not by harness-specific hooks, so every developer and every agent harness hits the same checks. CI runs the same checks and is the backstop, because a hook can be skipped. Never use `--no-verify`.
+
+`pnpm i` installs the hooks (the `prepare` script runs `lefthook install`). Configuration is `lefthook.yml`; the scripts are in `scripts/agent-context/`.
+
+| Stage | What runs |
+| --- | --- |
+| `pre-commit` | `sync-skills.mjs` (refresh `.claude/skills/`), `build-index.mjs` (refresh the status table), then `check.mjs` |
+| `commit-msg` | `commit-msg.mjs`: subject present and at most 72 characters |
+| `pre-push` | `check-branch.mjs`, `check.mjs`, then `typecheck`, `deps:check` and `test` for any package that defines them |
+| CI | `check.mjs`, and on pull requests `check-pr-body.mjs` (PR sections, departure rule, branch name) |
+
+## What `check.mjs` verifies
+
+- Every `AGENTS.md` has a sibling `CLAUDE.md` containing exactly `@AGENTS.md`, and every `CLAUDE.md` has an `AGENTS.md`.
+- Relative markdown links and `agent-docs/`, `.agents/`, `.github/`, `scripts/` paths in instruction files and docs resolve.
+- Every file under `spec/`, `design/` and `brief/` (except `README.md`) has a valid header.
+- `.claude/skills/` is an exact copy of `.agents/skills/`.
+- The status table in `agent-docs/README.md` is current.
+- No banned files are tracked: organiser datasets, CSVs outside `data/reference/` (allow-list), `.env`, keys.
+- Size: instruction files, spec, design and process docs over 300 lines produce a warning (soft limit, never a failure).
+
+Configuration (limits, allow-lists, branch patterns) is in `scripts/agent-context/config.json`.
+
+## Adding checks
+
+Prefer a check over a new sentence in an instruction file. If a rule can be enforced by a hook, lint rule or test, add that instead and keep the prose short. Format and lint of staged source files, typecheck and dependency boundaries are added with the monorepo skeleton.

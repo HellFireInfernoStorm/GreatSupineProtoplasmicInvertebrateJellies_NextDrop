@@ -1,0 +1,27 @@
+---
+status: draft
+owner: Dinura
+sources: guide §9.5
+---
+
+# Recovery rules and conflict classification
+
+## 9.5 Recovery rules and conflict classification
+
+The three recovery rules (built as-is):
+
+1. **Delivery facts recorded by the driver win and keep the phone's capture time.**
+2. **Dispatcher changes win for stops not yet visited**; they reach the driver as soon as sync completes.
+3. **A true clash is never auto-resolved**; it goes to the dispatcher's exceptions inbox with the driver's proof-of-delivery photo.
+
+Supporting rules: nothing disappears silently (the pending count drops only when the server confirms each record); text syncs before photos.
+
+**Classification** for a field fact on subject stop S, captured under `basedOnPlanVersion = v`, when the current published version is V:
+
+- If `v == V`, or no `PlanVersionChange` in `(v, V]` touches S -> `APPLIED`.
+- If S was **removed/cancelled** or **moved to another vehicle/trip** in `(v, V]` and the event is a delivery fact (`STOP_ARRIVED`, `STOP_OUTCOME`, `POD_CAPTURED`) -> **clash**: store with `disposition = HELD`, open a `Conflict` (`FACT_ON_CANCELLED_STOP` or `FACT_ON_REASSIGNED_STOP`), emit `CONFLICT_OPENED`, notify the dispatcher. The fact and its evidence are preserved and visible; the reducer skips it until resolved.
+- Two devices report a delivery fact for the same stop -> `DUPLICATE_DELIVERY_FACT` conflict.
+- An event that is now illegal under the transition table and is not merely a late earlier-stage fact -> `ILLEGAL_TRANSITION` conflict or rejection.
+- Non-fact events (e.g. `PLAN_ACKNOWLEDGED`) on changed stops -> `APPLIED`.
+
+`CONFLICT_RESOLVED` with `ACCEPT_FACT` makes the reducer apply the held event (keeping its capture time); `REJECT_FACT` leaves it recorded but inert. Resolution is always by the dispatcher.

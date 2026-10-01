@@ -1,0 +1,32 @@
+# Git hooks for every developer and every agent harness. CI runs the same checks (.github/workflows/agent-context.yml).
+# Format and lint of staged source files are added with the monorepo skeleton (spec/build-order.md step 1).
+pre-commit:
+  parallel: false
+  commands:
+    sync-skills:
+      run: node scripts/agent-context/sync-skills.mjs
+      stage_fixed: true
+    build-index:
+      glob: "agent-docs/**/*.md"
+      run: node scripts/agent-context/build-index.mjs
+      stage_fixed: true
+    agent-context:
+      run: node scripts/agent-context/check.mjs
+
+commit-msg:
+  commands:
+    subject:
+      run: node scripts/agent-context/commit-msg.mjs {1}
+
+pre-push:
+  commands:
+    branch-name:
+      run: node scripts/agent-context/check-branch.mjs
+    agent-context:
+      run: node scripts/agent-context/check.mjs
+    typecheck:
+      run: pnpm -r --if-present run typecheck
+    boundaries:
+      run: pnpm run --if-present deps:check
+    unit-tests:
+      run: pnpm -r --if-present run test

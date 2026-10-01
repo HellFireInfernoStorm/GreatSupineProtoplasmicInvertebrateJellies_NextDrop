@@ -1,0 +1,4 @@
+{
+  "source": ".agents/skills",
+  "targets": [".claude/skills"]
+}
