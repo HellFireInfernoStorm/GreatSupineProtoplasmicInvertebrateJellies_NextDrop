@@ -1,0 +1,10 @@
+# Instruction files and the context system are owned by Dinura.
+/AGENTS.md                  @HellFireInfernoStorm
+**/AGENTS.md                @HellFireInfernoStorm
+**/CLAUDE.md                @HellFireInfernoStorm
+/agent-docs/                @HellFireInfernoStorm
+/.agents/                   @HellFireInfernoStorm
+/.claude/skills/            @HellFireInfernoStorm
+/.github/                   @HellFireInfernoStorm
+/scripts/agent-context/     @HellFireInfernoStorm
+/lefthook.yml               @HellFireInfernoStorm

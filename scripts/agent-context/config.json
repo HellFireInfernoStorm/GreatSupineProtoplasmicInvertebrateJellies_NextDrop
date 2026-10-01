@@ -1,0 +1,21 @@
+{
+  "softLineLimit": 300,
+  "sizeExempt": ["agent-docs/brief/challenge-booklet.md"],
+  "headerRequiredDirs": ["agent-docs/spec", "agent-docs/design", "agent-docs/brief"],
+  "headerStatuses": ["draft", "agreed"],
+  "branchPattern": "^[0-9]+-[a-z0-9]+(-[a-z0-9]+)*$",
+  "branchExempt": ["main", "claude/*"],
+  "commitSubjectMax": 72,
+  "departureLabel": "designathon-departure",
+  "referenceCsvAllowed": [
+    "outlets.csv", "vehicles.csv", "calendar.csv", "district_travel.csv",
+    "service_allowance.csv", "traffic_speed.csv", "road_conditions.csv"
+  ],
+  "referenceDir": "data/reference",
+  "bannedPathPatterns": [
+    "(^|/)Training Data/", "(^|/)Test Data/", "(^|/)Submission Templates/",
+    "(^|/)check_allocation\\.py$", "(^|/)submission_task[0-9a-z]+\\.csv$",
+    "(^|/)(deliveries_train|route_legs_train|route_legs_test|task1_test_inputs|task2a_test_inputs|task2b_peak_day_[a-z]+)\\.csv$",
+    "(^|/)\\.env$", "(^|/)\\.env\\.(?!example$)[^/]+$", "\\.(pem|key|p12)$"
+  ]
+}

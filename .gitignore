@@ -1,0 +1,32 @@
+# dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+__pycache__/
+.venv/
+
+# environment and secrets (only .env.example is committed)
+.env
+.env.*
+!.env.example
+
+# personal agent overrides
+AGENTS.local.md
+CLAUDE.local.md
+**/AGENTS.local.md
+**/CLAUDE.local.md
+
+# editor and OS
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# organiser datasets and scripts must never be committed (see agent-docs/spec/platform/data-policy.md)
+Training Data/
+Test Data/
+Submission Templates/
+check_allocation.py

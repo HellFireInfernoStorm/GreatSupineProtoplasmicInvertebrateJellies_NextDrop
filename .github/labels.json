@@ -1,0 +1,18 @@
+[
+  { "name": "svc:api", "color": "0E8A5F", "description": "apps/api" },
+  { "name": "svc:web", "color": "1F6BD6", "description": "apps/web" },
+  { "name": "svc:rules", "color": "6B38CD", "description": "packages/rules" },
+  { "name": "svc:contracts", "color": "B45F06", "description": "packages/contracts" },
+  { "name": "svc:e2e", "color": "465264", "description": "e2e tests" },
+  { "name": "svc:solver", "color": "9AA3B0", "description": "optional solver sidecar" },
+  { "name": "svc:infra", "color": "131A26", "description": "Compose, CI, deployment" },
+  { "name": "svc:docs", "color": "DBE0E5", "description": "agent-docs, docs/, README" },
+  { "name": "type:feature", "color": "087A52", "description": "New capability" },
+  { "name": "type:bug", "color": "C4262C", "description": "Something is wrong" },
+  { "name": "type:chore", "color": "6B7585", "description": "Maintenance" },
+  { "name": "type:spike", "color": "F2941F", "description": "Time-boxed investigation" },
+  { "name": "designathon-departure", "color": "E4B400", "description": "Changes something the Day 5 design specified. Needs an ADR." },
+  { "name": "contract-change", "color": "B45F06", "description": "Touches packages/contracts events or DTOs" },
+  { "name": "schema-change", "color": "B45F06", "description": "Touches Prisma schema or migrations" },
+  { "name": "blocked", "color": "C4262C", "description": "Waiting on another issue named in the body" }
+]

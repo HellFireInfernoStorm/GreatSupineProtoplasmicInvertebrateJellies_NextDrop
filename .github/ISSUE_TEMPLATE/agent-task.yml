@@ -1,0 +1,64 @@
+name: Task
+description: A narrow, independently assignable piece of work. The form doubles as the brief for a developer or an agent.
+title: "[task] "
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be true when this is done, in one or two sentences.
+    validations:
+      required: true
+  - type: dropdown
+    id: services
+    attributes:
+      label: Affected services
+      description: Also apply the matching svc:* labels.
+      multiple: true
+      options:
+        - svc:api
+        - svc:web
+        - svc:rules
+        - svc:contracts
+        - svc:e2e
+        - svc:solver
+        - svc:infra
+        - svc:docs
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: A checklist the reviewer can verify.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: What this issue must not touch. Write "Nothing specific" only if that is true.
+    validations:
+      required: true
+  - type: input
+    id: links
+    attributes:
+      label: Docs and ADRs to read
+      description: Paths under agent-docs/, for example agent-docs/spec/sync/push-protocol.md
+    validations:
+      required: true
+  - type: input
+    id: blocked_by
+    attributes:
+      label: Blocked by
+      description: Issue numbers that must merge first (contract and schema issues come first).
+    validations:
+      required: false
+  - type: checkboxes
+    id: departure
+    attributes:
+      label: Designathon departure
+      options:
+        - label: This changes something the Day 5 design specified (add the label designathon-departure and write an ADR)
+          required: false
