@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@nextdrop/config": "workspace:*",
+    "@types/node": "^22.19.0",
     "typescript": "~6.0.3",
     "vitest": "^5.0.3"
   }
