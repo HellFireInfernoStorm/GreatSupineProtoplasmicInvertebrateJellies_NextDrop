@@ -1,5 +1,5 @@
 import type { EventType } from "../event-types";
-import type { EventEnvelope } from "../envelope";
+import type { EnvelopeBase, EventEnvelope } from "../envelope";
 import { SCHEMA_VERSION } from "../schema-version";
 
 export const ID = "018f1234-5678-7890-abcd-ef1234567890";
@@ -9,7 +9,7 @@ export const TRIP = "018f1234-5678-7890-abcd-ef1234567893";
 export const VEHICLE = "018f1234-5678-7890-abcd-ef1234567894";
 export const LINE = "line-1";
 
-const base = (): Omit<EventEnvelope, "type" | "payload"> => ({
+const base = (): EnvelopeBase => ({
   id: ID,
   schemaVersion: SCHEMA_VERSION,
   subject: { orderId: ID2 },
@@ -20,7 +20,9 @@ const base = (): Omit<EventEnvelope, "type" | "payload"> => ({
   disposition: "APPLIED",
 });
 
-export const validPayloads: Record<EventType, EventEnvelope> = {
+const assignment = { tripId: TRIP, vehicleId: VEHICLE, seq: 1 };
+
+export const validPayloads: { [K in EventType]: Extract<EventEnvelope, { type: K }> } = {
   ORDER_PLACED: {
     ...base(),
     type: "ORDER_PLACED",
@@ -33,16 +35,40 @@ export const validPayloads: Record<EventType, EventEnvelope> = {
   ORDER_PLANNED: {
     ...base(),
     type: "ORDER_PLANNED",
-    payload: { tripId: TRIP, vehicleId: VEHICLE, seq: 1, planVersion: 1 },
+    payload: {
+      tripId: TRIP,
+      vehicleId: VEHICLE,
+      seq: 1,
+      etaFrom: "2026-10-04T03:30:00.000Z",
+      etaTo: "2026-10-04T04:00:00.000Z",
+      planVersion: 1,
+    },
   },
-  PLAN_CHANGED: { ...base(), type: "PLAN_CHANGED", payload: { planVersion: 2 } },
+  PLAN_CHANGED: {
+    ...base(),
+    type: "PLAN_CHANGED",
+    payload: { from: assignment, to: { ...assignment, seq: 2 }, planVersion: 2 },
+  },
   ORDER_DEFERRED: {
     ...base(),
     type: "ORDER_DEFERRED",
     payload: {
       reasonCode: "TIME_BUDGET",
       causeKind: "UNAVOIDABLE_POOL_EXHAUSTED",
+      scoreInputs: {
+        priorityClass: "OTHER_FRESH",
+        aged: false,
+        deferredYesterday: false,
+        daysSinceLastServed: 1,
+        deferredCount: 1,
+        slip: 1,
+        volumeL: 12,
+      },
       toDate: "2026-10-05",
+      daysUnserved: 1,
+      consecutiveDeferrals: 1,
+      note: "pool exhausted",
+      decidedBy: "SYSTEM",
     },
   },
   PLAN_ACKNOWLEDGED: { ...base(), type: "PLAN_ACKNOWLEDGED", payload: { planVersion: 1 } },
@@ -50,7 +76,7 @@ export const validPayloads: Record<EventType, EventEnvelope> = {
     ...base(),
     type: "LOAD_SHORT",
     source: "FIELD",
-    payload: { lines: [{ lineId: LINE, qtyShort: 1 }] },
+    payload: { lines: [{ lineId: LINE, qtyShort: 1 }], reasonCode: "MISSING_STOCK" },
   },
   LOAD_DAMAGED: {
     ...base(),
@@ -78,7 +104,7 @@ export const validPayloads: Record<EventType, EventEnvelope> = {
     ...base(),
     type: "LOAD_REVERSED",
     source: "FIELD",
-    payload: { orderId: ID2 },
+    payload: { orderId: ID2, lines: [{ lineId: LINE, qtyLoaded: 2 }] },
   },
   TRIP_READY: { ...base(), type: "TRIP_READY", subject: { tripId: TRIP }, payload: { tripId: TRIP } },
   TRIP_DEPARTED: {
@@ -109,7 +135,7 @@ export const validPayloads: Record<EventType, EventEnvelope> = {
     ...base(),
     type: "POD_CAPTURED",
     source: "FIELD",
-    payload: { receiverName: "Manager" },
+    payload: { receiverName: "Manager", photoBlobRefs: [] },
   },
   PROBLEM_FLAGGED: {
     ...base(),
@@ -117,7 +143,11 @@ export const validPayloads: Record<EventType, EventEnvelope> = {
     source: "FIELD",
     payload: { kind: "RUNNING_LATE" },
   },
-  RECEIPT_CONFIRMED: { ...base(), type: "RECEIPT_CONFIRMED", payload: {} },
+  RECEIPT_CONFIRMED: {
+    ...base(),
+    type: "RECEIPT_CONFIRMED",
+    payload: { lines: [{ lineId: LINE, qtyReceived: 2 }] },
+  },
   ISSUE_REPORTED: {
     ...base(),
     type: "ISSUE_REPORTED",

@@ -3,9 +3,10 @@ import { z } from "zod";
 /** UUID v7 on the wire (validated as UUID; version nibble not enforced). */
 export const uuidV7 = z.uuid();
 
+/** Server clock timestamps are stored as UTC (`Z`). Offset forms such as `+05:30` are rejected. */
 export const isoDateTime = z.iso.datetime();
 
-export const localDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+export const localDate = z.iso.date();
 
 export const actorSchema = z.object({
   userId: z.string().min(1),

@@ -1,7 +1,28 @@
-import { CAUSE_KINDS, HARD_CODES, ORDER_STATUSES, REASON_CODES, WARN_CODES } from "@nextdrop/rules";
+import {
+  CAUSE_KINDS,
+  CONFLICT_RESOLUTIONS,
+  HARD_CODES,
+  ORDER_STATUSES,
+  REASON_CODES,
+  REVERSAL_TARGETS,
+  SHORT_OUTCOMES,
+  STOP_OUTCOMES,
+  WARN_CODES,
+} from "@nextdrop/rules";
 import { z } from "zod";
 
-export { CAUSE_KINDS, HARD_CODES, ORDER_STATUSES, REASON_CODES, WARN_CODES };
+export {
+  CAUSE_KINDS,
+  CONFLICT_RESOLUTIONS,
+  HARD_CODES,
+  ORDER_STATUSES,
+  REASON_CODES,
+  REVERSAL_TARGETS,
+  SHORT_OUTCOMES,
+  STOP_OUTCOMES,
+  WARN_CODES,
+};
+export type { ConflictResolution, ReversalTarget, ShortOutcome, StopOutcome } from "@nextdrop/rules";
 
 export const orderStatusSchema = z.enum(ORDER_STATUSES);
 
@@ -19,16 +40,12 @@ export const TRIP_STATUSES = ["PLANNED", "READY", "DEPARTED", "COMPLETE", "CANCE
 export type TripStatus = (typeof TRIP_STATUSES)[number];
 export const tripStatusSchema = z.enum(TRIP_STATUSES);
 
-export const PLANNING_DAY_STATES = ["OPEN", "CLOSED"] as const;
+export const PLANNING_DAY_STATES = ["OPEN", "CLOSED", "PLANNING", "PUBLISHED", "IN_PROGRESS", "COMPLETE"] as const;
 export type PlanningDayState = (typeof PLANNING_DAY_STATES)[number];
 export const planningDayStateSchema = z.enum(PLANNING_DAY_STATES);
 
-export const SHORT_OUTCOMES = ["SHIP_PARTIAL", "HOLD_TRIP", "BACKORDER"] as const;
-export type ShortOutcome = (typeof SHORT_OUTCOMES)[number];
 export const shortOutcomeSchema = z.enum(SHORT_OUTCOMES);
 
-export const STOP_OUTCOMES = ["FULL", "PARTIAL", "REFUSED", "FAILED"] as const;
-export type StopOutcome = (typeof STOP_OUTCOMES)[number];
 export const stopOutcomeSchema = z.enum(STOP_OUTCOMES);
 
 export const PROBLEM_KINDS = [
@@ -59,9 +76,9 @@ export const CONFLICT_KINDS = [
 export type ConflictKind = (typeof CONFLICT_KINDS)[number];
 export const conflictKindSchema = z.enum(CONFLICT_KINDS);
 
-export const CONFLICT_RESOLUTIONS = ["ACCEPT_FACT", "REJECT_FACT"] as const;
-export type ConflictResolution = (typeof CONFLICT_RESOLUTIONS)[number];
 export const conflictResolutionSchema = z.enum(CONFLICT_RESOLUTIONS);
+
+export const reversalTargetSchema = z.enum(REVERSAL_TARGETS);
 
 export const VEHICLE_AVAILABILITY_STATUSES = ["AVAILABLE", "IN_WORKSHOP"] as const;
 export type VehicleAvailabilityStatus = (typeof VEHICLE_AVAILABILITY_STATUSES)[number];

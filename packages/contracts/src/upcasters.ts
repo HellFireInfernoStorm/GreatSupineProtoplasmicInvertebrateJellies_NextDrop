@@ -4,18 +4,17 @@ import { SCHEMA_VERSION } from "./schema-version";
 export type PayloadUpcaster = (payload: unknown) => unknown;
 
 /** Maps event type -> fromVersion -> upcaster to the next version. Empty for v1. */
-export type UpcasterRegistry = Map<EventType | string, Map<number, PayloadUpcaster>>;
+export type UpcasterRegistry = Map<EventType, Map<number, PayloadUpcaster>>;
 
-export function createUpcasterRegistry(): UpcasterRegistry {
-  return new Map();
-}
+/** Shared registry. Register a v2 upcaster here when a payload changes. */
+export const upcasterRegistry: UpcasterRegistry = new Map();
 
 /** Walk from `schemaVersion` up to {@link SCHEMA_VERSION}, applying registered upcasters. */
 export function upcastPayload(
-  registry: UpcasterRegistry,
-  type: EventType | string,
+  type: EventType,
   schemaVersion: number,
   payload: unknown,
+  registry: UpcasterRegistry = upcasterRegistry,
 ): unknown {
   if (schemaVersion >= SCHEMA_VERSION) {
     return payload;

@@ -1,6 +1,8 @@
+import { PRIORITY_CLASSES, type ScoreInputs } from "@nextdrop/rules";
 import { z } from "zod";
 import {
   damagedLineSchema,
+  isoDateTime,
   lineIdSchema,
   loadedLineSchema,
   localDate,
@@ -17,6 +19,7 @@ import {
   issueKindSchema,
   issueResolutionSchema,
   problemKindSchema,
+  reversalTargetSchema,
   shortOutcomeSchema,
   stopOutcomeSchema,
   vehicleAvailabilityReasonSchema,
@@ -44,32 +47,52 @@ export const orderCancelledPayloadSchema = z.object({
 export const orderPlannedPayloadSchema = z.object({
   tripId: uuidV7,
   vehicleId: uuidV7,
-  seq: z.number().int().nonnegative().optional(),
-  etaFrom: z.string().optional(),
-  etaTo: z.string().optional(),
+  seq: z.number().int().nonnegative(),
+  etaFrom: isoDateTime,
+  etaTo: isoDateTime,
   planVersion: z.number().int().nonnegative(),
 });
 
+export const planAssignmentSnapshotSchema = z.object({
+  tripId: uuidV7,
+  vehicleId: uuidV7,
+  seq: z.number().int().nonnegative(),
+});
+
 export const planChangedPayloadSchema = z.object({
-  from: z.record(z.string(), z.unknown()).optional(),
-  to: z.record(z.string(), z.unknown()).optional(),
+  from: planAssignmentSnapshotSchema,
+  to: planAssignmentSnapshotSchema,
   planVersion: z.number().int().nonnegative(),
 });
 
 export const scoreInputsSchema = z.object({
-  deferred_yesterday: z.boolean().optional(),
-  days_since_last_served: z.number().int().nonnegative().optional(),
+  priorityClass: z.enum(PRIORITY_CLASSES),
+  aged: z.boolean(),
+  deferredYesterday: z.boolean(),
+  daysSinceLastServed: z.number().int().nonnegative(),
+  deferredCount: z.number().int().nonnegative(),
+  slip: z.number().int(),
+  volumeL: z.number(),
 });
+
+type ScoreInputsParsed = z.infer<typeof scoreInputsSchema>;
+type _ScoreInputsMatch = ScoreInputsParsed extends ScoreInputs
+  ? ScoreInputs extends ScoreInputsParsed
+    ? true
+    : never
+  : never;
+const _scoreInputsMatch: _ScoreInputsMatch = true;
+void _scoreInputsMatch;
 
 export const orderDeferredPayloadSchema = z.object({
   reasonCode: deferralReasonCodeSchema,
   causeKind: causeKindSchema,
-  scoreInputs: scoreInputsSchema.optional(),
-  toDate: localDate.optional(),
-  daysUnserved: z.number().int().nonnegative().optional(),
-  consecutiveDeferrals: z.number().int().nonnegative().optional(),
-  note: z.string().optional(),
-  decidedBy: deferralDecidedBySchema.optional(),
+  scoreInputs: scoreInputsSchema,
+  toDate: localDate,
+  daysUnserved: z.number().int().nonnegative(),
+  consecutiveDeferrals: z.number().int().nonnegative(),
+  note: z.string(),
+  decidedBy: deferralDecidedBySchema,
   planVersion: z.number().int().nonnegative().optional(),
 });
 
@@ -79,7 +102,7 @@ export const planAcknowledgedPayloadSchema = z.object({
 
 export const loadShortPayloadSchema = z.object({
   lines: z.array(shortLineSchema).min(1),
-  reasonCode: z.string().optional(),
+  reasonCode: z.string().min(1),
   photoRef: z.string().optional(),
 });
 
@@ -101,13 +124,13 @@ export const shortResolvedPayloadSchema = z.object({
 
 export const loadReversalRequestedPayloadSchema = z.object({
   orderId: uuidV7,
-  to: z.enum(["PLANNED", "DEFERRED"]),
+  to: reversalTargetSchema,
   planVersion: z.number().int().nonnegative(),
 });
 
 export const loadReversedPayloadSchema = z.object({
   orderId: uuidV7,
-  lines: z.array(loadedLineSchema).optional(),
+  lines: z.array(loadedLineSchema),
 });
 
 export const tripReadyPayloadSchema = z.object({
@@ -135,7 +158,7 @@ export const stopOutcomePayloadSchema = z.object({
 export const podCapturedPayloadSchema = z.object({
   receiverName: z.string().min(1),
   signatureBlobRef: z.string().optional(),
-  photoBlobRefs: z.array(z.string()).optional(),
+  photoBlobRefs: z.array(z.string()),
 });
 
 export const problemFlaggedPayloadSchema = z.object({
@@ -152,7 +175,7 @@ export const receiptConfirmedPayloadSchema = z.object({
         qtyReceived: z.number().int().nonnegative(),
       }),
     )
-    .optional(),
+    .min(1),
 });
 
 export const issueReportedPayloadSchema = z.object({
