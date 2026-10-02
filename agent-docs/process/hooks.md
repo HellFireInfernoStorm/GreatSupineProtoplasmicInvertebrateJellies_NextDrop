@@ -9,7 +9,7 @@ Enforcement is by git hooks (lefthook), not by harness-specific hooks, so every 
 | `pre-commit` | `sync-skills.mjs` (refresh `.claude/skills/`), `build-index.mjs` (refresh the status table), then `check.mjs` |
 | `commit-msg` | `commit-msg.mjs`: subject present and at most 72 characters |
 | `pre-push` | `check-branch.mjs`, `check.mjs`, then `typecheck`, `deps:check` and `test` for any package that defines them |
-| CI | `check.mjs`, and on pull requests `check-pr-body.mjs` (PR sections, departure rule, required labels, branch name). On issues, the `issue-labels` workflow applies the labels chosen in the Task form (`issue-labels.mjs`). |
+| CI | `check.mjs`, and on pull requests `check-pr-body.mjs` (PR sections, departure rule, required labels, branch name). On issues, the `issue-labels` workflow applies the labels chosen in the Task form (`issue-labels.mjs`), and the `unblock` workflow keeps the `blocked` label in step with each issue's "Blocked by" list (`unblock.mjs`). |
 
 ## What `check.mjs` verifies
 

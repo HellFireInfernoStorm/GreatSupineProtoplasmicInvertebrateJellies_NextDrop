@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { config, read, isMain } from "./lib.mjs";
 
 /** Split a rendered issue form into its "### Heading" sections. */
-function sections(body) {
+export function sections(body) {
   const out = new Map();
   let cur = null;
   for (const line of body.replace(/\r\n/g, "\n").split("\n")) {

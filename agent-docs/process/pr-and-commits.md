@@ -42,6 +42,8 @@ A PR opened from a UI or by a tool that does not set labels (for example the Cla
 
 Issues follow the same rule. The "Task" form applies its `svc:*`, `type:*` and departure labels automatically (`issue-labels` workflow). An issue created without the form, through `gh issue create` or the API, needs its labels set by whoever creates it.
 
+"Blocked by" names every blocker by issue number (`#25, #29`); a short note may follow. A blocker that is not an issue yet, such as an owner decision, gets an issue of its own first. Otherwise the `unblock` workflow cannot clear the label. A manual run of the workflow (Actions tab, "unblock", "Run workflow") re-checks every open `blocked` issue.
+
 | Label | Use |
 | --- | --- |
 | `svc:api` `svc:web` `svc:rules` `svc:contracts` `svc:e2e` `svc:solver` `svc:infra` `svc:docs` | Which part of the system an issue touches |
@@ -49,4 +51,4 @@ Issues follow the same rule. The "Task" form applies its `svc:*`, `type:*` and d
 | `designathon-departure` | Issue or PR that changes something the Day 5 design specified. The README's "significant departures" section is built from these. |
 | `contract-change` | Touches `packages/contracts` events or DTOs |
 | `schema-change` | Touches Prisma schema or migrations |
-| `blocked` | Waiting on another issue named in the body |
+| `blocked` | Waiting on an issue listed under "Blocked by". The `unblock` workflow removes it once every listed issue is closed and adds it back if one reopens. |
