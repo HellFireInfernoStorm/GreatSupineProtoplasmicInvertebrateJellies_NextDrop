@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: design context §3
+sources: design context §3; Figma review of 2 Oct 2026 (ADR 0015)
 ---
 
 # Design system
@@ -16,7 +16,9 @@ sources: design context §3
 | Driver | Dark (bound to the **Loader** variable collection) | Noto Sans | 360×800 | Same dark tokens as Loader, phone-sized |
 | Low-fi (Dispatcher, Driver, Store) | Greyscale wireframes | Roboto (driver low-fi), grey `#F6F6F6` frames (dispatcher low-fi) | same sizes | Placeholder boxes, ≤2-line notes |
 
-The Dispatcher hi-fi visual language was copied from the friend's original "Dispatcher Hi-Fi" work (soft 42 px icon tiles on KPI cards, dotless pills, underline tabs, 8 px per-metric bars, Bold 32 page titles).
+The Dispatcher hi-fi visual language was copied from the friend's original "Dispatcher Hi-Fi" page (soft 42 px icon tiles on KPI cards, dotless pills, underline tabs, 8 px per-metric bars, Bold 32 page titles). That page (`70:2`) is deleted. The reference is now the Dispatcher page `254:8156`.
+
+**Logo.** The NextDrop wordmark is in the Style Guide Logos section (`652:46054`): "NextDrop" with a parcel box replacing the "o", in white on navy. It exists as raster images only; use them until a vector source arrives, and do not redraw it. Screens in Figma still say "Waypoint"; the build uses NextDrop (ADR 0012).
 
 ## 3.2 Figma variable collections (local)
 
@@ -48,7 +50,7 @@ The Dispatcher hi-fi visual language was copied from the friend's original "Disp
 ## 3.5 Components per app (component sets)
 
 - **Store** (page "Store Manager HI-Fi Claude", section `226:5`): Chip `228:39` (tone ok/warn/danger/info/purple/neutral, prop `Label#228:0`), Button `228:100` (Style primary/secondary/ghost/on-panel/on-panel-outline × Size sm/md/lg; props `Label#228:7`, `Icon#228:23`, `Show icon#228:39`; heights 36/44/52), Stepper `228:117`, Sidebar `228:376` (6 variants, 240×900), TopBar `228:377` (has an unread dot), PhoneNav `228:478` (Active = My deliveries | Place order | Receipt | History; 390×72), TimelineEvent `228:495` (State done|latest; props `Status#228:58`, `Detail#228:61`, `Who#228:64`), Store icons frame `228:2` (`store-icon/*`: search, calendar, chevron-down, arrow-left, logo).
-- **Dispatcher** (section `267:2`): sidebar hi-fi `267:458` (7 variants by active item), sidebar low-fi `267:648`, Dispatcher button `301:1553` (Style primary/secondary/disabled × md/sm; props `Label#301:0`, `Chevron#301:7`), Dispatcher pill `301:1566` (Tone green/blue/orange/red/purple/grey; `Label#301:14`), topbar `301:1567` (Date, Unread). 85 `dispatcher-icon/*` components in section `266:25` (24 px, 1.8 stroke).
+- **Dispatcher** (section `267:2`): sidebar hi-fi `267:458` (7 variants by active item; two variant names lag their labels: `Live runs` is Delivery Progress and `Deferrals & publish` is Defer & publish), sidebar low-fi `267:648`, Dispatcher button `301:1553` (Style primary/secondary/disabled × md/sm; props `Label#301:0`, `Chevron#301:7`), Dispatcher pill `301:1566` (Tone green/blue/orange/red/purple/grey; `Label#301:14`), topbar `301:1567` (Date, Unread). 85 `dispatcher-icon/*` components in section `266:25` (24 px, 1.8 stroke).
 - **Loader** (section `148:36`): Chip `149:32` (tone × size md/sm), Button `149:93` (Style primary/ok/secondary/warn/danger/disabled × md 64px / lg 80px; `Label#149:14`, `Show icon#149:40`), SyncState (sending/sent/seen), LoaderTile, TopBar, ReasonChip, TripCard, OrderRow (9 variants), CapacityBar (Fill=0..100), HoldButton (96px), Toast set `358:3405` (Shown `149:178`, Hidden `358:3399`), and `icon/*` set (46 icons: check, warning, critical, thermometer, reefer, van, window, dock, history, loading, pending, photo, vehicle, driver, profile, stop, items, weight, volume, open, flag, add, delete, cancel, info, lock, refresh, trip, route, outlet, issues, notifications, deferred, chevron-right, plus, minus, arrow-down, check-double, undo, snowflake, globe, camera, switch, send, clock, sequence).
 - **Driver** (section `326:15`): Driver button `326:112` (Style primary/ok/secondary/warn/danger/disabled × lg 56/md 48; `Label#326:0`, Leading icon, Chevron, Icon), Driver chip `326:142`, Driver sync pill `326:154` (State Synced/Syncing/Offline; `Label#326:73`), Driver status bar `326:173` (Signal On/Off, Time), Driver reason chip `381:415`, Driver signature pad `381:465`.
 
@@ -60,7 +62,7 @@ Radius: 8 small buttons/inputs, 12 rows/tiles, 16 cards, 20–24 phone cards/she
 
 - Times are 24-hour `HH:MM`; day only when not today ("Thu 1 Oct"). Show **two timestamps, never merged**: "Delivered 06:12 · confirmed 07:40 after sync".
 - Counts say what they count ("16 of 20 crates", "stop 3 of 7").
-- IDs: `OUT0xx` outlets, `VEH0xx` vehicles, `T0xx` trips, `ORD1xxxx` orders. Keep placeholders obviously placeholders.
+- IDs: `OUT0xx` outlets, `VEH0xx` vehicles, `T0xx` trips, `ORD1xxxx` orders. The Style Guide says "keep placeholders obviously placeholders". The build instead shows real IDs from the reference CSVs (ADR 0008).
 - One filled primary button per screen. Bottom sheets sit over a scrim; scrim or "Got it" closes. Loader toast hides after 5 s and always offers Undo. Irreversible loader hand-over uses a hold-to-confirm button. Amber before red; offline is grey/amber, never red.
 - No gesture is the only way to do something (loader spec).
 

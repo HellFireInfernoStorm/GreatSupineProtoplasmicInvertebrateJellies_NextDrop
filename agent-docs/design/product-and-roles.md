@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: design context §1
+sources: design context §1; Figma page "User Personas" (ADR 0016)
 ---
 
 # Product, roles and design trade-off
@@ -15,6 +15,15 @@ An **order** is a single object with a **timeline**. Every role reads it and add
 The dispatcher's published plan is the source every other role reads. Every field event writes back to the record.
 
 ## The four roles (personas from the Blueprint)
+
+These personas are authoritative for the build (ADR 0016). The Figma page "User Personas" (`510:19782`) adds working context. It is used where it does not contradict this table.
+
+- **Dispatcher:** dual monitors and 6 years running the network. Time pressure between the 16:00 cutoff and night loading, with constant phone calls. The plan lives in their head and a spreadsheet.
+- **Loader:** several trucks at once. Printed lists go stale. On a shared device it is unclear who flagged what.
+- **Driver:** relies today on a paper run sheet and phone calls.
+- **Store manager:** orders by phone or message today, with no confirmation.
+
+The Figma page names no one, and where it gives personal details that differ (for example the dispatcher's age and pronouns), this table wins. Docs refer to personas by name or role, without pronouns.
 
 | Role | Persona | Context | Device | Design rules the persona forces |
 |---|---|---|---|---|
@@ -44,7 +53,7 @@ Max 2 trips per vehicle per day, Monday–Saturday only, weekly fuel quota per v
 ## Core trade-off: the system proposes, the dispatcher decides
 
 - **Hard constraints** are enforced and can never be overridden: weight, volume, reefer for chilled, vans for `van_only`, home depot, one brand and district per trip, max 2 trips, 270/480 min budgets, weekly fuel quota.
-- **Priorities** are proposed and can be overridden with a reason. Default order shown on D2/D3: (1) outlets deferred yesterday, (2) chilled Fresh orders, (3) Fresh orders before 08:00, (4) most days since last served, (5) Style/Tech orders that can move a day with least impact.
+- **Priorities** are proposed and can be overridden with a reason. Default order (ADR 0009, `spec/domain/priority-policy.md`): (1) chilled Fresh, (2) other Fresh, (3) Style/Tech from outlets deferred on the previous run, (4) most days since last served, (5) remaining Style/Tech, smallest slip deferred first. The Designathon draft put "deferred yesterday" first; ADR 0009 replaced it.
 - Cost: extra clicks, because every deferral needs a reason code. That is intended: the reason codes are the deferral record Waypoint does not have today.
 
 ## Shared building blocks (keep the four views consistent)

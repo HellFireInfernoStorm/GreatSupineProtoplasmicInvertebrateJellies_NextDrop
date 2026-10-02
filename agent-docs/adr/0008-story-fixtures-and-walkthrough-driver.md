@@ -21,3 +21,11 @@ Sampath on a Kandy-depot vehicle, with the low-coverage hill run, is the single 
 ## Consequences
 
 The Figma frames for store and dispatcher show different names and IDs until refreshed. This is listed as a departure. Spec edited: `data/seed-and-demo.md`, `overview.md`, `assumptions.md`.
+
+Amended 2026-10-02 after the Figma review (ADR 0015). The departure also covers these frames:
+
+- The **Loader** frames: Peliyagoda Dock 3, T001 · VEH001, handed to Ruwan S.
+- The **Driver** frames: they name the Peliyagoda loader Kasun on the "Kandy dock". The Kandy fixture uses the separate Kandy loader account from `data/seed-and-demo.md` §15.3.
+- The **D4** "no signal" card: it shows T002 · VEH004 · Gampaha.
+
+The D4 "Sync clash" inbox item and the escalated trip state, required by `sync/recovery-and-conflicts.md` and `platform/notifications-and-monitoring.md`, are not drawn. They are built in the D4 visual language as additions under this entry.

@@ -10,7 +10,12 @@ sources: guide §14, §14.1
 
 One SPA. Route groups `/store/*`, `/dispatch/*`, `/loader/*`, `/driver/*`, plus `/login`. Route guards use `/auth/me`. Each role shell is a lazily loaded chunk; the **driver and loader chunks are precached** by the service worker, the others are runtime-cached. A shell sets `data-theme="store|dispatcher|loader|driver"` on its root.
 
-Screen inventory (authoritative list and visuals are in the Figma file / design context): Store (home/deliveries, place order, order detail with timeline, confirm receipt and report issue, notifications); Dispatcher (order queue, plan board, deferral review, live run monitor, capacity outlook, fleet, exceptions inbox); Loader (trips by departure, loading checklist in reverse stop order, ready/hand-over with hold-to-confirm, connection and plan-changed states); Driver (today's run, stop detail, outcome and proof of delivery, sync/offline/reconnect/clash and plan-changed states, settings with sync diagnostics).
+Screen inventory. The authoritative list and visuals are the live Figma file (ADR 0015), summarised in `design/screens.md`.
+
+- **Store:** sign-in; my deliveries; place order with the outlet brand's product catalogue; review and submit; order placed; deferral notice; order tracking, timeline, history and detail; confirm receipt; report issue; notifications; the "late or lost?" sheet.
+- **Dispatcher:** sign-in with depot; dashboard (D0); order queue (D1); plan board (D2) with the add-trip modal in valid and blocked states; defer and publish (D3); Delivery Progress (D4, the live run monitor, route `/dispatch/runs`, with exceptions inbox and evidence detail); capacity outlook (D5); fleet and capacity; notifications popover; confirmation toasts.
+- **Loader:** PIN sign-in with language chips; trips by departure; loading checklist in reverse stop order; short and damaged sheets; ready and hand-over with hold-to-confirm; connection and plan-changed states.
+- **Driver:** PIN sign-in; today's run; stop detail; flag a problem; outcome and proof of delivery; sync, offline, reconnect, clash and plan-changed states; settings with sync diagnostics.
 
 ## 14.3 Conventions
 
