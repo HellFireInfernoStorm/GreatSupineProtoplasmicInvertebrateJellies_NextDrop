@@ -10,3 +10,4 @@ export * from "./etas";
 export * from "./fuel";
 export * from "./plan";
 export * from "./trip-time";
+export * from "./validator";
