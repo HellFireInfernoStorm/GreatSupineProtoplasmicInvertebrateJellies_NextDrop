@@ -31,7 +31,8 @@ export const REASON_CODES = [
   "OTHER",
 ] as const;
 export type ReasonCode = (typeof REASON_CODES)[number];
-export type CauseKind = "UNAVOIDABLE_INFEASIBLE" | "UNAVOIDABLE_POOL_EXHAUSTED" | "CHOICE";
+export const CAUSE_KINDS = ["UNAVOIDABLE_INFEASIBLE", "UNAVOIDABLE_POOL_EXHAUSTED", "CHOICE"] as const;
+export type CauseKind = (typeof CAUSE_KINDS)[number];
 
 export interface DeferralExplanation {
   readonly orderId: string;
