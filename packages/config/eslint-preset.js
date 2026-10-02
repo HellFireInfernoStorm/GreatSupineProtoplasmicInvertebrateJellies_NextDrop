@@ -25,5 +25,49 @@ export const react = [
   { languageOptions: { globals: { ...globals.browser } } },
 ];
 
+/** packages/rules: pure and deterministic. No clock, no randomness, no I/O, no imports from outside the package. */
+export const rulesPurity = [
+  {
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^(?!\\.{1,2}/)",
+              message: "packages/rules imports only its own modules (zero runtime dependencies).",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "MemberExpression[object.name='Date'][property.name='now']",
+          message: "No clock in the rules core: take the time as input.",
+        },
+        {
+          selector: "NewExpression[callee.name='Date'][arguments.length=0]",
+          message: "No clock in the rules core: take the time as input.",
+        },
+        {
+          selector: "MemberExpression[object.name='Math'][property.name='random']",
+          message: "No randomness in the rules core: use the seeded PRNG.",
+        },
+      ],
+      "no-restricted-globals": [
+        "error",
+        "process",
+        "window",
+        "document",
+        "fetch",
+        "localStorage",
+        "setTimeout",
+        "setInterval",
+      ],
+    },
+  },
+];
+
 /** Last: turns off rules that Prettier owns. */
 export const formatting = [prettier];

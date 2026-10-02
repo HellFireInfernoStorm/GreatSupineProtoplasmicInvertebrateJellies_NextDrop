@@ -20,7 +20,8 @@ proposePlan(input, ref, cfg): AllocationResult        // trips, deferrals + expl
 rankOrders(orders, cfg): RankedOrder[]                // priority keys
 explainDeferral(order, finalPlan, ref, cfg): DeferralExplanation
 applyEvent(state, event): OrderState                  // order reducer (section 5.5)
-nextOperatingDate(date, calendar), cutoffAt(date)     // calendar helpers
+nextOperatingDate(date, calendar), operatingDateAfter(date, calendar), cutoffAt(date)   // calendar helpers
+deliveryDateFor(requestedDate, placedAt, calendar)    // date an order targets after rollover and cutoff (ADR 0018)
 orderingGuidance(brand, date, calendar): MessageKey | null   // brand ordering notice (ADR 0010)
 ```
 
