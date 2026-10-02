@@ -23,7 +23,7 @@ sources: guide §7.2
 | `LOAD_REVERSAL_REQUESTED` | Server / dispatcher | orderId, to PLANNED or DEFERRED, planVersion | loader task; order stays LOADED |
 | `LOAD_REVERSED` | Field / loader | orderId, lines | LOADED -> PLANNED or DEFERRED |
 | `TRIP_READY` | Field / loader (hold-to-confirm) | tripId | trip -> READY (requires every `LOAD_SHORT` line to have a `SHORT_RESOLVED`) |
-| `TRIP_DEPARTED` | Field / driver | tripId | trip -> DEPARTED; server derives `ORDER_OUT_FOR_DELIVERY` per LOADED order |
+| `TRIP_DEPARTED` | Field / driver | tripId | trip -> DEPARTED; server derives `ORDER_OUT_FOR_DELIVERY` per PLANNED or LOADED order on the trip (ADR 0019) |
 | `STOP_ARRIVED` | Field / driver | orderId | none (progress + last heard) |
 | `STOP_OUTCOME` | Field / driver | outcome FULL, PARTIAL, REFUSED, FAILED; lines delivered/returned; reasonCode? (`VEHICLE_BREAKDOWN` for stops left after a breakdown, ADR 0017) | -> DELIVERED (FULL, PARTIAL) or FAILED |
 | `POD_CAPTURED` | Field / driver | receiverName, signatureBlobRef?, photoBlobRefs[] | evidence attached |
