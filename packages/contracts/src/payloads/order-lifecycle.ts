@@ -57,6 +57,8 @@ export const planAssignmentSnapshotSchema = z.object({
   tripId: uuidV7,
   vehicleId: uuidV7,
   seq: z.number().int().nonnegative(),
+  etaFrom: isoDateTime,
+  etaTo: isoDateTime,
 });
 
 export const planChangedPayloadSchema = z.object({
@@ -87,7 +89,7 @@ void _scoreInputsMatch;
 export const orderDeferredPayloadSchema = z.object({
   reasonCode: deferralReasonCodeSchema,
   causeKind: causeKindSchema,
-  scoreInputs: scoreInputsSchema,
+  scoreInputs: scoreInputsSchema.nullable(),
   toDate: localDate,
   daysUnserved: z.number().int().nonnegative(),
   consecutiveDeferrals: z.number().int().nonnegative(),

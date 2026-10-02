@@ -24,6 +24,7 @@ sources: guide §7.2
 | `LOAD_REVERSED` | Field / loader | orderId, lines | LOADED -> PLANNED or DEFERRED |
 | `TRIP_READY` | Field / loader (hold-to-confirm) | tripId | trip -> READY (requires every `LOAD_SHORT` line to have a `SHORT_RESOLVED`) |
 | `TRIP_DEPARTED` | Field / driver | tripId | trip -> DEPARTED; server derives `ORDER_OUT_FOR_DELIVERY` per PLANNED or LOADED order on the trip (ADR 0019) |
+| `ORDER_OUT_FOR_DELIVERY` | Server / derived from `TRIP_DEPARTED` | tripId? | -> OUT_FOR_DELIVERY (ADR 0019) |
 | `STOP_ARRIVED` | Field / driver | orderId | none (progress + last heard) |
 | `STOP_OUTCOME` | Field / driver | outcome FULL, PARTIAL, REFUSED, FAILED; lines delivered/returned; reasonCode? (`VEHICLE_BREAKDOWN` for stops left after a breakdown, ADR 0017) | -> DELIVERED (FULL, PARTIAL) or FAILED |
 | `POD_CAPTURED` | Field / driver | receiverName, signatureBlobRef?, photoBlobRefs[] | evidence attached |
@@ -35,4 +36,4 @@ sources: guide §7.2
 | `CONFLICT_OPENED` | Server | conflictId, kind, heldEventId | dispatcher inbox |
 | `CONFLICT_RESOLVED` | Server / dispatcher | conflictId, ACCEPT_FACT or REJECT_FACT, note | reducer applies or drops the held event |
 
-"Out for delivery" on the order timeline is server-derived from `TRIP_DEPARTED`. Trip-level facts are stored once (subject `tripId`), vehicle-level facts once (subject `vehicleId`); per-order consequences are derived in the same transaction.
+Trip-level facts are stored once (subject `tripId`), vehicle-level facts once (subject `vehicleId`); per-order consequences such as `ORDER_OUT_FOR_DELIVERY` are derived in the same transaction as `TRIP_DEPARTED`.

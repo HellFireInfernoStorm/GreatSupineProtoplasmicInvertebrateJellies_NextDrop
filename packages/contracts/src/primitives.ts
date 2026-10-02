@@ -13,22 +13,26 @@ export const actorSchema = z.object({
   role: z.enum(["STORE", "DISPATCHER", "LOADER", "DRIVER", "SYSTEM"]),
 });
 
-export const subjectSchema = z.object({
-  orderId: uuidV7.optional(),
-  tripId: uuidV7.optional(),
-  vehicleId: uuidV7.optional(),
-});
+export const subjectSchema = z
+  .object({
+    orderId: uuidV7.optional(),
+    tripId: uuidV7.optional(),
+    vehicleId: uuidV7.optional(),
+  })
+  .refine((s) => s.orderId !== undefined || s.tripId !== undefined || s.vehicleId !== undefined, {
+    message: "subject must include orderId, tripId, or vehicleId",
+  });
 
 export const lineIdSchema = z.string().min(1);
 
 export const shortLineSchema = z.object({
   lineId: lineIdSchema,
-  qtyShort: z.number().int().nonnegative(),
+  qtyShort: z.number().int().positive(),
 });
 
 export const damagedLineSchema = z.object({
   lineId: lineIdSchema,
-  qty: z.number().int().nonnegative(),
+  qty: z.number().int().positive(),
 });
 
 export const loadedLineSchema = z.object({

@@ -20,7 +20,13 @@ const base = (): EnvelopeBase => ({
   disposition: "APPLIED",
 });
 
-const assignment = { tripId: TRIP, vehicleId: VEHICLE, seq: 1 };
+const assignment = {
+  tripId: TRIP,
+  vehicleId: VEHICLE,
+  seq: 1,
+  etaFrom: "2026-10-04T03:30:00.000Z",
+  etaTo: "2026-10-04T04:00:00.000Z",
+};
 
 export const validPayloads: { [K in EventType]: Extract<EventEnvelope, { type: K }> } = {
   ORDER_PLACED: {
@@ -47,7 +53,16 @@ export const validPayloads: { [K in EventType]: Extract<EventEnvelope, { type: K
   PLAN_CHANGED: {
     ...base(),
     type: "PLAN_CHANGED",
-    payload: { from: assignment, to: { ...assignment, seq: 2 }, planVersion: 2 },
+    payload: {
+      from: assignment,
+      to: {
+        ...assignment,
+        seq: 2,
+        etaFrom: "2026-10-04T04:00:00.000Z",
+        etaTo: "2026-10-04T04:30:00.000Z",
+      },
+      planVersion: 2,
+    },
   },
   ORDER_DEFERRED: {
     ...base(),

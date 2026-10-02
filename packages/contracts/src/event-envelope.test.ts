@@ -44,6 +44,21 @@ describe("eventEnvelopeSchema", () => {
     const tripId = payloadTripId(parsed);
     expect(tripId).toBe(validPayloads.ORDER_PLANNED.payload.tripId);
   });
+
+  it("rejects an envelope with an empty subject", () => {
+    const bad = { ...validPayloads.ORDER_PLACED, subject: {} };
+    expect(eventEnvelopeSchema.safeParse(bad).success).toBe(false);
+  });
+});
+
+describe("orderDeferredPayloadSchema", () => {
+  it("accepts null scoreInputs when the allocator has no ranking context", () => {
+    const payload = {
+      ...validPayloads.ORDER_DEFERRED.payload,
+      scoreInputs: null,
+    };
+    expect(eventPayloadSchemas.ORDER_DEFERRED.safeParse(payload).success).toBe(true);
+  });
 });
 
 function payloadTripId(e: EventEnvelope): string | undefined {
