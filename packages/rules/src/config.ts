@@ -37,6 +37,8 @@ export interface RulesConfig {
   readonly priorityOrder: readonly PriorityClass[];
   /** Aging guard: an order deferred at least this many times sorts first within its class. */
   readonly agingDeferralCount: number;
+  /** `LOW_FUEL_MARGIN` warns when less than this percentage of a vehicle's weekly fuel quota is left. */
+  readonly lowFuelMarginPct: number;
   /** Cap on local-search moves in the allocator. */
   readonly localSearchIterationCap: number;
   /** Seed for the allocator's local-search PRNG, so proposals are reproducible. */
@@ -57,6 +59,7 @@ export const DEFAULT_RULES_CONFIG: RulesConfig = Object.freeze({
   validationEtaIncludesReturn: false,
   priorityOrder: Object.freeze([...PRIORITY_CLASSES]),
   agingDeferralCount: 2,
+  lowFuelMarginPct: 10,
   localSearchIterationCap: 2000,
   localSearchSeed: 1,
 });
@@ -81,6 +84,7 @@ export function resolveRulesConfig(overrides: Partial<RulesConfig> = {}): RulesC
     "reloadBufferMin",
     "etaWindowMin",
     "agingDeferralCount",
+    "lowFuelMarginPct",
     "localSearchIterationCap",
     "localSearchSeed",
   ] as const;
