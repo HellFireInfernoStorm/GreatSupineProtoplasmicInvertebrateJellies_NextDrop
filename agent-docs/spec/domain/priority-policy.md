@@ -13,7 +13,7 @@ Hard constraints are never overridable. Priorities are proposed and may be overr
 1. Chilled Fresh orders.
 2. Other Fresh orders (must arrive before 08:00).
 3. Style/Tech orders from outlets deferred on the previous run (`deferred_yesterday`).
-4. Style/Tech orders by most `days_since_last_served`.
+4. Style/Tech orders from outlets not served for at least `staleServiceDays` (default 7), by most `days_since_last_served` (ADR 0022).
 5. Remaining Style/Tech orders, ranked by the **slip** of deferring them.
 
 Inside classes 1 and 2: outlets deferred on the previous run first, then most `days_since_last_served`.
