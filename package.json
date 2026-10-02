@@ -8,15 +8,29 @@
   },
   "scripts": {
     "prepare": "lefthook install",
+    "dev": "pnpm -r --parallel --if-present run dev",
+    "build": "pnpm -r --if-present run build",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "pnpm -r --if-present run test",
+    "test:int": "node -e \"console.log('test:int: no integration tests yet')\"",
+    "e2e": "node -e \"console.log('e2e: no end-to-end tests yet')\"",
     "agent:check": "node scripts/agent-context/check.mjs",
     "agent:sync-skills": "node scripts/agent-context/sync-skills.mjs",
     "agent:index": "node scripts/agent-context/build-index.mjs"
   },
   "devDependencies": {
-    "lefthook": "^1.11.0"
+    "@nextdrop/config": "workspace:*",
+    "eslint": "^10.11.0",
+    "lefthook": "^1.11.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "esbuild",
       "lefthook"
     ]
   }

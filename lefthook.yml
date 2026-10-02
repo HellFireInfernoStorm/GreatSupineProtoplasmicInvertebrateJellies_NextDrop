@@ -1,6 +1,5 @@
 # Commands run in name order, so the numeric prefixes matter: sync the skills copy, rebuild the index, then check.
 # Git hooks for every developer and every agent harness. CI runs the same checks (.github/workflows/agent-context.yml).
-# Format and lint of staged source files are added with the monorepo skeleton (spec/build-order.md step 1).
 pre-commit:
   parallel: false
   commands:
@@ -13,6 +12,13 @@ pre-commit:
       stage_fixed: true
     3-agent-context:
       run: node scripts/agent-context/check.mjs
+    4-format:
+      glob: "*.{js,mjs,cjs,ts,tsx,json,css,html,yml,yaml}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+    5-lint:
+      glob: "*.{js,mjs,cjs,ts,tsx}"
+      run: pnpm exec eslint --no-warn-ignored {staged_files}
 
 commit-msg:
   commands:

@@ -1,0 +1,11 @@
+# Docs, instruction files and agent-context scripts keep their hand-written formatting.
+*.md
+agent-docs/
+.agents/
+.claude/
+.github/
+scripts/agent-context/
+data/
+pnpm-lock.yaml
+dist/
+coverage/
