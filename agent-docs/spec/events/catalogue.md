@@ -25,13 +25,14 @@ sources: guide §7.2
 | `TRIP_READY` | Field / loader (hold-to-confirm) | tripId | trip -> READY (requires every `LOAD_SHORT` line to have a `SHORT_RESOLVED`) |
 | `TRIP_DEPARTED` | Field / driver | tripId | trip -> DEPARTED; server derives `ORDER_OUT_FOR_DELIVERY` per LOADED order |
 | `STOP_ARRIVED` | Field / driver | orderId | none (progress + last heard) |
-| `STOP_OUTCOME` | Field / driver | outcome FULL, PARTIAL, REFUSED, FAILED; lines delivered/returned; reasonCode? | -> DELIVERED (FULL, PARTIAL) or FAILED |
+| `STOP_OUTCOME` | Field / driver | outcome FULL, PARTIAL, REFUSED, FAILED; lines delivered/returned; reasonCode? (`VEHICLE_BREAKDOWN` for stops left after a breakdown, ADR 0017) | -> DELIVERED (FULL, PARTIAL) or FAILED |
 | `POD_CAPTURED` | Field / driver | receiverName, signatureBlobRef?, photoBlobRefs[] | evidence attached |
-| `PROBLEM_FLAGGED` | Field / driver | kind, note, photoRef? | dispatcher inbox |
+| `PROBLEM_FLAGGED` | Field / driver | kind STORE_NOT_OPEN, ROAD_BLOCKED, DOCK_UNREACHABLE, VEHICLE_PROBLEM, RUNNING_LATE; note, photoRef? | dispatcher inbox; `VEHICLE_PROBLEM` also notifies the dispatcher as needs action (ADR 0017) |
 | `RECEIPT_CONFIRMED` | Server / store | lines received | -> RECEIVED |
 | `ISSUE_REPORTED` | Server / store | kind SHORT, DAMAGED, WARM, OTHER; lines; photo; note | -> DISPUTED; dispatcher inbox |
 | `ISSUE_RESOLVED` | Server / dispatcher | CREDIT, ADD_TO_RUN, REJECT; note | -> RECEIVED; ADD_TO_RUN creates a follow-up order |
+| `VEHICLE_AVAILABILITY_CHANGED` | Server / dispatcher | vehicleId, date, status AVAILABLE or IN_WORKSHOP, reason SERVICE or BREAKDOWN, note, sourceEventId? | sets `VehicleAvailability`; a breakdown notifies the dispatcher and the affected trips' loaders and drivers (ADR 0017) |
 | `CONFLICT_OPENED` | Server | conflictId, kind, heldEventId | dispatcher inbox |
 | `CONFLICT_RESOLVED` | Server / dispatcher | conflictId, ACCEPT_FACT or REJECT_FACT, note | reducer applies or drops the held event |
 
-"Out for delivery" on the order timeline is server-derived from `TRIP_DEPARTED`. Trip-level facts are stored once (subject `tripId`); per-order consequences are derived in the same transaction.
+"Out for delivery" on the order timeline is server-derived from `TRIP_DEPARTED`. Trip-level facts are stored once (subject `tripId`), vehicle-level facts once (subject `vehicleId`); per-order consequences are derived in the same transaction.

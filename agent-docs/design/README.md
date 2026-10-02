@@ -1,6 +1,6 @@
 # Design context
 
-Derived from the Day 5 Figma design. The Figma file is not assumed to be reachable.
+Derived from the Day 5 Figma design and checked against the live file on 2 Oct 2026. The latest version of the Figma file is the source of truth; when this folder and the file disagree, the file wins and the doc is fixed (ADR 0015). The file can be read with the Figma MCP tools, but it is not being edited for now.
 
 | File | Title | Holds |
 | --- | --- | --- |
@@ -11,11 +11,11 @@ Derived from the Day 5 Figma design. The Figma file is not assumed to be reachab
 | [degradation-scenario.md](degradation-scenario.md) | Degradation scenario: dead zone on the hill run | Scenario, recovery rules, driver and store flows. |
 | [prototype-flows.md](prototype-flows.md) | Prototype flows and login screens | Flow starting points, wiring, login design. |
 | [figma-reference.md](figma-reference.md) | Figma file map and tooling notes | Page and node map, Figma API lessons, quick reference. Only needed when editing Figma. |
-| [known-gaps.md](known-gaps.md) | Other artefacts and known gaps | Open items in the design. |
+| [known-gaps.md](known-gaps.md) | Other artefacts and known gaps | Open items in the design, Figma defects, closed items. |
 
 ## Source note
 
-Copied from the head of the original design context file. Node IDs, file keys and paths refer to the team's Figma file and the design-stage machine, not to this repository. Ignore them unless you are editing Figma.
+Copied from the head of the original design context file, written by Chethaka (`@lakwan194`). Node IDs and file keys refer to the team's Figma file. Paths refer to the design-stage machine, not to this repository. The quoted block below is historical; `figma-reference.md` has the current file map.
 
 > Everything designed so far for the Rootcode Tech-Triathlon 2026 Designathon entry, written so that a person or an AI assistant who has never seen the project can pick it up. It covers the product idea, the four apps, the shared design system, every screen and prototype flow in Figma, the degradation scenario, the mock story data, known gaps, and the Figma API lessons learned.
 >

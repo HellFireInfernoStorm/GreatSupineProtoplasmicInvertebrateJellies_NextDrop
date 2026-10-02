@@ -10,7 +10,7 @@ When sources disagree, the higher one wins:
 
 1. The Challenge Booklet: `agent-docs/brief/challenge-booklet.md`.
 2. Accepted ADRs: `agent-docs/adr/`.
-3. The spec: `agent-docs/spec/`. For what a screen looks like, `agent-docs/design/` wins over the spec.
+3. The spec: `agent-docs/spec/`. For what a screen looks like, the design wins over the spec: the latest version of the Figma file (ADR 0015), summarised in `agent-docs/design/`. If the two disagree, the Figma file wins and the doc is fixed.
 4. The nested `AGENTS.md` of the directory you are editing.
 5. The issue's acceptance criteria.
 6. Personal files (`AGENTS.local.md`). They never override the repository.

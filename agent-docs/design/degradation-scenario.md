@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: design context §7
+sources: design context §7; Figma review of 2 Oct 2026 (ADR 0015)
 ---
 
 # Degradation scenario: dead zone on the hill run
@@ -50,6 +50,12 @@ Caveat: someone else added a green **"Confirm Delivery"** button (hero, second A
 
 ## 7.3 Dispatcher side of the story (partly done)
 
-D4 has the grey T002 card, but the story does not fully match the Kandy narrative yet (T002 is Peliyagoda / Minuwangoda, not the Kandy truck). Not yet drawn: a "Sync clash" item in the D4 inbox (rule 3) and the escalated (behind schedule) state.
+**In Figma.** D4 has the grey card "T002 · VEH004 · Gampaha · Fresh · Last sync 07:22 · stop 3 of 5 · low-coverage area near Minuwangoda". That is a Peliyagoda trip, not the Kandy truck. Two things are not drawn: a "Sync clash" item in the D4 inbox (rule 3) and the escalated (behind schedule) state. The Driver workflow card has the dispatcher cancel stop 5 at 06:31 from D4, so the design story needs the clash item.
+
+**Build** (ADR 0008 amendment):
+
+- The grey card shows the Kandy fixture trip that the driver and store screens use.
+- The **Sync clash** inbox item reuses the dispute evidence panel. It shows the driver's proof of delivery and capture time beside the plan change that cancelled or moved the stop. Actions: Accept fact / Reject fact (`CONFLICT_RESOLVED`). Conflict kinds are labelled from `spec/sync/recovery-and-conflicts.md`.
+- **Escalated** (`ESCALATED`: no signal and behind schedule) uses the existing status tones. The Style Guide rule is "Late is not lost: only mark a run amber when it is behind plan; escalate only then".
 
 ---

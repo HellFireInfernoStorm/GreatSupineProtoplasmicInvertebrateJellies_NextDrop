@@ -34,7 +34,7 @@ Schema lives in `apps/api/prisma/schema.prisma`. Prisma models stay inside `apps
 | | `Trip` | displayId (`T001`), planningDayId, vehicleId, tripNo (1/2), brand, district, status (PLANNED, READY, DEPARTED, COMPLETE, CANCELLED), plannedDepart, plannedMinutes, km, litres |
 | | `TripStop` | tripId, orderId, seq, etaMin, windowOpen/Close snapshot, serviceMin |
 | | `Deferral` | orderId, planningDayId, planVersion, reasonCode, causeKind, bindingConstraint, scoreInputs JSON, decidedBy (DISPATCHER/SYSTEM), note, nextServiceableDate, daysUnserved, consecutiveDeferrals |
-| | `VehicleAvailability` | vehicleId, date, status (AVAILABLE, IN_WORKSHOP) |
+| | `VehicleAvailability` | vehicleId, date, status (AVAILABLE, IN_WORKSHOP), reason (SERVICE, BREAKDOWN), note, setBy, setAt (ADR 0017) |
 | Sync | `Conflict` | kind, state (OPEN/RESOLVED), orderId, tripId, heldEventId, opened/resolved by and at, resolution, note |
 | | `Blob` | clientBlobId (unique), ownerEventId?, mime, size, bytes (`bytea`) behind a `BlobStore` interface |
 | | `ChangeFeed` | seq (BigInt unique), kind, entityType, entityId, version?, audience columns (depot, vehicleId, outletId, roles[]), createdAt |
