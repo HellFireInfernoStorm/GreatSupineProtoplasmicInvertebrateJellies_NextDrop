@@ -12,3 +12,4 @@ sources: guide §9.6
 - The service worker updates only at a safe moment (idle, between stops), never mid-delivery.
 - Client-side rule checks are advisory; the server re-validates.
 - Device clocks are never used for ordering or conflict decisions. The client records `clockOffsetMs` (server minus device, learned from responses) so captured times can be shown accurately.
+- Timeline order is server insertion order; `deviceSeq` orders events within a device. Offsets are for display only (ADR 0010).

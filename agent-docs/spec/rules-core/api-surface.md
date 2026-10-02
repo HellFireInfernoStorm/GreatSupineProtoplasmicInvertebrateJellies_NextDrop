@@ -21,6 +21,7 @@ rankOrders(orders, cfg): RankedOrder[]                // priority keys
 explainDeferral(order, finalPlan, ref, cfg): DeferralExplanation
 applyEvent(state, event): OrderState                  // order reducer (section 5.5)
 nextOperatingDate(date, calendar), cutoffAt(date)     // calendar helpers
+orderingGuidance(brand, date, calendar): MessageKey | null   // brand ordering notice (ADR 0010)
 ```
 
 `ValidationResult = { ok, violations: Violation[] }`, where `Violation = { code, severity: 'HARD'|'WARN', tripRef?, vehicleId?, orderIds[], params, message_key }`. `params` carries limit and actual values (e.g. `{ limit: 270, actual: 301 }`) so the UI can render the constraint-breach modal and localize it.

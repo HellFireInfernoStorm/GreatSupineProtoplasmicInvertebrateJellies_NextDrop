@@ -6,7 +6,7 @@ sources: guide §1, §2
 
 # Overview, principles and containers
 
-One responsive, installable web app (PWA) with four role-based shells over one modular-monolith API and one PostgreSQL database. It connects ordering, planning, loading, delivery and receipt for Waypoint Group (three brands, 120 outlets, two depots, 60 vehicles).
+One responsive, installable web app (PWA) with four role-based shells over one modular-monolith API and one PostgreSQL database. It connects ordering, planning, loading, delivery and receipt for the customer Waypoint Group (the product is called NextDrop; three brands, 120 outlets, two depots, 60 vehicles).
 
 Core product idea: **one record per order, with a timeline.** Every role reads the same order and appends events to it. The dispatcher's published plan is the source every other role reads.
 
@@ -17,7 +17,7 @@ Core product idea: **one record per order, with a timeline.** Every role reads t
 | Store manager | Dilini, Waypoint Fresh OUT015 (Wellawatte) | Phone + desktop | Online; degrades gracefully | Place orders before 16:00 cutoff, see ETA and deferral notices, confirm receipt, report issues |
 | Dispatcher | Nimal, Peliyagoda DC | Desktop (1600x1000) | Stable | Review queue, propose/edit plan, defer with reason codes, publish, monitor live runs, resolve exceptions, capacity outlook |
 | Loader | Kasun, night shift, Peliyagoda dock | Shared tablet (landscape 1280x800); MUST also work at phone width | Offline-capable | See trips by departure, load in reverse stop order, flag short/damaged, hold-to-mark-ready |
-| Driver | Ruwan S. (walkthrough, Peliyagoda VEH001/T001); Sampath (Kandy, extra account) | Personal Android phone (360x800) | Offline-first | One stop per screen, record outcome and proof of delivery, sync when signal returns |
+| Driver | Sampath (walkthrough, Kandy hill run, fixtures per ADR 0008); Ruwan S. (Peliyagoda, extra account) | Personal Android phone (360x800) | Offline-first | One stop per screen, record outcome and proof of delivery, sync when signal returns |
 
 Order statuses shown in every app (one vocabulary): `Ordered, Planned, Deferred, Loaded, Out for delivery, Delivered, Received`, plus `Short` (a loader flag), `Failed`, `Disputed`, `Cancelled`.
 

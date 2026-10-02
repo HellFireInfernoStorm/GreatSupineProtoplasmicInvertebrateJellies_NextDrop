@@ -21,6 +21,6 @@ sources: guide §21
 | Photo target | <= ~200 KB, max ~1280 px | Client-side compression |
 | SSE heartbeat / poll fallback | 25 s / 20 s | |
 | Priority order | section 4.7 | Lexicographic; weights in `RulesConfig` |
-| Walkthrough driver | Ruwan S., Peliyagoda, `VEH001`/`T001` | Sampath (Kandy) as extra account |
+| Walkthrough driver | Sampath, Kandy hill run (ADR 0008) | Ruwan S. (Peliyagoda) as extra account |
 
-Open items to settle (defaults above apply meanwhile): final product and repo names; which Designathon snapshot was submitted (README lists departures, including the loader phone layout, Noto Sans Sinhala/Tamil replacing stand-in fonts, and any list-based planning instead of drag-and-drop); native review of Sinhala/Tamil strings; whether Web Push or an SMS provider is wired; hosting choice; organiser answer on data publication.
+Open items to settle (defaults above apply meanwhile): which Designathon snapshot was submitted (README lists departures, including the loader phone layout, Noto Sans Sinhala/Tamil fonts, list-based planning, the NextDrop name, m³ capacity and the Sampath story); hosting choice (see open-questions C3). Web Push is optional and there is no SMS (ADR 0013); reference data may be published (ADR 0011).

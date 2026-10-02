@@ -22,6 +22,7 @@ Seeding is idempotent and runs on every start when `SEED_ON_START=true`. Histori
 
 - **Demo clock**: server `Clock` service (`now = realNow + offset`); all cutoff, state-transition and ETA logic reads it. `POST /demo/clock` sets the time; a `tick` job (and `POST /demo/tick`) applies time-driven transitions idempotently.
 - **Reset and presets**: `POST /demo/reset { preset }` restores operational tables to a known checkpoint: `before-cutoff`, `orders-closed`, `plan-published`, `loading`, `mid-run`, `clash-ready`. A judge can jump to any role's step.
+- **Reset epoch and visibility** (ADR 0007): every reset or seed increments `DemoState.resetEpoch`. Reset and clock changes need a confirm step, are rate-limited, and the actor and time are shown in a persistent banner in every shell ('Reset by dispatcher at 14:02'). The README advises judges who need isolation to run `docker compose up` locally.
 - **Quick-login chips** on the login screens for the four seeded accounts.
 - **Force-offline switch** in Loader/Driver (section 10).
 - Demo controls are reachable from a small panel in each shell footer; clock/reset are dispatcher-only (or script key).
@@ -33,8 +34,8 @@ Seeding is idempotent and runs on every start when `SEED_ON_START=true`. Histori
 | Store manager | outlet `OUT015` / Dilini | Waypoint Fresh, Wellawatte (Peliyagoda-served) |
 | Dispatcher | Nimal, Peliyagoda | Depot selector available |
 | Loader | `LDR001`, Peliyagoda dock | PIN login |
-| Driver | `DRV001` Ruwan S., `VEH001`, trip `T001` (Peliyagoda) | The walkthrough driver; PIN login |
-| Extras | A Kandy loader and driver (Sampath), second store manager | For Kandy and multi-outlet scenarios |
+| Driver | Sampath, Kandy depot (fixture IDs from `story-fixtures`) | The walkthrough driver on the Kandy hill run; PIN login |
+| Extras | `DRV001` Ruwan S. (Peliyagoda), a Kandy loader, a second store manager | Second driver; Kandy and multi-outlet scenarios |
 
 ## 15.4 Reference judge walkthrough (basis for the README and the Playwright test)
 
@@ -52,3 +53,15 @@ Seeding is idempotent and runs on every start when `SEED_ON_START=true`. Histori
 12. **Dispatcher** exceptions inbox shows the clash with the POD photo; resolve it.
 13. **Store**: sees delivered (double timestamp), confirms receipt of one order, reports a shortage on another.
 14. **Dispatcher** resolves the dispute; opens the capacity outlook.
+
+## 15.5 Story fixtures (ADR 0008)
+
+The invented design IDs (`OUT015`, `VEH001`, `T001`) are placeholders. A script run at seed time (`pnpm seed:pick-fixtures`) selects real rows from the reference CSVs and writes them to `apps/api/prisma/seed/story-fixtures.ts`, the single module that seed, e2e tests and docs import. Criteria:
+
+- **Driver vehicle**: a Kandy-depot vehicle; its Fresh or Style trip includes a stop in the hill district used for the low-coverage scene (Talawakele area).
+- **Store outlet receiving that delivery**: an outlet served by that trip, brand Fresh if the vehicle is a reefer.
+- **Peak-day store outlet** (steps 1, 5, 6): a Fresh outlet in Wellawatte served from Peliyagoda if one exists in `outlets.csv`; otherwise the nearest Fresh outlet in Colombo served from Peliyagoda. Dilini's account is bound to it.
+- **Overload demo**: the Peliyagoda peak day (dispatcher steps 3 to 5) is unchanged. The field steps 7 to 12 run on the Kandy depot with the pinned vehicle, driver and loader, and the dispatcher switches depot with the selector.
+- The dispatcher's 'no signal' card (D4) and the store's delayed-confirmation view use the same driver and trip.
+
+Fixture picks are recorded in the PR that first adds the CSVs.

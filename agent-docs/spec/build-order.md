@@ -10,7 +10,7 @@ sources: guide §22
 
 1. Monorepo skeleton, Compose (`db` + `app`), CI, `.env.example`, contract v1 (event catalogue, DTOs, status vocabulary, error codes). Deploy this skeleton publicly early and keep it deployed.
 2. `packages/rules` with full unit/property tests (validator, trip time, ETA, fuel, allocator, reducer).
-3. Prisma schema, migrations (with raw SQL), seed (reference, products, accounts, story day).
+3. Prisma schema (first migration includes the raw-SQL drift check in [prisma-rules.md](data/prisma-rules.md)), migrations (with raw SQL), seed (reference, products, accounts, story day).
 4. Auth, policy layer, role shells, themes and the shared component kit.
 5. Orders module and Store app (cutoff, place order, detail, notifications).
 6. Planning module and Dispatcher app (queue, propose, edit with live validation, defer review, publish).

@@ -21,6 +21,7 @@ Supporting rules: nothing disappears silently (the pending count drops only when
 - If `v == V`, or no `PlanVersionChange` in `(v, V]` touches S -> `APPLIED`.
 - If S was **removed/cancelled** or **moved to another vehicle/trip** in `(v, V]` and the event is a delivery fact (`STOP_ARRIVED`, `STOP_OUTCOME`, `POD_CAPTURED`) -> **clash**: store with `disposition = HELD`, open a `Conflict` (`FACT_ON_CANCELLED_STOP` or `FACT_ON_REASSIGNED_STOP`), emit `CONFLICT_OPENED`, notify the dispatcher. The fact and its evidence are preserved and visible; the reducer skips it until resolved.
 - Two devices report a delivery fact for the same stop -> `DUPLICATE_DELIVERY_FACT` conflict.
+- A `LOAD_CONFIRMED` for an order the current plan version no longer holds (removed, cancelled or moved) -> `HELD`, conflict kind `LOAD_AGAINST_CHANGED_PLAN`. The dispatcher resolves it by keeping the order on the truck (re-adding it to the plan) or by requesting a reversal (`LOAD_REVERSAL_REQUESTED`); the loader then confirms with `LOAD_REVERSED` (ADR 0004).
 - An event that is now illegal under the transition table and is not merely a late earlier-stage fact -> `ILLEGAL_TRANSITION` conflict or rejection.
 - Non-fact events (e.g. `PLAN_ACKNOWLEDGED`) on changed stops -> `APPLIED`.
 

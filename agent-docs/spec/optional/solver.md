@@ -6,7 +6,7 @@ sources: guide §17
 
 # Optimization sidecar
 
-> **IMPLEMENTATION NOTE.** The optimization sidecar is **part of the architecture but will be skipped from the implementation if there is no time.** Nothing else in the system may depend on it. The greedy allocator in `packages/rules` is the primary and always-available engine. Build the sidecar last, only after everything else is complete and tested. If it is not built: omit the `solver/` directory content and compose profile, hide the "Optimise" control, set `SOLVER_ENABLED=false`, and do not mention it as delivered in the README or demo.
+> **STATUS (ADR 0014).** The optimisation sidecar is **not built for now**. The greedy allocator in `packages/rules` is the only engine and `SOLVER_ENABLED` is `false`. The design below stays valid so it can be built later if time remains after the walkthrough passes. Nothing else in the system may depend on it.
 
 **Role**: improve assignment quality (fewer deferrals, better packing) on request. It proposes assignments only; it never decides validity.
 

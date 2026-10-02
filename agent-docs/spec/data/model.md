@@ -33,7 +33,7 @@ Schema lives in `apps/api/prisma/schema.prisma`. Prisma models stay inside `apps
 | | `PlanVersionChange` | planVersionId, orderId, tripId, change (ADDED, REMOVED, MOVED_VEHICLE, MOVED_TRIP, RESEQUENCED, ETA_CHANGED, DEFERRED) |
 | | `Trip` | displayId (`T001`), planningDayId, vehicleId, tripNo (1/2), brand, district, status (PLANNED, READY, DEPARTED, COMPLETE, CANCELLED), plannedDepart, plannedMinutes, km, litres |
 | | `TripStop` | tripId, orderId, seq, etaMin, windowOpen/Close snapshot, serviceMin |
-| | `Deferral` | orderId, planningDayId, planVersion, reasonCode, causeKind, bindingConstraint, scoreInputs JSON, decidedBy (DISPATCHER/SYSTEM), note |
+| | `Deferral` | orderId, planningDayId, planVersion, reasonCode, causeKind, bindingConstraint, scoreInputs JSON, decidedBy (DISPATCHER/SYSTEM), note, nextServiceableDate, daysUnserved, consecutiveDeferrals |
 | | `VehicleAvailability` | vehicleId, date, status (AVAILABLE, IN_WORKSHOP) |
 | Sync | `Conflict` | kind, state (OPEN/RESOLVED), orderId, tripId, heldEventId, opened/resolved by and at, resolution, note |
 | | `Blob` | clientBlobId (unique), ownerEventId?, mime, size, bytes (`bytea`) behind a `BlobStore` interface |
@@ -41,4 +41,4 @@ Schema lives in `apps/api/prisma/schema.prisma`. Prisma models stay inside `apps
 | | `FeedCounter` | single row, `head` BigInt |
 | | `Notification` | recipient (userId or role+scope), kind, titleKey, params, entityRef, createdAt, readAt |
 | Support | `WeeklyDemandHistory` | depot, brand, isoYear, isoWeek, totalVolumeM3, chilledVolumeM3 (seeded aggregate for the outlook) |
-| | `DemoState` | clockOffsetMs, preset |
+| | `DemoState` | clockOffsetMs, preset, resetEpoch (int, ADR 0007), lastResetBy, lastResetAt |

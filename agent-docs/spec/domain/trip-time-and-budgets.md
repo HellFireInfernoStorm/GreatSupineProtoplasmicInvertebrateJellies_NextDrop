@@ -25,7 +25,7 @@ A vehicle may run one Fresh and one Style trip, each checked against its own bud
 
 - Stop ETA = trip departure + outbound travel + sum of (previous stops' service + inter-stop travel). Early arrival waits until the window opens.
 - Stops are sequenced by earliest window close first (ties by district order, then order ID). The loader sees the reverse sequence (last stop loaded first).
-- Fresh trip 1 departs at the Fresh window start (03:30, configurable). Trip 2 departs after trip 1 ends + return (equal to outbound time) + reload buffer. Style/Tech departure is the earliest time that satisfies all stops' open times (and mall windows) within the trading day.
+- Fresh trip 1 departs at the Fresh window start (03:30, configurable). **Two ETAs** exist per stop (ADR 0003). The **validation ETA** follows the Booklet formula: trip 2 starts when trip 1's `trip_minutes` have elapsed, with no return leg and no reload buffer; only this ETA can raise `WINDOW_MISSED` or `TIME_BUDGET_EXCEEDED`. The **display ETA** (shown to stores, loaders, drivers) departs trip 2 after trip 1 ends + return (equal to outbound time) + reload buffer. If the display ETA misses a window but the validation ETA does not, the validator emits the warning `LATE_RISK`. Setting `validationEtaIncludesReturn` makes the validation ETA use the display ETA. Style/Tech departure is the earliest time that satisfies all stops' open times (and mall windows) within the trading day.
 - Store-facing ETA is shown as a band (`ETA_WINDOW_MIN`, default 30).
 
 ## 4.5 Fuel
