@@ -1,0 +1,64 @@
+name: unblock
+
+# Keeps the `blocked` label in step with the "Blocked by" section of each issue (scripts/agent-context/unblock.mjs).
+# Closing an issue removes `blocked` from open issues whose blockers are now all closed.
+# Reopening one adds `blocked` back to open issues that list it. A manual run sweeps every open `blocked` issue.
+# Issues whose "Blocked by" names no issue number are never changed.
+on:
+  issues:
+    types: [closed, reopened]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: unblock
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update blocked labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { blockersFromIssueBody, shouldBeBlocked, BLOCKED_LABEL } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/agent-context/unblock.mjs`);
+            const trigger = context.payload.issue?.number;
+            const reopened = context.payload.action === "reopened";
+
+            const open = (await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: "open", per_page: 100 }))
+              .filter((i) => !i.pull_request);
+            const hasLabel = (i) => i.labels.some((l) => (l.name ?? l) === BLOCKED_LABEL);
+            const candidates = open.filter((i) =>
+              trigger === undefined ? hasLabel(i) : blockersFromIssueBody(i.body).includes(trigger) && hasLabel(i) !== reopened,
+            );
+
+            const closed = new Map();
+            for (const i of candidates) {
+              for (const n of blockersFromIssueBody(i.body)) {
+                if (closed.has(n)) continue;
+                try {
+                  closed.set(n, (await github.rest.issues.get({ ...context.repo, issue_number: n })).data.state === "closed");
+                } catch (e) {
+                  if (e.status !== 404) throw e;
+                  core.warning(`#${i.number} lists #${n} under "Blocked by", which does not exist; treating it as open`);
+                  closed.set(n, false);
+                }
+              }
+            }
+
+            for (const i of candidates) {
+              const want = shouldBeBlocked(i.body, (n) => closed.get(n));
+              if (want === false && hasLabel(i)) {
+                await github.rest.issues.removeLabel({ ...context.repo, issue_number: i.number, name: BLOCKED_LABEL });
+                core.info(`#${i.number}: all blockers closed, removed ${BLOCKED_LABEL}`);
+              } else if (want === true && !hasLabel(i)) {
+                await github.rest.issues.addLabels({ ...context.repo, issue_number: i.number, labels: [BLOCKED_LABEL] });
+                core.info(`#${i.number}: a blocker is open again, added ${BLOCKED_LABEL}`);
+              }
+            }
+            core.info(`checked ${candidates.length} issue(s)${trigger ? ` after #${trigger} was ${context.payload.action}` : ""}`);
