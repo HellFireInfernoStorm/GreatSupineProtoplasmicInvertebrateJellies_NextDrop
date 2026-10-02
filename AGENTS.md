@@ -42,6 +42,8 @@ pnpm agent:index            rebuild the status table in agent-docs/README.md
 
 Follow [agent-docs/process/start-task.md](agent-docs/process/start-task.md). In short: read the issue and its comments (use `gh`, or the GitHub MCP tools if `gh` is missing: [github-access.md](agent-docs/process/github-access.md)), create branch `<issue-number>-short-slug`, post your plan as an issue comment starting with `<!-- agent-plan -->`, and keep that comment current.
 
+Every issue and PR carries labels: at least one `svc:*` and exactly one `type:*`, plus `designathon-departure`, `contract-change` or `schema-change` when they apply. CI fails a PR without them; a PR opened from a UI or tool starts unlabelled, so add them yourself ([pr-and-commits.md](agent-docs/process/pr-and-commits.md)).
+
 ## Changing the spec
 
 If a change deviates from the spec, or settles something it leaves open, the same PR adds an ADR and edits the spec file. See [spec-changes.md](agent-docs/process/spec-changes.md). Departures from the Day 5 Designathon design also get the label `designathon-departure`.

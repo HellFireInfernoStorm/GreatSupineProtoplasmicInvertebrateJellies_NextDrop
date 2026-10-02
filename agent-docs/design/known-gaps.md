@@ -6,19 +6,19 @@ sources: design context §10, §11; Figma review of 2 Oct 2026 (ADR 0015)
 
 # Other artefacts and known gaps
 
-## Artefacts outside this repository
+## What counts as design
 
-These are held by Chethaka (`@lakwan194`), who wrote the design context. Copies have been requested.
+The latest Figma file is the only design source (ADR 0015). Anything not in it is not a design requirement:
 
-- **Claude Doc "Dispatcher prototypes — gap review vs Blueprint"** (id `98b3d1fe-3eff-4d9b-ba27-d5ca74462e96`, body block `c37aba05-e5e9`, last revision seen 14). A checklist of the dispatcher screens against the Blueprint. It stood at 29 Met / 3 Partial on 29 Sep.
-- **`loader-screens-spec.md`**. The full Loader spec. Its rules that are confirmed elsewhere:
-  - 7:1 contrast (`design-system.md` §3.2).
-  - 64/80 px targets and no gesture-only actions (§3.6, §3.7).
-  - 5 s undo toasts (Figma Loader workflow card and Style Guide).
+- Blueprint pages that were never drawn (cover, trade-off page).
+- Deleted pages.
+- Documents outside this repository: the Blueprint PDF, `loader-screens-spec.md`, and the dispatcher gap-review Claude Doc.
 
-  The 40% extra width for Tamil is known only from that file.
-- **`Designation Blueprint.pdf`** (13 pages). It binds only through what this folder captured from it. The Booklet always wins.
-- **Datasets.** The reference CSVs go in `data/reference/` (ADR 0011). Real IDs replace the design's placeholders (ADR 0008).
+None of these is tracked as a gap. The Loader rules the build needs are in `design-system.md` §3.2 and §3.6–3.7, and in the Figma rationale cards. Tamil string length is handled by `spec/frontend/design-system.md` (layouts must not assume English widths; a Playwright check renders `ta` at phone width).
+
+The NextDrop wordmark exists only as raster images, and there is no vector source. The raster is the asset (`figma-reference.md` §4.5).
+
+Datasets: the reference CSVs go in `data/reference/` (ADR 0011). Real IDs replace the design's placeholders (ADR 0008).
 
 ## Open gaps (as of the Figma review, 2 Oct)
 
@@ -32,13 +32,12 @@ These are held by Chethaka (`@lakwan194`), who wrote the design context. Copies 
    - The build follows ADR 0008: one Kandy fixture for the field steps, with a separate Kandy loader account.
 3. **Workflow cards are stale.** Dispatcher `317:1535`, Store `252:1311` / `252:1500` and Driver `318:2` say "not wired yet", but all four are wired. The Store and Driver cards do not include the degradation flow or login.
 4. **Localisation.** The Sinhala and Tamil strings (Loader L2, login language chips) need a native check. Yaldevi stands in for Noto Sans Sinhala in Figma.
-5. **Blueprint pages not found in Figma:** cover / problem framing, and the trade-off page (Blueprint p9). The trade-off is written in `product-and-roles.md`.
-6. **Figma defects**, not fixed while the file is frozen: `figma-reference.md` §4.10.
-7. **Persona-page features with no drawn screen** (ADR 0016). They are not built unless the owner or an issue adds them:
+5. **Figma defects**, not fixed while the file is frozen: `figma-reference.md` §4.10.
+6. **Persona-page features with no drawn screen** (ADR 0016). They are not built unless the owner or an issue adds them:
    - Store: "Order tracking (status, **location**)". This conflicts with the decision to leave out live GPS.
    - Dispatcher: "Vehicle and **driver** assignment" (rosters were left out) and "Trip history".
    - Loader: "Loading and shortfall history".
-8. **Ownership.** Role owners will be decided at a team meeting. Who records the video will be decided after development, based on availability. The Designathon AI disclosure exists in Figma (`559:19610`) and becomes part of `docs/ai-disclosure.md`.
+7. **Ownership.** Role owners will be decided at a team meeting. Who records the video will be decided after development, based on availability. The Designathon AI disclosure exists in Figma (`559:19610`) and becomes part of `docs/ai-disclosure.md`.
 
 ## Closed by the Figma review or by ADRs
 

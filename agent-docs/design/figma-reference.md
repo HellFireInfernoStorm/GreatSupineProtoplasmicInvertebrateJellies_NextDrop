@@ -175,7 +175,7 @@ Foundations:
 
 Component copies: Driver `510:17264`, Store `510:17401`, Loader `510:17866`, Dispatcher `510:19084`. They are current: the dispatcher sidebar copy has the role label and "Delivery Progress".
 
-**Logos.** The **NextDrop** wordmark has a parcel box replacing the "o", in white on three navy backgrounds: `logoBLUE`, `logoDARKBLUE`, `logoNOTSODARKBLUE`. It is raster only (rectangles with image fills). The vector source has been requested.
+**Logos.** The **NextDrop** wordmark has a parcel box replacing the "o", in white on three navy backgrounds: `logoBLUE`, `logoDARKBLUE`, `logoNOTSODARKBLUE`. It is raster only (rectangles with image fills), and **there is no vector source**. The raster is the source (ADR 0015): export it from Figma as PNG at 2× and 3× for the build, and do not redraw or trace it.
 
 Principle 4 ("Never invent a real-looking ID") is superseded for the build by ADR 0008 (real IDs).
 
@@ -285,8 +285,8 @@ Do not copy these into the build.
 
 | I want… | Go to |
 |---|---|
-| The Blueprint's scope and rules | `Designation Blueprint.pdf` (not in this repo; ask Chethaka) |
-| Loader detailed spec | `loader-screens-spec.md` (not in this repo; ask Chethaka). Meanwhile §4.3 and `design-system.md` |
+| Scope and rules | The Booklet, then this file and the Figma file (ADR 0015). The Blueprint PDF is not needed |
+| Loader detailed rules | §4.3 and `design-system.md` §3.6–3.7 (the old `loader-screens-spec.md` is not needed) |
 | Personas | `product-and-roles.md` (authoritative, ADR 0016); Figma page "User Personas" `510:19782` |
 | The phone story of a day | Store page, section `251:1336`, flow "Phone · A day at OUT015" |
 | Offline scenario end to end | Driver flow 4 (`481:664`) → flow 2 (`329:159`), Store degradation flow (`491:1402`), Dispatcher D4 (`272:991`) |

@@ -1,8 +1,8 @@
-// CI check for pull requests: the template must be filled in, the departure rule must hold, the branch name must fit.
+// CI check for pull requests: the template must be filled in, the departure rule must hold, the required labels must be set, the branch name must fit.
 //   GITHUB_EVENT_PATH=<event.json> node scripts/agent-context/check-pr-body.mjs
 //   node scripts/agent-context/check-pr-body.mjs path/to/event.json
 import { readFileSync } from "node:fs";
-import { config, Report } from "./lib.mjs";
+import { config, Report, read } from "./lib.mjs";
 import { branchProblem } from "./check-branch.mjs";
 
 const eventPath = process.argv[2] ?? process.env.GITHUB_EVENT_PATH;
@@ -84,6 +84,18 @@ for (const s of ["Intent", "Key decisions", "Open questions", "How it was tested
     const m = t.match(new RegExp(`${f}:[ \\t]*(.*)`));
     if (!m || !m[1].trim()) r.error(`"AI assistance": fill in "${f}" (write None if no AI tool was used)`);
   }
+}
+
+// Labels: every PR carries the required label groups, and only labels defined in .github/labels.json.
+{
+  const defined = JSON.parse(read(config.labelsFile)).map((l) => l.name);
+  for (const g of config.requiredLabelGroups) {
+    const have = labels.filter((l) => l.startsWith(g.prefix));
+    const options = defined.filter((l) => l.startsWith(g.prefix)).join(", ");
+    if (have.length < g.min) r.error(`missing a ${g.prefix}* label (${g.hint}): add one of ${options}`);
+    if (g.max !== undefined && have.length > g.max) r.error(`too many ${g.prefix}* labels (${have.join(", ")}): keep ${g.hint}`);
+  }
+  for (const l of labels) if (!defined.includes(l)) r.error(`label "${l}" is not defined in ${config.labelsFile}`);
 }
 
 const bp = branchProblem(pr.head?.ref);

@@ -13,7 +13,7 @@ body:
     id: services
     attributes:
       label: Affected services
-      description: Also apply the matching svc:* labels.
+      description: The matching svc:* labels are applied automatically from this field.
       multiple: true
       options:
         - svc:api
@@ -24,6 +24,18 @@ body:
         - svc:solver
         - svc:infra
         - svc:docs
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      description: The matching type:* label is applied automatically from this field.
+      options:
+        - type:feature
+        - type:bug
+        - type:chore
+        - type:spike
     validations:
       required: true
   - type: textarea
@@ -60,5 +72,5 @@ body:
     attributes:
       label: Designathon departure
       options:
-        - label: This changes something the Day 5 design specified (add the label designathon-departure and write an ADR)
+        - label: This changes something the Day 5 design specified (the label designathon-departure is applied automatically; write an ADR)
           required: false
