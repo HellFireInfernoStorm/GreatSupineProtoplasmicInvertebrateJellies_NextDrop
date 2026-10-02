@@ -37,4 +37,6 @@ The Figma file is **not edited for now**. Known defects in the file are recorded
 
 - The open item about the submitted snapshot in `spec/assumptions.md` is settled.
 - Edited: `AGENTS.md`, `spec/assumptions.md`, `spec/frontend/architecture.md` (screen inventory), every file in `design/` that the review found stale.
+- Anything not in the file is not a design requirement. That covers Blueprint deliverables never drawn (cover, trade-off page), deleted pages, and documents outside the repository (the Blueprint PDF, `loader-screens-spec.md`, the dispatcher gap-review doc). Missing pages are not tracked as gaps. The Booklet still governs scope.
+- Assets exist only in the form the file holds them. The NextDrop wordmark has no vector source, so the raster images in the Logos section are the source (added 2026-10-02).
 - A later edit to the Figma file can change the build target. Such an edit should be announced to the team and followed by a doc update.

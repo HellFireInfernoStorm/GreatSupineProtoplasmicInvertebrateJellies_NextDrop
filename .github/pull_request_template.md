@@ -1,3 +1,5 @@
+<!-- Labels are required and checked by CI: at least one svc:*, exactly one type:*, plus designathon-departure / contract-change / schema-change when they apply. Copy them from the issue. See agent-docs/process/pr-and-commits.md. -->
+
 ## Closes
 
 Closes #

@@ -18,7 +18,7 @@ sources: design context §3; Figma review of 2 Oct 2026 (ADR 0015)
 
 The Dispatcher hi-fi visual language was copied from the friend's original "Dispatcher Hi-Fi" page (soft 42 px icon tiles on KPI cards, dotless pills, underline tabs, 8 px per-metric bars, Bold 32 page titles). That page (`70:2`) is deleted. The reference is now the Dispatcher page `254:8156`.
 
-**Logo.** The NextDrop wordmark is in the Style Guide Logos section (`652:46054`): "NextDrop" with a parcel box replacing the "o", in white on navy. It exists as raster images only; use them until a vector source arrives, and do not redraw it. Screens in Figma still say "Waypoint"; the build uses NextDrop (ADR 0012).
+**Logo.** The NextDrop wordmark is in the Style Guide Logos section (`652:46054`): "NextDrop" with a parcel box replacing the "o", in white on navy. It exists as raster images only, and there is no vector source. Export the raster (PNG at 2× and 3×) for the build, and do not redraw or trace it. Screens in Figma still say "Waypoint"; the build uses NextDrop (ADR 0012).
 
 ## 3.2 Figma variable collections (local)
 

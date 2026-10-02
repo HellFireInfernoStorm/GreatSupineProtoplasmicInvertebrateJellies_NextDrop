@@ -7,6 +7,11 @@
   "branchExempt": ["main", "claude/*"],
   "commitSubjectMax": 72,
   "departureLabel": "designathon-departure",
+  "labelsFile": ".github/labels.json",
+  "requiredLabelGroups": [
+    { "prefix": "svc:", "min": 1, "hint": "one per area touched" },
+    { "prefix": "type:", "min": 1, "max": 1, "hint": "exactly one" }
+  ],
   "referenceCsvAllowed": [
     "outlets.csv", "vehicles.csv", "calendar.csv", "district_travel.csv",
     "service_allowance.csv", "traffic_speed.csv", "road_conditions.csv"

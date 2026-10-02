@@ -19,7 +19,8 @@ The PR is the handoff unit, so the template is strict. Sections and checkboxes a
 - none of the "Spec and docs" boxes is ticked, or "No spec or docs change needed" has no reason after "because:";
 - the departure choice is missing, or "Yes" is ticked without the label `designathon-departure` and an ADR link (and vice versa);
 - no "Touches" box is ticked;
-- any of the three AI assistance fields is empty (write `None` if no AI tool was used).
+- any of the three AI assistance fields is empty (write `None` if no AI tool was used);
+- the labels are wrong: see the next section.
 
 ### AI assistance section
 
@@ -27,7 +28,19 @@ The Booklet requires a disclosure of which work was AI-assisted, which was not, 
 
 ## Labels
 
-Defined once in `.github/labels.json` and applied by the `labels` workflow.
+Defined once in `.github/labels.json` and created by the `labels` workflow.
+
+**Every PR needs labels, and CI fails without them.** Labels are not part of the PR body, so set them separately:
+
+- At least one `svc:*` label, one per area touched.
+- Exactly one `type:*` label.
+- `designathon-departure`, `contract-change` or `schema-change` whenever the PR template says so.
+
+Copy the labels from the issue the PR closes, then adjust them to what the PR actually touches.
+
+A PR opened from a UI or by a tool that does not set labels (for example the Claude Code "create PR" button or `create_pull_request`) starts unlabelled. Add the labels straight after opening it (`gh pr edit N --add-label …`, or MCP `issue_write` with the PR number). Every label change re-runs the check.
+
+Issues follow the same rule. The "Task" form applies its `svc:*`, `type:*` and departure labels automatically (`issue-labels` workflow). An issue created without the form, through `gh issue create` or the API, needs its labels set by whoever creates it.
 
 | Label | Use |
 | --- | --- |

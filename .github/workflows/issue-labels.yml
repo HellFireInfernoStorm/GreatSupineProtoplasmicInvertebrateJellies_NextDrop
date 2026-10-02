@@ -1,0 +1,27 @@
+name: issue-labels
+
+# Applies the svc:*, type:* and designathon-departure labels chosen in the "Task" issue form.
+# Issues created without the form (for example through the API) must be labelled by their author.
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add labels from the issue form
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { labelsFromIssueForm } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/agent-context/issue-labels.mjs`);
+            const labels = labelsFromIssueForm(context.payload.issue.body ?? "");
+            if (labels.length) {
+              await github.rest.issues.addLabels({ ...context.repo, issue_number: context.payload.issue.number, labels });
+            }
+            core.info(`labels from form: ${labels.join(", ") || "none"}`);

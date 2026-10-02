@@ -23,6 +23,6 @@ A GitHub issue is the task brief. The agent-maintained plan comment on the issue
 
 6. **Work in small steps** and keep the plan comment current. A person or another harness must be able to continue from it alone.
 7. **Spec and ADRs.** Anything that must last (a deviation, a settled open question) goes into the spec and an ADR in the same PR: [spec-changes.md](spec-changes.md). The plan comment is working state only.
-8. **Open the PR** with the template, when the developer asks for it: [pr-and-commits.md](pr-and-commits.md).
+8. **Open the PR** with the template, when the developer asks for it, and **set its labels** (the issue's `svc:*` and `type:*`, plus `designathon-departure`, `contract-change` or `schema-change` when they apply). CI fails a PR without them. See [pr-and-commits.md](pr-and-commits.md).
 
 If the issue contradicts the spec or the Booklet, stop and comment on the issue. See the precedence rule in the root `AGENTS.md`.
