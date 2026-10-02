@@ -14,12 +14,15 @@ sources: guide §7.2
 | `ORDER_CANCELLED` | Server / store or dispatcher | reason | -> CANCELLED (before loading) |
 | `ORDER_PLANNED` | Server / publish | tripId, vehicleId, seq, etaFrom, etaTo, planVersion | -> PLANNED |
 | `PLAN_CHANGED` | Server / publish | from, to, planVersion | stays PLANNED; notifies |
-| `ORDER_DEFERRED` | Server / publish or system | reasonCode, causeKind, scoreInputs, toDate, note, decidedBy | -> DEFERRED |
+| `ORDER_DEFERRED` | Server / publish or system | reasonCode, causeKind, scoreInputs, toDate (= nextServiceableDate), daysUnserved, consecutiveDeferrals, note, decidedBy | -> DEFERRED |
 | `PLAN_ACKNOWLEDGED` | Field / loader, driver | planVersion | none |
 | `LOAD_SHORT` | Field / loader | lines[{lineId, qtyShort}], reasonCode, photoRef? | flag; notifies dispatcher + store |
 | `LOAD_DAMAGED` | Field / loader | lines[{lineId, qty}], photoRef? | flag; notifies dispatcher |
 | `LOAD_CONFIRMED` | Field / loader | lines[{lineId, qtyLoaded}] | -> LOADED |
-| `TRIP_READY` | Field / loader (hold-to-confirm) | tripId | trip -> READY (requires all orders resolved) |
+| `SHORT_RESOLVED` | Server / dispatcher | orderId, lineId, outcome SHIP_PARTIAL, HOLD_TRIP, BACKORDER; note | resolves a `LOAD_SHORT` line; BACKORDER creates a follow-up order via `ORDER_PLACED` with `replacesOrderId` |
+| `LOAD_REVERSAL_REQUESTED` | Server / dispatcher | orderId, to PLANNED or DEFERRED, planVersion | loader task; order stays LOADED |
+| `LOAD_REVERSED` | Field / loader | orderId, lines | LOADED -> PLANNED or DEFERRED |
+| `TRIP_READY` | Field / loader (hold-to-confirm) | tripId | trip -> READY (requires every `LOAD_SHORT` line to have a `SHORT_RESOLVED`) |
 | `TRIP_DEPARTED` | Field / driver | tripId | trip -> DEPARTED; server derives `ORDER_OUT_FOR_DELIVERY` per LOADED order |
 | `STOP_ARRIVED` | Field / driver | orderId | none (progress + last heard) |
 | `STOP_OUTCOME` | Field / driver | outcome FULL, PARTIAL, REFUSED, FAILED; lines delivered/returned; reasonCode? | -> DELIVERED (FULL, PARTIAL) or FAILED |

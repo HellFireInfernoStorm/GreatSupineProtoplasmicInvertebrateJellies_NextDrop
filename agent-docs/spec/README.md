@@ -1,6 +1,6 @@
 # Specification
 
-How Waypoint is built. Split by concern from the draft architecture guide so an agent reads only the area it works on. Every topic file has a header (`status: draft | agreed`, `owner`, `sources`). Everything starts as `draft`.
+How NextDrop is built. Split by concern from the draft architecture guide so an agent reads only the area it works on. Every topic file has a header (`status: draft | agreed`, `owner`, `sources`). Everything starts as `draft`.
 
 Start with [overview.md](overview.md). Open decisions are in [open-questions.md](open-questions.md). The change rule is in [spec-changes.md](../process/spec-changes.md).
 

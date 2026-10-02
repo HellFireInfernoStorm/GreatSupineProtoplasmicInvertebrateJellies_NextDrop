@@ -1,6 +1,6 @@
-# Waypoint (Tech-Triathlon 2026, Hackathon build)
+# NextDrop (Tech-Triathlon 2026, Hackathon build)
 
-Delivery planning system for Waypoint Group: one responsive PWA with four role shells (store manager, dispatcher, loader, driver) over one modular-monolith API and one PostgreSQL database. Every order is one record with a timeline that all four roles read and append to.
+Delivery planning system (product name NextDrop) for Waypoint Group: one responsive PWA with four role shells (store manager, dispatcher, loader, driver) over one modular-monolith API and one PostgreSQL database. Every order is one record with a timeline that all four roles read and append to.
 
 Instruction files are owned by Dinura (`@HellFireInfernoStorm`). Propose changes by PR.
 

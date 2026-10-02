@@ -23,7 +23,7 @@ sources: design context §7
 4. Nothing disappears silently. The pending count only drops when the server confirms each record.
 5. Text records sync before photos.
 
-Open: an SMS backup for urgent plan changes is undecided (included only if the build team supports it). Alternative scenario considered: "Shortfall at the dock".
+Decided (ADR 0013): no SMS backup; urgent plan changes use in-app notices only. Alternative scenario considered: "Shortfall at the dock".
 
 ## 7.1 Driver degradation (Figma)
 
