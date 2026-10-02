@@ -11,3 +11,5 @@ export * from "./fuel";
 export * from "./plan";
 export * from "./trip-time";
 export * from "./validator";
+export * from "./ranking";
+export * from "./allocator";
