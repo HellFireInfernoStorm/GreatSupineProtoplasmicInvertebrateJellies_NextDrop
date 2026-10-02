@@ -145,6 +145,9 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@nextdrop/rules':
+        specifier: workspace:*
+        version: link:../rules
       zod:
         specifier: ^4.6.5
         version: 4.6.5
