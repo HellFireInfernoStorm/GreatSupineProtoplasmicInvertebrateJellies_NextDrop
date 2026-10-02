@@ -1,0 +1,4 @@
+{
+  "extends": "@nextdrop/config/tsconfig.base.json",
+  "include": ["src"]
+}
