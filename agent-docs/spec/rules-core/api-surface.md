@@ -19,7 +19,7 @@ computeFuel(trip, vehicle, ref, cfg): { km, litres }
 proposePlan(input, ref, cfg): AllocationResult        // trips, deferrals + explanations, stats, trace
 rankOrders(orders, cfg): RankedOrder[]                // priority keys
 explainDeferral(order, finalPlan, ref, cfg): DeferralExplanation
-applyEvent(state, event): OrderState                  // order reducer (section 5.5)
+applyEvent(state, event): { state, outcome }         // order reducer (section 5.5, ADR 0019)
 nextOperatingDate(date, calendar), operatingDateAfter(date, calendar), cutoffAt(date)   // calendar helpers
 deliveryDateFor(requestedDate, placedAt, calendar)    // date an order targets after rollover and cutoff (ADR 0018)
 orderingGuidance(brand, date, calendar): MessageKey | null   // brand ordering notice (ADR 0010)
