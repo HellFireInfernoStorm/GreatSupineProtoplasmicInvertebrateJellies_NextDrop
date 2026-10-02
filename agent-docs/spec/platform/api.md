@@ -19,3 +19,5 @@ Base path `/api`. JSON, zod-validated, errors as `{ code, message_key, params, r
 | Notifications | `GET /notifications`, `POST /notifications/read` | all |
 | Demo (only when `DEMO_MODE=true`) | `GET /demo/state`, `POST /demo/clock`, `POST /demo/reset` (preset), `POST /demo/tick` | dispatcher (+ script key) |
 | Ops | `GET /healthz`, `GET /readyz` | public |
+
+`/api/readyz` returns `{ status, checks: { database, migrations } }`: 200 with `status: ok` only when a DB query succeeds and all migration files shipped with the app have completed matching-checksum entries in `_prisma_migrations`. Missing or failed/pending migrations and unavailable/unconfigured databases return 503 with `status: unavailable`. Rolled-back attempts do not count as applied. `/api/healthz` reports process liveness independently. The production image must include `apps/api/prisma/migrations` alongside the API source (ADR 0023).

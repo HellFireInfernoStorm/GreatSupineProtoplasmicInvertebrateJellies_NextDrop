@@ -4,7 +4,10 @@ import { buildServer, type App } from "./server";
 describe("ops endpoints", () => {
   let app: App;
   beforeAll(async () => {
-    app = await buildServer();
+    app = await buildServer(
+      {},
+      { ready: async () => ({ status: "ok", checks: { database: "ok", migrations: "ok" } }) },
+    );
   });
   afterAll(() => app.close());
 

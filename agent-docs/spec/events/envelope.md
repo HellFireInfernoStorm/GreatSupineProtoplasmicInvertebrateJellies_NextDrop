@@ -14,7 +14,7 @@ EventEnvelope {
   clientEventId?  uuid v7 (field events; idempotency key)
   deviceId?, deviceSeq?   per-device monotonic counter
   type, schemaVersion
-  subject         { orderId?, tripId? }
+  subject         { orderId?, tripId?, vehicleId? }
   source          SERVER | FIELD
   actor           { userId, role }
   capturedAt      device time (FIELD) or server time (SERVER)

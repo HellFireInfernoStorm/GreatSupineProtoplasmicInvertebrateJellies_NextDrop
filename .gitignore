@@ -30,3 +30,7 @@ Training Data/
 Test Data/
 Submission Templates/
 check_allocation.py
+
+# generated Prisma client (pnpm db:generate)
+apps/api/src/generated/
+.pnpm-store/

@@ -1,7 +1,15 @@
 import { base, formatting, node, react, rulesPurity } from "@nextdrop/config/eslint";
 
 export default [
-  { ignores: ["**/dist/**", "**/coverage/**", "scripts/agent-context/**"] },
+  {
+    ignores: [
+      "**/dist/**",
+      "**/coverage/**",
+      "scripts/agent-context/**",
+      "apps/api/src/generated/**",
+      ".pnpm-store/**",
+    ],
+  },
   ...base,
   ...node.map((c) => ({ ...c, files: ["apps/api/**", "packages/**", "*.{js,ts}", "**/*.config.{js,ts}"] })),
   ...react.map((c) => ({ ...c, files: ["apps/web/src/**/*.{ts,tsx}"] })),

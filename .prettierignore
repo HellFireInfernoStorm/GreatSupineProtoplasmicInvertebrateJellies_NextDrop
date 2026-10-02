@@ -9,3 +9,5 @@ data/
 pnpm-lock.yaml
 dist/
 coverage/
+apps/api/src/generated/
+.pnpm-store/
