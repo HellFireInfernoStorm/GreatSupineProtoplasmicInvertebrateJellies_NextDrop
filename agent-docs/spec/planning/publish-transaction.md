@@ -19,3 +19,11 @@ sources: guide §8.2
 9. After commit, broadcast the new feed head over SSE.
 
 Publishing is idempotent per `(planningDayId, draftRevision)`.
+
+Details (ADR 0037):
+- `OTHER` and repeat deferrals need a note.
+- A moved order gets `ORDER_PLANNED` plus `PLAN_CHANGED`; a LOADED order only `PLAN_CHANGED`.
+- Trips are upserted by vehicle and trip number, keeping their display ID; new trips take the next global `Tnnn`.
+- Stops are rewritten in place with a 1-based `seq`.
+- Notifications: depot loaders and affected drivers get `plan_changed`; each changed order's store gets `eta_updated` or `deferral_notice`.
+- `OutletServiceState.deferredLastRun` follows the published deferrals.
