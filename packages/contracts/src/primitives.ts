@@ -8,9 +8,10 @@ export const isoDateTime = z.iso.datetime();
 
 export const localDate = z.iso.date();
 
+export const HUMAN_ROLES = ["STORE", "DISPATCHER", "LOADER", "DRIVER"] as const;
 export const actorSchema = z.object({
   userId: z.string().min(1),
-  role: z.enum(["STORE", "DISPATCHER", "LOADER", "DRIVER", "SYSTEM"]),
+  role: z.enum([...HUMAN_ROLES, "SYSTEM"]),
 });
 
 export const subjectSchema = z

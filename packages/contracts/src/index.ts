@@ -10,3 +10,4 @@ export * from "./payloads/order-lifecycle";
 export * from "./event-payload";
 export * from "./envelope";
 export * from "./upcasters";
+export * from "./api";
