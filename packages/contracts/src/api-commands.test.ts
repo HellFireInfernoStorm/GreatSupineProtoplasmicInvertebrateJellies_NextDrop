@@ -83,6 +83,7 @@ describe("dispatcher short-resolution and reversal contracts", () => {
     expect(backorder.replacesOrderId).toBe(apiFixtures.order.id);
     expect(backorder.id).not.toBe(apiFixtures.order.id);
     expect(backorder.lines).toHaveLength(1);
+    expect(backorder.lines[0]?.id).not.toBe(apiFixtures.orderLine.id);
     expect(backorder.lines[0]?.qtyOrdered).toBe(1);
     expect(apiShortResolutionFixtures.SHIP_PARTIAL.backorder).toBeNull();
     expect(apiShortResolutionFixtures.HOLD_TRIP.backorder).toBeNull();

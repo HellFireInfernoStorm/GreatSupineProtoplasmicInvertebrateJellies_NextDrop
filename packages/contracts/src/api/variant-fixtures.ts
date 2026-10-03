@@ -96,7 +96,9 @@ export const apiShortResolutionFixtures = {
       replacesOrderId: f.order.id,
       placedAt: f.ackResponse.serverTime,
       confirmedAt: f.ackResponse.serverTime,
-      lines: [{ ...f.orderLine, qtyOrdered: 1, qtyLoaded: 0, qtyDelivered: 0, qtyReceived: 0 }],
+      lines: [
+        { ...f.orderLine, id: "mock-backorder-line", qtyOrdered: 1, qtyLoaded: 0, qtyDelivered: 0, qtyReceived: 0 },
+      ],
       weightG: f.orderLine.unitWeightG,
       volumeL: Math.ceil(f.orderLine.unitVolumeM3 * 1000),
       assignment: null,
