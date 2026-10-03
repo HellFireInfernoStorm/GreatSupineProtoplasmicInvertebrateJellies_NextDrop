@@ -13,6 +13,7 @@ import { demoRoutes } from "./modules/demo";
 import { feedRoutes } from "./modules/feed";
 import { createNotifier, notificationRoutes } from "./modules/notifications";
 import { registerOrders } from "./modules/orders";
+import { registerPlanning } from "./modules/planning";
 
 export interface ServerDependencies {
   ready?: Readiness;
@@ -78,6 +79,7 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
   await app.register(notificationRoutes, { prisma, now: clock.now });
   // Store cutoffs are business time: they follow the demo clock.
   await registerOrders(app, { prisma, now: clock.now });
+  await registerPlanning(app, { prisma, clock });
   // Demo tooling needs the database: the clock offset, the tick and the reset all live there.
   if (prisma) {
     await app.register(demoRoutes, {

@@ -11,6 +11,8 @@ export class ApiHttpError extends Error {
     readonly messageKey: string,
     readonly params: Params = {},
     readonly headers: Record<string, string> = {},
+    /** Extra body fields a route's contract declares, e.g. `validation` on 422 VALIDATION_FAILED. */
+    readonly extra: Record<string, unknown> = {},
   ) {
     super(`${code}: ${messageKey}`);
     this.name = "ApiHttpError";
@@ -37,7 +39,7 @@ function body(request: FastifyRequest, code: ErrorCode, messageKey: string, para
   return { code, message_key: messageKey, params, requestId: request.id };
 }
 
-function send(reply: FastifyReply, status: number, payload: ApiError) {
+function send(reply: FastifyReply, status: number, payload: ApiError & Record<string, unknown>) {
   return reply.code(status).type("application/json").send(payload);
 }
 
@@ -49,7 +51,10 @@ export function registerErrorHandling(app: FastifyInstance, notFoundFallback?: N
   app.setErrorHandler((error: FastifyError | ApiHttpError, request, reply) => {
     if (error instanceof ApiHttpError) {
       reply.headers(error.headers);
-      return send(reply, error.statusCode, body(request, error.code, error.messageKey, error.params));
+      return send(reply, error.statusCode, {
+        ...body(request, error.code, error.messageKey, error.params),
+        ...error.extra,
+      });
     }
     if (error.validation) return send(reply, 400, body(request, "SCHEMA_INVALID", "errors.schemaInvalid"));
     const status = error.statusCode ?? 500;
