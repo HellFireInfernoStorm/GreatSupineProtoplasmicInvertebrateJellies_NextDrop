@@ -49,6 +49,14 @@ enum Role {
   DRIVER
 }
 
+enum EventActorRole {
+  STORE
+  DISPATCHER
+  LOADER
+  DRIVER
+  SYSTEM
+}
+
 enum SessionKind {
   WEB
   FIELD
@@ -234,8 +242,8 @@ model Product {
   brand               Brand
   tempRequirement     TempRequirement
   unitLabel           String
-  unitWeightKg        Decimal         @db.Decimal(10, 3)
-  unitVolumeM3        Decimal         @db.Decimal(10, 3)
+  unitWeightKg        Decimal         @db.Decimal(13, 6)
+  unitVolumeM3        Decimal         @db.Decimal(13, 6)
   orderLine_productId OrderLine[]     @relation("OrderLine_productId")
 
   @@map("products")
@@ -342,8 +350,8 @@ model OrderLine {
   qtyLoaded    Int     @default(0)
   qtyDelivered Int     @default(0)
   qtyReceived  Int     @default(0)
-  unitWeightKg Decimal @db.Decimal(10, 3)
-  unitVolumeM3 Decimal @db.Decimal(10, 3)
+  unitWeightKg Decimal @db.Decimal(13, 6)
+  unitVolumeM3 Decimal @db.Decimal(13, 6)
   orderId      String  @db.Uuid
   order        Order   @relation("OrderLine_orderId", fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   productId    String  @db.Uuid
@@ -360,7 +368,7 @@ model OrderEvent {
   type                 String
   schemaVersion        Int              @default(1)
   source               EventSource
-  actorRole            Role
+  actorRole            EventActorRole
   capturedAt           DateTime         @db.Timestamptz(3)
   clockOffsetMs        BigInt?
   receivedAt           DateTime         @default(now()) @db.Timestamptz(3)

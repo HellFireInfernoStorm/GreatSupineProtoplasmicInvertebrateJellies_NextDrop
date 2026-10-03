@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createReadiness, type Migration } from "./readiness";
 import { buildServer } from "../server";
+import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { repositoryMigrations } from "./readiness";
 
 const expected = new Map([["initial", "checksum"]]);
 const applied: Migration = {
@@ -12,6 +17,19 @@ const applied: Migration = {
 const connect = async () => {};
 
 describe("database readiness", () => {
+  it.each(["missing", "incomplete"])("reports %s runtime migration files as unavailable", async (kind) => {
+    const root = mkdtempSync(join(tmpdir(), "nextdrop25-manifest-"));
+    try {
+      const directory = kind === "missing" ? join(root, "missing") : root;
+      if (kind === "incomplete") mkdirSync(join(root, "initial"));
+      const manifest = repositoryMigrations(pathToFileURL(directory));
+      expect(manifest).toBeNull();
+      const ready = createReadiness({ connect, migrations: async () => [applied] }, manifest);
+      expect(await ready()).toEqual({ status: "unavailable", checks: { database: "ok", migrations: "failed" } });
+    } finally {
+      rmSync(root, { recursive: true });
+    }
+  });
   it("requires all repository migration checksums and successful completion", async () => {
     const ready = createReadiness({ connect, migrations: async () => [applied] }, expected);
     expect(await ready()).toEqual({ status: "ok", checks: { database: "ok", migrations: "ok" } });

@@ -13,33 +13,40 @@ export type Readiness = () => Promise<{
   checks: Record<string, "ok" | "failed">;
 }>;
 
-export function repositoryMigrations(): Map<string, string> {
-  const directory = fileURLToPath(new URL("../../prisma/migrations/", import.meta.url));
-  return new Map(
-    readdirSync(directory, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => [
-        entry.name,
-        createHash("sha256")
-          .update(readFileSync(`${directory}/${entry.name}/migration.sql`))
-          .digest("hex"),
-      ]),
-  );
+export function repositoryMigrations(
+  location = new URL("../../prisma/migrations/", import.meta.url),
+): Map<string, string> | null {
+  try {
+    const directory = fileURLToPath(location);
+    return new Map(
+      readdirSync(directory, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => [
+          entry.name,
+          createHash("sha256")
+            .update(readFileSync(`${directory}/${entry.name}/migration.sql`))
+            .digest("hex"),
+        ]),
+    );
+  } catch {
+    // An incomplete runtime image is live but unready, just like an unmigrated DB.
+    return null;
+  }
 }
 
 export function createReadiness(
   probe: { connect: () => Promise<void>; migrations: () => Promise<Migration[]> },
-  expected: ReadonlyMap<string, string>,
+  expected: ReadonlyMap<string, string> | null,
 ): Readiness {
   return async () => {
     const checks: Record<string, "ok" | "failed"> = { database: "failed", migrations: "failed" };
     try {
       await probe.connect();
       checks.database = "ok";
+      if (!expected?.size) return { status: "unavailable", checks };
       const rows = (await probe.migrations()).filter((row) => !row.rolled_back_at);
       const applied = new Map(rows.filter((row) => row.finished_at).map((row) => [row.migration_name, row.checksum]));
       if (
-        expected.size > 0 &&
         rows.every((row) => row.finished_at) &&
         [...expected].every(([name, checksum]) => applied.get(name) === checksum)
       ) {

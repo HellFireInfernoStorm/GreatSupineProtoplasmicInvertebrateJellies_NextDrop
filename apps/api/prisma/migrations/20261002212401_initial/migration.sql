@@ -1,3 +1,6 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateEnum
 CREATE TYPE "Brand" AS ENUM ('Fresh', 'Style', 'Tech');
 
@@ -18,6 +21,9 @@ CREATE TYPE "TempRequirement" AS ENUM ('chilled', 'ambient');
 
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('STORE', 'DISPATCHER', 'LOADER', 'DRIVER');
+
+-- CreateEnum
+CREATE TYPE "EventActorRole" AS ENUM ('STORE', 'DISPATCHER', 'LOADER', 'DRIVER', 'SYSTEM');
 
 -- CreateEnum
 CREATE TYPE "SessionKind" AS ENUM ('WEB', 'FIELD');
@@ -156,8 +162,8 @@ CREATE TABLE "products" (
     "brand" "Brand" NOT NULL,
     "tempRequirement" "TempRequirement" NOT NULL,
     "unitLabel" TEXT NOT NULL,
-    "unitWeightKg" DECIMAL(10,3) NOT NULL,
-    "unitVolumeM3" DECIMAL(10,3) NOT NULL,
+    "unitWeightKg" DECIMAL(13,6) NOT NULL,
+    "unitVolumeM3" DECIMAL(13,6) NOT NULL,
 
     CONSTRAINT "products_pkey" PRIMARY KEY ("id")
 );
@@ -241,8 +247,8 @@ CREATE TABLE "order_lines" (
     "qtyLoaded" INTEGER NOT NULL DEFAULT 0,
     "qtyDelivered" INTEGER NOT NULL DEFAULT 0,
     "qtyReceived" INTEGER NOT NULL DEFAULT 0,
-    "unitWeightKg" DECIMAL(10,3) NOT NULL,
-    "unitVolumeM3" DECIMAL(10,3) NOT NULL,
+    "unitWeightKg" DECIMAL(13,6) NOT NULL,
+    "unitVolumeM3" DECIMAL(13,6) NOT NULL,
     "orderId" UUID NOT NULL,
     "productId" UUID NOT NULL,
 
@@ -257,7 +263,7 @@ CREATE TABLE "order_events" (
     "type" TEXT NOT NULL,
     "schemaVersion" INTEGER NOT NULL DEFAULT 1,
     "source" "EventSource" NOT NULL,
-    "actorRole" "Role" NOT NULL,
+    "actorRole" "EventActorRole" NOT NULL,
     "capturedAt" TIMESTAMPTZ(3) NOT NULL,
     "clockOffsetMs" BIGINT,
     "receivedAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -771,7 +777,7 @@ ALTER TABLE "planning_days" ADD CONSTRAINT "planning_days_check_1" CHECK ("curre
 ALTER TABLE "plan_drafts" ADD CONSTRAINT "plan_drafts_check_1" CHECK (revision >= 0 AND "baseVersion" >= 0);
 ALTER TABLE "plan_versions" ADD CONSTRAINT "plan_versions_check_1" CHECK (version > 0 AND "draftRevision" >= 0);
 ALTER TABLE "order_events" ADD CONSTRAINT "order_events_check_1" CHECK ("schemaVersion" > 0);
-ALTER TABLE "order_events" ADD CONSTRAINT "order_events_check_2" CHECK (("deviceId" IS NULL AND "deviceSeq" IS NULL) OR ("deviceId" IS NOT NULL AND "deviceSeq" IS NOT NULL AND "deviceSeq" > 0));
+ALTER TABLE "order_events" ADD CONSTRAINT "order_events_check_2" CHECK (("deviceId" IS NULL AND "deviceSeq" IS NULL) OR ("deviceId" IS NOT NULL AND "deviceSeq" IS NOT NULL AND "deviceSeq" >= 0));
 ALTER TABLE "order_events" ADD CONSTRAINT "order_events_check_3" CHECK (source <> 'FIELD' OR ("clientEventId" IS NOT NULL AND "deviceId" IS NOT NULL AND "deviceSeq" IS NOT NULL));
 ALTER TABLE "devices" ADD CONSTRAINT "devices_check_1" CHECK ("pendingCount" >= 0);
 ALTER TABLE "blobs" ADD CONSTRAINT "blobs_check_1" CHECK (size >= 0 AND size = octet_length(bytes));

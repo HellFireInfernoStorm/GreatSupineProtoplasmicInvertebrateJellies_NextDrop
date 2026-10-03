@@ -2,27 +2,63 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
 import { createReadiness, repositoryMigrations, type Migration, type Readiness } from "./readiness";
 
-export function createDatabase(url = process.env.DATABASE_URL): { ready: Readiness; close: () => Promise<void> } {
+export type Database = {
+  prisma: PrismaClient | null;
+  ready: Readiness;
+  close: () => Promise<void>;
+};
+
+declare module "fastify" {
+  interface FastifyInstance {
+    prisma: PrismaClient | null;
+  }
+}
+
+export function createDatabase(url = process.env.DATABASE_URL, options: { migrationsDirectory?: URL } = {}): Database {
   if (!url) {
     return {
+      prisma: null,
       ready: async () => ({ status: "unavailable", checks: { database: "failed", migrations: "failed" } }),
       close: async () => {},
     };
   }
-  const adapter = new PrismaPg({ connectionString: url, connectionTimeoutMillis: 2000, query_timeout: 2000 });
+  const schema = new URL(url).searchParams.get("schema") ?? "public";
+  const adapter = new PrismaPg({ connectionString: url }, { schema });
   const prisma = new PrismaClient({ adapter });
+  // Isolate probe limits from publication/locking transactions on the shared application client.
+  const probe = new PrismaClient({
+    adapter: new PrismaPg(
+      {
+        connectionString: url,
+        max: 1,
+        connectionTimeoutMillis: 2000,
+        query_timeout: 2000,
+        statement_timeout: 2000,
+      },
+      { schema },
+    ),
+  });
   return {
+    prisma,
     ready: createReadiness(
       {
         connect: async () => {
-          await prisma.$queryRaw`SELECT 1`;
+          await probe.$queryRaw`SELECT 1`;
         },
-        migrations: () => prisma.$queryRaw<Migration[]>`
-          SELECT migration_name, checksum, finished_at, rolled_back_at FROM "_prisma_migrations"
-        `,
+        migrations: () =>
+          probe.$transaction(async (tx) => {
+            // Parameterized identifier text: raw queries do not inherit the adapter's model schema.
+            const searchPath = `"${schema.replaceAll('"', '""')}"`;
+            await tx.$queryRaw`SELECT set_config('search_path', ${searchPath}, true)`;
+            return tx.$queryRaw<Migration[]>`
+            SELECT migration_name, checksum, finished_at, rolled_back_at FROM "_prisma_migrations"
+          `;
+          }),
       },
-      repositoryMigrations(),
+      repositoryMigrations(options.migrationsDirectory),
     ),
-    close: () => prisma.$disconnect(),
+    close: async () => {
+      await Promise.all([prisma.$disconnect(), probe.$disconnect()]);
+    },
   };
 }
