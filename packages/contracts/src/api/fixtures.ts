@@ -147,7 +147,7 @@ export const apiFixtures = {
   receiptRequest: { lines: [{ lineId: "line-1", qtyReceived: 2 }] },
   reportIssueRequest: { kind: "SHORT", lines: [{ lineId: "line-1", qty: 1 }], note: "Missing crate" },
   issueCreatedResponse: { issueId: MOCK_ID, order: r.order },
-  orderHistoryResponse: { items: [r.order], total: 1 },
+  orderHistoryResponse: { items: [r.order], total: 1, nextCursor: null },
   dayQuery: { depot: "Peliyagoda" },
   dayResponse: {
     date: MOCK_DATE,
@@ -181,7 +181,20 @@ export const apiFixtures = {
   },
   resolveConflictRequest: { resolution: "ACCEPT_FACT", note: "Mock resolution" },
   resolveIssueRequest: { resolution: "CREDIT", note: "Mock credit" },
-  fleetResponse: { date: MOCK_DATE, items: [{ vehicle: r.vehicle, availability }] },
+  fleetResponse: {
+    date: MOCK_DATE,
+    items: [
+      {
+        vehicle: r.vehicle,
+        availability: {
+          status: "AVAILABLE",
+          reason: null,
+          note: null,
+          changedAt: null,
+        },
+      },
+    ],
+  },
   updateFleetRequest: { changes: [availability] },
   outlookQuery: { depot: "Peliyagoda", from: MOCK_DATE, weeks: 4 },
   outlookResponse: {

@@ -6,6 +6,8 @@ import {
   planningDayStateSchema,
   problemKindSchema,
   shortOutcomeSchema,
+  vehicleAvailabilityStatusSchema,
+  vehicleAvailabilityReasonSchema,
 } from "../vocab";
 import {
   conflictResolvedPayloadSchema,
@@ -93,14 +95,26 @@ export const exceptionSchema = z.discriminatedUnion("type", [
   }),
 ]);
 export const exceptionsResponseSchema = z.strictObject({ items: z.array(exceptionSchema) });
-export const resolveConflictRequestSchema = conflictResolvedPayloadSchema.omit({ conflictId: true, heldEventId: true });
-export const resolveIssueRequestSchema = issueResolvedPayloadSchema;
+export const resolveConflictRequestSchema = conflictResolvedPayloadSchema
+  .omit({ conflictId: true, heldEventId: true })
+  .strict();
+export const resolveIssueRequestSchema = issueResolvedPayloadSchema.strict();
 export const fleetResponseSchema = z.strictObject({
   date: localDate,
-  items: z.array(z.strictObject({ vehicle: vehicleSchema, availability: vehicleAvailabilityChangedPayloadSchema })),
+  items: z.array(
+    z.strictObject({
+      vehicle: vehicleSchema,
+      availability: z.strictObject({
+        status: vehicleAvailabilityStatusSchema,
+        reason: vehicleAvailabilityReasonSchema.nullable(),
+        note: z.string().nullable(),
+        changedAt: isoDateTime.nullable(),
+      }),
+    }),
+  ),
 });
 export const updateFleetRequestSchema = z.strictObject({
-  changes: z.array(vehicleAvailabilityChangedPayloadSchema).min(1),
+  changes: z.array(vehicleAvailabilityChangedPayloadSchema.omit({ sourceEventId: true }).strict()).min(1),
 });
 export const outlookQuerySchema = z.strictObject({
   depot: nonempty,

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { eventEnvelopeBase } from "../envelope";
 import { eventPayloadSchemas, type EventPayloadMap } from "../event-payload";
 import { errorCodeSchema } from "../errors";
+import { syncResultStatusSchema } from "../sync";
 import { isoDateTime, localDate, uuidV7 } from "../primitives";
 import { count, cursorSchema, nonempty } from "./common";
 import { rulesConfigSchema } from "./planning-resources";
@@ -55,21 +56,56 @@ export const syncEventsIngressRequestSchema = z.strictObject({
 });
 const resultBase = z.strictObject({ clientEventId: uuidV7, receivedAt: isoDateTime });
 export const syncEventResultSchema = z.discriminatedUnion("status", [
-  resultBase.extend({ status: z.literal("ACCEPTED"), serverEventId: uuidV7, code: errorCodeSchema.optional() }),
   resultBase.extend({
-    status: z.literal("DUPLICATE"),
+    status: syncResultStatusSchema.extract(["ACCEPTED"]),
+    serverEventId: uuidV7,
+    code: errorCodeSchema.optional(),
+  }),
+  resultBase.extend({
+    status: syncResultStatusSchema.extract(["DUPLICATE"]),
     serverEventId: uuidV7.optional(),
     code: errorCodeSchema.optional(),
   }),
   resultBase.extend({
-    status: z.literal("HELD_CONFLICT"),
+    status: syncResultStatusSchema.extract(["HELD_CONFLICT"]),
     conflictId: uuidV7,
     serverEventId: uuidV7.optional(),
     code: errorCodeSchema.optional(),
   }),
-  resultBase.extend({ status: z.literal("REJECTED"), code: errorCodeSchema }),
+  resultBase.extend({
+    status: syncResultStatusSchema.extract(["REJECTED"]),
+    clientEventId: uuidV7.nullable(),
+    /** Original zero-based input position, before deviceSeq processing order. */
+    index: count,
+    code: errorCodeSchema,
+  }),
 ]);
 export type SyncEventResult = z.infer<typeof syncEventResultSchema>;
+export type RejectedSyncEventResult = Extract<SyncEventResult, { status: "REJECTED" }>;
+export type ClientEventParseResult =
+  { success: true; data: ClientEvent } | { success: false; rejection: RejectedSyncEventResult };
+
+/** Server per-event entry point: preserve batch correlation and enforce batch device identity. */
+export function parseClientEvent(
+  raw: unknown,
+  batchDeviceId: string,
+  index: number,
+  receivedAt: string,
+): ClientEventParseResult {
+  const parsed = clientEventSchema.safeParse(raw);
+  if (parsed.success && parsed.data.deviceId === batchDeviceId) return { success: true, data: parsed.data };
+  const identity = z.object({ clientEventId: uuidV7 }).safeParse(raw);
+  return {
+    success: false,
+    rejection: {
+      status: "REJECTED",
+      clientEventId: identity.success ? identity.data.clientEventId : null,
+      index,
+      code: "SCHEMA_INVALID",
+      receivedAt,
+    },
+  };
+}
 export const syncEventsResponseSchema = z.strictObject({
   results: z.array(syncEventResultSchema),
   serverTime: isoDateTime,
@@ -115,16 +151,18 @@ export const blobHeadersSchema = z.object({
   "content-type": z.enum(["image/jpeg", "image/png", "image/webp"]),
   "x-nextdrop-csrf": nonempty,
 });
+/** Server hard cap; client compression still targets approximately 200 KB. */
+export const MAX_BLOB_BYTES = 512 * 1024;
 // Bytes are a transport body, not JSON. The handler also limits raw upload bytes.
 export const blobBodySchema = z
   .instanceof(Uint8Array)
-  .refine((bytes) => bytes.byteLength > 0 && bytes.byteLength <= 204800, {
-    message: "blob must contain 1..204800 bytes",
+  .refine((bytes) => bytes.byteLength > 0 && bytes.byteLength <= MAX_BLOB_BYTES, {
+    message: `blob must contain 1..${MAX_BLOB_BYTES} bytes`,
   });
 export const blobResponseSchema = z.strictObject({
   clientBlobId: uuidV7,
   mime: blobHeadersSchema.shape["content-type"],
-  size: z.number().int().positive().max(204800),
+  size: z.number().int().positive().max(MAX_BLOB_BYTES),
 });
 export const fieldSchemas = {
   clientEvent: clientEventSchema,

@@ -11,6 +11,7 @@ const day = { params: f.dateParams, query: f.dayQuery };
 const unauthorized = { ...error, code: "INVALID_CREDENTIALS", message_key: "errors.invalid_credentials" } as const;
 const rateLimited = { ...error, code: "RATE_LIMITED", message_key: "errors.rate_limited" } as const;
 const revisionConflict = { ...error, code: "REVISION_CONFLICT", message_key: "errors.revision_conflict" } as const;
+const tooLarge = { ...error, code: "PAYLOAD_TOO_LARGE", message_key: "errors.payload_too_large" } as const;
 export const apiRouteFixtures = {
   login: {
     request: { headers, body: f.loginRequest },
@@ -26,6 +27,7 @@ export const apiRouteFixtures = {
         user: { role: "LOADER", id: "loader-1", displayName: "Mock loader", locale: "en", depot: "Peliyagoda" },
       },
       401: unauthorized,
+      429: rateLimited,
     },
   },
   outlets: { request: { query: f.referenceQuery }, responses: { 200: f.outletsResponse } },
@@ -102,8 +104,14 @@ export const apiRouteFixtures = {
   outlook: { request: { query: f.outlookQuery }, responses: { 200: f.outlookResponse } },
   outletHistory: { request: { params, query: f.listQuery }, responses: { 200: f.orderHistoryResponse } },
   snapshot: { request: { query: f.dateQuery }, responses: { 200: f.fieldSnapshot } },
-  syncEvents: { request: { headers, body: f.syncEventsRequest }, responses: { 200: f.syncEventsResponse } },
-  uploadBlob: { request: { params, headers: f.blobHeaders, body: f.blobBody }, responses: { 200: f.blobResponse } },
+  syncEvents: {
+    request: { headers, body: f.syncEventsRequest },
+    responses: { 200: f.syncEventsResponse, 413: tooLarge },
+  },
+  uploadBlob: {
+    request: { params, headers: f.blobHeaders, body: f.blobBody },
+    responses: { 200: f.blobResponse, 413: tooLarge },
+  },
   heartbeat: { request: { headers, body: f.heartbeatRequest }, responses: { 200: f.heartbeatResponse } },
   changes: { request: { query: f.changesQuery }, responses: { 200: f.changesResponse } },
   stream: { request: { query: f.streamQuery }, responses: { 200: f.streamHint } },

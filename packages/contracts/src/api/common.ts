@@ -1,10 +1,10 @@
 import type { ValidationResult, Violation } from "@nextdrop/rules";
 import { z } from "zod";
 import { errorCodeSchema } from "../errors";
-import { isoDateTime, localDate, uuidV7 } from "../primitives";
+import { HUMAN_ROLES, isoDateTime, localDate, uuidV7 } from "../primitives";
 import { validatorCodeSchema } from "../vocab";
 
-export const HUMAN_ROLES = ["STORE", "DISPATCHER", "LOADER", "DRIVER"] as const;
+export { HUMAN_ROLES } from "../primitives";
 export const humanRoleSchema = z.enum(HUMAN_ROLES);
 export type HumanRole = z.infer<typeof humanRoleSchema>;
 export const nonempty = z.string().min(1);

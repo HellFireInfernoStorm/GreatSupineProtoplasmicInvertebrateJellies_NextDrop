@@ -34,10 +34,10 @@ export const webRoutes = {
     method: "POST",
     path: "/api/auth/reauth",
     roles: field,
-    access: "session",
+    access: "expired-session",
     transport: "json",
     request: { headers: "mutationHeaders", body: "reauthRequest" },
-    responses: { 200: "sessionResponse", 401: "apiError" },
+    responses: { 200: "sessionResponse", 401: "apiError", 429: "apiError" },
   },
   outlets: {
     method: "GET",

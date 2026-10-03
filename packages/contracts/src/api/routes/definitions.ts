@@ -5,7 +5,7 @@ export interface ApiRouteDefinition {
   method: "GET" | "POST" | "PUT";
   path: `/api/${string}`;
   roles: readonly HumanRole[];
-  access: "public" | "session" | "demo";
+  access: "public" | "session" | "expired-session" | "demo";
   transport: "json" | "binary" | "sse";
   /** Complete client DTO when server ingress deliberately defers validation to individual items. */
   clientBody?: ApiSchemaName;

@@ -80,9 +80,12 @@ describe("API contracts public surface", () => {
     expect(contracts).toHaveProperty("syncEventResultSchema");
     const base = { clientEventId: "018f1234-5678-7890-abcd-ef1234567890", receivedAt: "2026-10-03T05:00:00.000Z" };
     expect(contracts.syncEventResultSchema.safeParse({ ...base, status: "REJECTED" }).success).toBe(false);
-    expect(contracts.syncEventResultSchema.parse({ ...base, status: "REJECTED", code: "NOT_ASSIGNED" })).toEqual({
+    expect(
+      contracts.syncEventResultSchema.parse({ ...base, status: "REJECTED", index: 0, code: "NOT_ASSIGNED" }),
+    ).toEqual({
       ...base,
       status: "REJECTED",
+      index: 0,
       code: "NOT_ASSIGNED",
     });
     expect(contracts.syncEventResultSchema.safeParse({ ...base, status: "HELD_CONFLICT" }).success).toBe(false);

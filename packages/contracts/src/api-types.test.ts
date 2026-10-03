@@ -11,6 +11,8 @@ import {
   type ClientEvent,
   type ApiDto,
   type ApiDtoInput,
+  type SyncResultStatus,
+  type SyncEventResult,
 } from "./index";
 
 it("keeps producer validation and config types assignable without casts", () => {
@@ -22,6 +24,7 @@ it("keeps producer validation and config types assignable without casts", () => 
 });
 
 it("preserves discriminated variants in public inferred types", () => {
+  expectTypeOf<SyncEventResult["status"]>().toEqualTypeOf<SyncResultStatus>();
   expectTypeOf<ReturnType<typeof clientEventSchema.parse>>().toEqualTypeOf<ClientEvent>();
   expectTypeOf<ApiDtoInput<"clientEvent">>().toEqualTypeOf<ClientEvent>();
   type Loaded = Extract<ClientEvent, { type: "LOAD_CONFIRMED" }>;

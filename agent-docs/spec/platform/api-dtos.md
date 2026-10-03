@@ -12,14 +12,16 @@ This draft supplies the previously unspecified wire conventions for [API endpoin
 
 `apiRoutes` is keyed by stable operation name. Each declaration has `method`, full `/api` path, `roles`, `access`, `transport`, `request` and `responses`. Schema references resolve through `apiSchemas`; `ApiDto<name>` and `ApiDtoInput<name>` expose output and input types. `apiRouteFixtures` contains every declared request part and response status; `apiFixtures` contains every named DTO. Fixtures are synthetic examples, not seed selections or real accounts.
 
-`apiVariantFixtures` also exports every login/session role, loader/driver snapshot, sync result status and exception type. Sync registration uses `request.body = syncEventsIngressRequest` for batch framing and raw events, with `clientBody = syncEventsRequest` identifying the complete typed client DTO. The handler validates raw events independently through `clientEventSchema`; a bad event must not abort valid neighbours. `bodyLimit` is 1000000 serialized bytes for sync and 204800 bytes for blobs.
+`apiVariantFixtures` also exports every login/session role, loader/driver snapshot, sync result status and exception type. Sync registration uses `request.body = syncEventsIngressRequest` for batch framing and raw events, with `clientBody = syncEventsRequest` identifying the complete typed client DTO. The handler validates each raw event through `parseClientEvent(raw, batchDeviceId, index, receivedAt)`, using its original zero-based input index and server receipt time. This helper checks the event schema and device match together, returning either the parsed event or a serializable SCHEMA_INVALID rejection. A bad event must not abort valid neighbours. `bodyLimit` is 1000000 serialized bytes for sync and `MAX_BLOB_BYTES` (524288 bytes) for blobs; both routes declare 413 responses and fixtures.
 
 - `access: public` covers login, liveness, and readiness. Empty roles mean an unauthenticated ops endpoint, not a deny-all route. Login declares the four possible target roles.
 - `access: session` requires session identity; list and resource ownership still use the API's central policy layer. The route table is the role ceiling, not the complete ownership policy.
+- `access: expired-session` is used only by field reauth. The API accepts a retained session row identified by its cookie, even after expiry, but rejects revoked/missing sessions. It verifies the field role, device binding, PIN and CSRF header, applies rate limits (429), and renews credentials without changing the outbox. It never permits normal expired-session business mutations.
 - `access: demo` requires `DEMO_MODE=true` and a dispatcher session or `x-nextdrop-script-key`. The API checks the key separately; the session path uses the declared CSRF headers. Never expose the script key in client mocks.
 - Common JSON errors are exported as `apiCommonErrorResponses` (400, 401, 403, 429, 500); merge them with route-specific responses during registration. A transport-limit failure uses 413 and `PAYLOAD_TOO_LARGE`.
 - Mutations carry `x-nextdrop-csrf`, a nonempty custom header checked by the API. Login uses the custom header for CSRF defence before a session exists. Session responses supply `csrfToken` for later mutations. Order creation also carries `idempotency-key`; it is not an order body property.
 - Request schemas are split into path params, query, headers, and body. GET routes have no body. Missing request parts mean no DTO is expected for that part. Header schemas permit unrelated HTTP headers.
+- Request bodies reject unknown keys, including reused mutation payloads and nested receipt/issue lines or fleet changes. Fleet requests omit server-owned `sourceEventId`; stored event payload schemas stay unchanged.
 - Query limits accept numeric strings from HTTP and produce integers. Feed cursors are never coerced to numbers. Notification `unreadOnly` is the literal query string `true` or `false`.
 
 ## Shared values and projections
@@ -50,7 +52,7 @@ Login body is discriminated by `role`:
 | LOADER | `loginId` (LDR###), `pin`, `deviceId` |
 | DRIVER | `loginId` (DRV###), `pin`, `deviceId` |
 
-Login, me and reauth return `{ user, expiresAt, serverTime, csrfToken }`. User variants include common id/displayName/locale and the required role scope: store outlet, dispatcher depots, loader depot, driver vehicle. Reauth takes `{ role, pin, deviceId }` for loader/driver and uses the retained session identity; its API policy must permit PIN renewal of expired field credentials without deleting the outbox. Logout returns `{ ok: true, serverTime }`.
+Login, me and reauth return `{ user, expiresAt, serverTime, csrfToken }`. User variants include common id/displayName/locale and the required role scope: store outlet, dispatcher depots, loader depot, driver vehicle. Reauth takes `{ role, pin, deviceId }` for loader/driver and uses the `expired-session` policy above; missing/revoked identity requires normal login. Logout returns `{ ok: true, serverTime }`.
 
 Reference lists wrap `{ items }`. Optional depot query selection never overrides authorization. Calendar requires `from` and `to`. Reasons returns separate deferral, problem, load-short, and stop-outcome lists of `{ code, message_key }`.
 
@@ -73,7 +75,7 @@ Validate takes `{ data }` and returns `ValidationResult`. Publish takes `{ revis
 
 Hard validation fails with 422 `{ code: VALIDATION_FAILED, message_key, params, requestId, validation: ValidationResult }`. Missing deferral reasons use the same 422 structure with `MISSING_DEFERRAL_REASON`; the API must include the associated validation information. Locked stops use 409 `STOP_LOCKED`; stale revisions use 409 `REVISION_CONFLICT`. Warnings alone remain successful. Rules perform the checks; Zod does not reproduce them.
 
-Runs wraps vehicle, trips, progress counts, separate last-heard/last-sync times, pending count, late risk and the documented state vocabulary, plus server time. Exceptions are discriminated CONFLICT, ISSUE, SHORT, DAMAGED, FAILED or PROBLEM rows. Fleet wraps date and vehicle/availability pairs; PUT takes `{ changes: [availability payloads] }`. Outlook takes depot/from/weeks and returns weekly brand demand/chilled/capacity in litres. Outlet history returns `{ items, total }`.
+Runs wraps vehicle, trips, progress counts, separate last-heard/last-sync times, pending count, late risk and the documented state vocabulary, plus server time. Exceptions are discriminated CONFLICT, ISSUE, SHORT, DAMAGED, FAILED or PROBLEM rows. Fleet wraps date and vehicle/availability pairs. Read availability is `{ status, reason, note, changedAt }`, with required nullable reason/note/changedAt; a never-changed available vehicle has all three null. PUT takes `{ changes: [availability payloads without sourceEventId] }`. Outlook takes depot/from/weeks and returns weekly brand demand/chilled/capacity in litres. Outlet history returns `{ items, total, nextCursor }`; pass non-null nextCursor as the next after query, and null means completion.
 
 ## Field, feed and transport
 
@@ -85,7 +87,7 @@ Heartbeat body is `{ deviceId, appVersion, pendingCount, lastSyncAt, lastKnownSt
 
 Changes query is `{ after, limit? }`, with decimal-string after and limit 1..1000. Rows are `{ seq, kind, entity: { type, id }, version?, at }`. Response is `{ items, head, resetEpoch }`. Sequence/head/cursor fields accept canonical nonnegative decimal strings, preserving values above Number.MAX_SAFE_INTEGER. Stream takes an after cursor and sends SSE hints whose JSON data is `{ head, resetEpoch }`; this is a hint contract, not a JSON HTTP response serializer.
 
-Blob upload has UUID path ID (= clientBlobId), an image content-type and CSRF header, and raw bytes. The proposed hard upload limit is 204800 bytes; the existing client compression target remains approximately 200 KB. MIME is JPEG, PNG or WebP (photos and rasterized signatures). Zod checks bytes/metadata, while the API validates the actual content and transport size. Success is `{ clientBlobId, mime, size }`. No JSON/base64 blob body is introduced.
+Blob upload has UUID path ID (= clientBlobId), an image content-type and CSRF header, and raw bytes. The proposed hard upload limit is 512 KiB (524288 bytes), leaving margin above the approximately 200 KB client compression target. `MAX_BLOB_BYTES` controls request bytes, response size and route transport cap. MIME is JPEG, PNG or WebP (photos and rasterized signatures). Zod checks bytes/metadata, while the API validates the actual content and transport size. Success is `{ clientBlobId, mime, size }`. No JSON/base64 blob body is introduced.
 
 ## Notifications, demo and ops
 

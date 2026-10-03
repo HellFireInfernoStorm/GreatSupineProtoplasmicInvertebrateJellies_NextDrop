@@ -1,5 +1,6 @@
 import type { ApiRouteDefinition } from "./definitions";
 import { HUMAN_ROLES } from "../common";
+import { MAX_BLOB_BYTES } from "../field";
 const dispatch = ["DISPATCHER"] as const;
 const field = ["LOADER", "DRIVER"] as const;
 export const fieldSupportRoutes = {
@@ -21,7 +22,7 @@ export const fieldSupportRoutes = {
     request: { headers: "mutationHeaders", body: "syncEventsIngressRequest" },
     clientBody: "syncEventsRequest",
     bodyLimit: 1000000,
-    responses: { 200: "syncEventsResponse" },
+    responses: { 200: "syncEventsResponse", 413: "apiError" },
   },
   uploadBlob: {
     method: "PUT",
@@ -29,9 +30,9 @@ export const fieldSupportRoutes = {
     roles: field,
     access: "session",
     transport: "binary",
-    bodyLimit: 204800,
+    bodyLimit: MAX_BLOB_BYTES,
     request: { params: "idParams", headers: "blobHeaders", body: "blobBody" },
-    responses: { 200: "blobResponse" },
+    responses: { 200: "blobResponse", 413: "apiError" },
   },
   heartbeat: {
     method: "POST",

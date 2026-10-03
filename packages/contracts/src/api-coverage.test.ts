@@ -133,7 +133,7 @@ describe("complete API DTO coverage", () => {
     expect(apiRoutes.uploadBlob.transport).toBe("binary");
     expect(apiRoutes.demoReset.access).toBe("demo");
     expect(blobBodySchema.safeParse(new Uint8Array(0)).success).toBe(false);
-    expect(blobBodySchema.safeParse(new Uint8Array(204801)).success).toBe(false);
+    expect(blobBodySchema.safeParse(new Uint8Array(524289)).success).toBe(false);
     expect(blobBodySchema.safeParse("image data").success).toBe(false);
   });
 

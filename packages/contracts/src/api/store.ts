@@ -40,11 +40,19 @@ export const orderListQuerySchema = z.strictObject({
   limit: z.coerce.number().int().min(1).max(100).optional(),
 });
 export const ordersResponseSchema = z.strictObject({ items: z.array(orderSchema), nextCursor: nonempty.nullable() });
-export const cancelOrderRequestSchema = orderCancelledPayloadSchema;
-export const receiptRequestSchema = receiptConfirmedPayloadSchema;
-export const reportIssueRequestSchema = issueReportedPayloadSchema;
+export const cancelOrderRequestSchema = orderCancelledPayloadSchema.strict();
+export const receiptRequestSchema = receiptConfirmedPayloadSchema.strict().extend({
+  lines: z.array(receiptConfirmedPayloadSchema.shape.lines.element.strict()).min(1),
+});
+export const reportIssueRequestSchema = issueReportedPayloadSchema.strict().extend({
+  lines: z.array(issueReportedPayloadSchema.shape.lines.unwrap().element.strict()).optional(),
+});
 export const issueCreatedResponseSchema = z.strictObject({ issueId: uuidV7, order: orderSchema });
-export const orderHistoryResponseSchema = z.strictObject({ items: z.array(orderSchema), total: count });
+export const orderHistoryResponseSchema = z.strictObject({
+  items: z.array(orderSchema),
+  total: count,
+  nextCursor: nonempty.nullable(),
+});
 export const storeSchemas = {
   cutoffResponse: cutoffResponseSchema,
   deliveriesResponse: deliveriesResponseSchema,

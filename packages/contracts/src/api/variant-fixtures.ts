@@ -43,7 +43,7 @@ export const apiVariantFixtures = {
       conflictId: f.conflict.id,
       serverEventId: f.syncEventResult.serverEventId,
     },
-    REJECTED: { ...result, status: "REJECTED", code: "NOT_ASSIGNED" },
+    REJECTED: { ...result, status: "REJECTED", index: 0, code: "NOT_ASSIGNED" },
   },
   exception: {
     CONFLICT: f.exception,
