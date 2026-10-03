@@ -19,14 +19,16 @@ export function Toast({ open, onClose, message, action, durationMs = 5000 }: Toa
     callback.current = onClose;
   }, [onClose]);
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      paused.current = { hover: false, focus: false };
+      return;
+    }
     const instance = createDismissTimer(() => callback.current(), durationMs);
     timer.current = instance;
     if (!paused.current.hover && !paused.current.focus) instance.resume();
     return () => {
       instance.dispose();
       timer.current = null;
-      paused.current = { hover: false, focus: false };
     };
   }, [open, durationMs]);
   const update = (kind: "hover" | "focus", value: boolean) => {
