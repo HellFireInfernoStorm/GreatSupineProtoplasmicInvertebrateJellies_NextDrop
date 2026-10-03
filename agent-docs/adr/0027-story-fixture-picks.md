@@ -1,9 +1,11 @@
 # ADR 0027: Story fixture picks from the reference CSVs
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-03
 - Issue / PR: #24
 - Designathon departure: yes (covered by ADR 0008, label `designathon-departure`)
+
+Accepted by Dinura on 2026-10-03 during the review of PR #82.
 
 ## Context
 
