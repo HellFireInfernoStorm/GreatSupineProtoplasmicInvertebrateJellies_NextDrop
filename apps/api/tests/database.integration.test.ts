@@ -11,6 +11,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { createDatabase } from "../src/lib/database";
 import { buildServer } from "../src/server";
 import { aggregateOrderQuantities } from "@nextdrop/rules";
+import { PLANNING_DAY_STATES } from "@nextdrop/contracts";
 import { repositoryMigrations } from "../src/lib/readiness";
 
 const url = process.env.TEST_DATABASE_URL;
@@ -151,6 +152,19 @@ describe.skipIf(!url)("isolated PostgreSQL suite", () => {
   });
 
   describe("migration safeguards", () => {
+    it("persists every planning-day state and preserves the OPEN default", async () => {
+      const initial = await client.query(`SELECT state FROM planning_days WHERE id=$1`, [ids.day]);
+      expect(initial.rows[0].state).toBe("OPEN");
+      for (const state of PLANNING_DAY_STATES) {
+        const saved = await client.query(`UPDATE planning_days SET state=$1 WHERE id=$2 RETURNING state`, [
+          state,
+          ids.day,
+        ]);
+        expect(saved.rows[0].state).toBe(state);
+      }
+      const values = await client.query(`SELECT unnest(enum_range(NULL::"PlanningDayState"))::text AS state`);
+      expect(values.rows.map((row: { state: string }) => row.state)).toEqual(PLANNING_DAY_STATES);
+    });
     it("preserves small unit snapshots and stores a positive single-item order", async () => {
       for (const size of ["0.0004", "0.0006", "0.000001"]) {
         const product = randomUUID();
@@ -341,7 +355,12 @@ describe.skipIf(!url)("isolated PostgreSQL suite", () => {
       const database = createDatabase(suiteUrl!.toString());
       const app = await buildServer({}, { ready: database.ready });
       try {
-        expect(repositoryMigrations()?.size).toBe(1);
+        const expected = repositoryMigrations();
+        expect(expected?.size).toBeGreaterThan(0);
+        const applied = await client.query<{ migration_name: string; checksum: string }>(
+          `SELECT migration_name, checksum FROM "_prisma_migrations" WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`,
+        );
+        expect(new Map(applied.rows.map((row) => [row.migration_name, row.checksum]))).toEqual(expected);
         const result = await app.inject("/api/readyz");
         expect(result.statusCode).toBe(200);
         expect(result.json()).toEqual({ status: "ok", checks: { database: "ok", migrations: "ok" } });

@@ -27,7 +27,7 @@ Schema lives in `apps/api/prisma/schema.prisma`. Prisma models stay inside `apps
 | | `OrderLine` | orderId, productId, qtyOrdered, qtyLoaded, qtyDelivered, qtyReceived, unit weight/volume snapshot |
 | | `OrderEvent` | append-only log (section 7) |
 | | `OutletServiceState` | outletId, lastServedDate, deferredLastRun (drives priority inputs) |
-| Planning | `PlanningDay` | depot, date, state, ordersClosedAt, currentVersion |
+| Planning | `PlanningDay` | depot, date, state (OPEN, CLOSED, PLANNING, PUBLISHED, IN_PROGRESS, COMPLETE), ordersClosedAt, currentVersion |
 | | `PlanDraft` | planningDayId, revision (optimistic concurrency), data JSONB (trips/stops/unassigned), baseVersion, updatedBy |
 | | `PlanVersion` | planningDayId, version, draftRevision (unique within day for publish idempotency), publishedAt, publishedBy, snapshot JSONB (immutable), summary |
 | | `PlanVersionChange` | planVersionId, orderId, tripId, change (ADDED, REMOVED, MOVED_VEHICLE, MOVED_TRIP, RESEQUENCED, ETA_CHANGED, DEFERRED) |
