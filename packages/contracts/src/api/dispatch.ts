@@ -15,6 +15,8 @@ import {
   issueResolvedPayloadSchema,
   vehicleAvailabilityChangedPayloadSchema,
   planAcknowledgedPayloadSchema,
+  shortResolvedPayloadSchema,
+  loadReversalRequestedPayloadSchema,
 } from "../payloads/order-lifecycle";
 import { apiErrorSchema, count, nonempty, validationResultSchema } from "./common";
 import { allocationStatsSchema, draftDataSchema, draftSchema, planVersionSchema } from "./planning-resources";
@@ -109,6 +111,16 @@ export const resolveConflictRequestSchema = conflictResolvedPayloadSchema
   .omit({ conflictId: true, heldEventId: true })
   .strict();
 export const resolveIssueRequestSchema = issueResolvedPayloadSchema.strict();
+export const resolveShortRequestSchema = shortResolvedPayloadSchema.omit({ orderId: true, lineId: true }).strict();
+export const resolveShortResponseSchema = z.strictObject({
+  order: orderSchema,
+  backorder: orderSchema.nullable(),
+  serverTime: isoDateTime,
+});
+export const requestReversalRequestSchema = loadReversalRequestedPayloadSchema
+  .omit({ orderId: true, planVersion: true })
+  .strict();
+export const requestReversalResponseSchema = z.strictObject({ order: orderSchema, serverTime: isoDateTime });
 export const fleetResponseSchema = z.strictObject({
   date: localDate,
   items: z.array(
@@ -164,6 +176,10 @@ export const dispatchSchemas = {
   exceptionsResponse: exceptionsResponseSchema,
   resolveConflictRequest: resolveConflictRequestSchema,
   resolveIssueRequest: resolveIssueRequestSchema,
+  resolveShortRequest: resolveShortRequestSchema,
+  resolveShortResponse: resolveShortResponseSchema,
+  requestReversalRequest: requestReversalRequestSchema,
+  requestReversalResponse: requestReversalResponseSchema,
   fleetResponse: fleetResponseSchema,
   updateFleetRequest: updateFleetRequestSchema,
   outlookQuery: outlookQuerySchema,
