@@ -125,13 +125,16 @@ export function toOutletDto(outlet: OutletRecord): ApiDto<"outlet"> {
   };
 }
 
-/** A trip as a store sees it: only stops for `outletId` (spec/platform/auth.md, store scope). */
-export function tripInclude(outletId: string) {
+/**
+ * A trip with its stops. A store passes its `outletId` and sees only its own stops (spec/platform/auth.md, store
+ * scope); field roles see every stop of a trip in their scope.
+ */
+export function tripInclude(outletId?: string) {
   return {
     district: { select: { name: true } },
     planningDay: { select: { date: true } },
     stops: {
-      where: { order: { outletId } },
+      ...(outletId ? { where: { order: { outletId } } } : {}),
       orderBy: { seq: "asc" },
       include: { order: { include: { ...orderInclude, outlet: { include: outletInclude } } } },
     },
