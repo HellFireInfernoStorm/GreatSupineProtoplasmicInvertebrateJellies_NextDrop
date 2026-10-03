@@ -182,7 +182,9 @@ Recorded decisions:
 
 > **TODO (#20):** list each tier S item that was not built: authorization matrix test (#58), capacity outlook (#55), remaining demo presets and panel (#56), load reversal (#60), fleet and breakdowns (#63), Sinhala and Tamil strings (#57), Web Push (#65).
 >
-> **TODO (#57):** list the Loader and Driver strings still marked `draft` in the `si` and `ta` locale files. Locale files do not exist yet.
+> **TODO (#57):** native review is pending for Sinhala and Tamil strings. Every leaf in `apps/web/src/i18n/locales/{si,ta}/shared/ui.json` and the development gallery's `apps/web/src/ui/gallery/locales/{si,ta}.json` is marked `draft`; these translations are not yet native-reviewed. Existing login locale review states remain in their own files.
+
+The shared component gallery is available at `/dev/ui` when running the Vite development server. It includes all four role themes and English, Sinhala and Tamil controls. Its route, sample text and component chunk are excluded from production builds.
 
 ## Architecture
 

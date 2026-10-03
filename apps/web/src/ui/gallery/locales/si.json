@@ -1,0 +1,220 @@
+{
+  "gallery": {
+    "title": {
+      "text": "හවුල් සංරචක එකතුව",
+      "review": "draft"
+    },
+    "theme": {
+      "text": "භූමිකාවේ තේමාව",
+      "review": "draft"
+    },
+    "language": {
+      "text": "භාෂාව",
+      "review": "draft"
+    },
+    "draft": {
+      "text": "සිංහල සහ දෙමළ පරිවර්තන ස්වදේශීය සමාලෝචනයට නියමිත කෙටුම්පත් වේ.",
+      "review": "draft"
+    },
+    "store": {
+      "text": "වෙළඳසැල",
+      "review": "draft"
+    },
+    "dispatcher": {
+      "text": "බෙදාහැරීම් සැලසුම්කරු",
+      "review": "draft"
+    },
+    "loader": {
+      "text": "පැටවීමේ සේවකයා",
+      "review": "draft"
+    },
+    "driver": {
+      "text": "රියදුරු",
+      "review": "draft"
+    },
+    "en": {
+      "text": "ඉංග්‍රීසි",
+      "review": "draft"
+    },
+    "si": {
+      "text": "සිංහල",
+      "review": "draft"
+    },
+    "ta": {
+      "text": "දෙමළ",
+      "review": "draft"
+    },
+    "buttons": {
+      "text": "බොත්තම්",
+      "review": "draft"
+    },
+    "primary": {
+      "text": "පැටවීම දිගටම කරන්න",
+      "review": "draft"
+    },
+    "secondary": {
+      "text": "විස්තර බලන්න",
+      "review": "draft"
+    },
+    "ghost": {
+      "text": "කාලරේඛාව බලන්න",
+      "review": "draft"
+    },
+    "on-panel": {
+      "text": "ඉදිරියට යන්න",
+      "review": "draft"
+    },
+    "on-panel-outline": {
+      "text": "ආපසු",
+      "review": "draft"
+    },
+    "ok": {
+      "text": "සූදානම් බව තහවුරු කරන්න",
+      "review": "draft"
+    },
+    "warn": {
+      "text": "අඩු ප්‍රමාණය බලන්න",
+      "review": "draft"
+    },
+    "danger": {
+      "text": "හානිය වාර්තා කරන්න",
+      "review": "draft"
+    },
+    "disabled": {
+      "text": "ක්‍රියාව ලබාගත නොහැක",
+      "review": "draft"
+    },
+    "statuses": {
+      "text": "තත්ත්ව සහ සලකුණු",
+      "review": "draft"
+    },
+    "cards": {
+      "text": "ගමන් සහ නැවතුම්",
+      "review": "draft"
+    },
+    "vehicle": {
+      "text": "VEH001 · ශීතකරණ වෑන් රථය",
+      "review": "draft"
+    },
+    "outlet": {
+      "text": "කඳුකර වෙළඳසැලේ භාණ්ඩ භාරගැනීමේ ස්ථානය",
+      "review": "draft"
+    },
+    "changed": {
+      "text": "වාහනය නැවත පැවරීමෙන් පසු පිටත්වීම වෙනස් කළා",
+      "review": "draft"
+    },
+    "capacity": {
+      "text": "ධාරිතාව",
+      "review": "draft"
+    },
+    "unit": {
+      "text": "පෙට්ටි",
+      "review": "draft"
+    },
+    "timeline": {
+      "text": "ක්ෂේත්‍ර සිදුවීම් කාලරේඛාව",
+      "review": "draft"
+    },
+    "delivered": {
+      "text": "බෙදාහැරීම අන්තර්ජාලයෙන් තොරව සටහන් කළා",
+      "review": "draft"
+    },
+    "pending": {
+      "text": "ලැබීම තහවුරු කිරීමට නියමිතයි",
+      "review": "draft"
+    },
+    "forms": {
+      "text": "ආදාන සහ ප්‍රමාණය",
+      "review": "draft"
+    },
+    "field": {
+      "text": "බෙදාහැරීමේ සටහන",
+      "review": "draft"
+    },
+    "hint": {
+      "text": "බෙදාහැරීමේ තත්ත්වය විස්තර කරන්න",
+      "review": "draft"
+    },
+    "error": {
+      "text": "බෙදාහැරීමේ සටහනක් අවශ්‍යයි",
+      "review": "draft"
+    },
+    "quantity": {
+      "text": "ලැබුණු පෙට්ටි ගණන",
+      "review": "draft"
+    },
+    "feedback": {
+      "text": "දැනුම්දීම් සහ හිස් තත්ත්ව",
+      "review": "draft"
+    },
+    "offline": {
+      "text": "අන්තර්ජාල සම්බන්ධතාව නැත. වෙනස්කම් සමමුහුර්ත වන තෙක් මෙම උපාංගයේ පවතී.",
+      "review": "draft"
+    },
+    "failure": {
+      "text": "මෙම සිදුවීම තහවුරු කළ නොහැකි විය",
+      "review": "draft"
+    },
+    "retry": {
+      "text": "නැවත උත්සාහ කරන්න",
+      "review": "draft"
+    },
+    "empty": {
+      "text": "පෙන්වීමට නැවතුම් නැත",
+      "review": "draft"
+    },
+    "emptyDetail": {
+      "text": "පවරන ලද නැවතුම් ලබාගත හැකි විට මෙහි පෙන්වනු ඇත.",
+      "review": "draft"
+    },
+    "interactions": {
+      "text": "තහවුරු කිරීම සහ සංවාද",
+      "review": "draft"
+    },
+    "hold": {
+      "text": "සූදානම් බව සටහන් කිරීමට තද කරගෙන සිටින්න",
+      "review": "draft"
+    },
+    "confirmed": {
+      "text": "{{count}} වරක් තහවුරු කළා",
+      "review": "draft"
+    },
+    "disableHold": {
+      "text": "තහවුරු කිරීම අක්‍රිය කරන්න",
+      "review": "draft"
+    },
+    "hideHold": {
+      "text": "තහවුරු කිරීම සඟවන්න",
+      "review": "draft"
+    },
+    "showModal": {
+      "text": "සංවාදය විවෘත කරන්න",
+      "review": "draft"
+    },
+    "showSheet": {
+      "text": "පත්‍රය විවෘත කරන්න",
+      "review": "draft"
+    },
+    "showToast": {
+      "text": "සුරැකීමේ දැනුම්දීම පෙන්වන්න",
+      "review": "draft"
+    },
+    "overlayTitle": {
+      "text": "බෙදාහැරීමේ විස්තර බලන්න",
+      "review": "draft"
+    },
+    "overlayBody": {
+      "text": "මෙම ආදර්ශ බෙදාහැරීම තහවුරු කිරීමට පෙර ප්‍රමාණ බලන්න.",
+      "review": "draft"
+    },
+    "saved": {
+      "text": "ආදර්ශ බෙදාහැරීම මෙම උපාංගයේ සුරැකී ඇත",
+      "review": "draft"
+    },
+    "undo": {
+      "text": "අහෝසි කරන්න",
+      "review": "draft"
+    }
+  }
+}
