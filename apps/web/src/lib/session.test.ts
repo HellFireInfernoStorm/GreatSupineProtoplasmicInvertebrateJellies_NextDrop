@@ -78,6 +78,27 @@ describe("reauth", () => {
     expect(isReauthNeeded()).toBe(false);
   });
 
+  it("keeps the session through a lockout, to try again later", async () => {
+    await signedInAs("DRIVER");
+    serve({ heartbeat: unauthenticated, reauth: { status: 429, body: apiRouteFixtures.reauth.responses[429] } });
+    await callApi("heartbeat", { body: apiFixtures.heartbeatRequest }).catch(() => undefined);
+    await expect(reauth("1234")).rejects.toMatchObject({ status: 429 });
+    expect(currentSession()?.user.role).toBe("DRIVER");
+    expect(isReauthNeeded()).toBe(true);
+  });
+
+  // The server answers UNAUTHENTICATED when the reauth window has passed or the device does not match.
+  it("sends the user to the full login when the server has no session left to renew", async () => {
+    await signedInAs("DRIVER");
+    queryClient.setQueryData(["driver", "run"], ["a stop"]);
+    serve({ heartbeat: unauthenticated, reauth: unauthenticated });
+    await callApi("heartbeat", { body: apiFixtures.heartbeatRequest }).catch(() => undefined);
+    await expect(reauth("1234")).rejects.toMatchObject({ status: 401, code: "UNAUTHENTICATED" });
+    expect(currentSession()).toBeNull();
+    expect(isReauthNeeded()).toBe(false);
+    expect(queryClient.getQueryData(["driver", "run"])).toBeUndefined();
+  });
+
   it("is refused for a Store or Dispatcher session", async () => {
     await signedInAs("DISPATCHER");
     await expect(reauth("1234")).rejects.toThrow();

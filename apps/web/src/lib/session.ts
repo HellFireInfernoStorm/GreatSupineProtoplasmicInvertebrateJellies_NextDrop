@@ -95,13 +95,27 @@ export function isReauthNeeded(): boolean {
   return useReauthStore.getState().needed;
 }
 
-/** Renew a Loader or Driver session with the PIN. A wrong PIN rejects and leaves the session as it was. */
+/**
+ * Renew a Loader or Driver session with the PIN. It always rejects on failure, and what happens to the session
+ * depends on why:
+ * - a wrong PIN (`INVALID_CREDENTIALS`), a lockout (429) or no signal: the session stays, to try again;
+ * - `UNAUTHENTICATED`: the server holds no session this device can renew (the reauth window has passed, or the
+ *   device or role does not match). No PIN can work, so the session is dropped and the shell goes to the full login.
+ */
 export async function reauth(pin: string): Promise<Session> {
   const role = currentSession()?.user.role;
   if (!role || !isFieldRole(role)) throw new Error("reauth needs a Loader or Driver session");
-  const session = await callApi("reauth", { body: { role, pin, deviceId: getDeviceId() } });
-  remember(session);
-  return session;
+  try {
+    const session = await callApi("reauth", { body: { role, pin, deviceId: getDeviceId() } });
+    remember(session);
+    return session;
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.code === "UNAUTHENTICATED") {
+      dropCachedData();
+      remember(null);
+    }
+    throw error;
+  }
 }
 
 /** Provided by the role shell, which renders its screens only while a session of its role exists. */
