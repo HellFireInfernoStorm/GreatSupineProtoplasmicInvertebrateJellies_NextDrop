@@ -1,9 +1,11 @@
 # ADR 0025: Store the full planning-day lifecycle
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-03
 - Issue / PR: #79
 - Designathon departure: no
+
+Accepted by Dinura in the [PR #80 review](https://github.com/HellFireInfernoStorm/GreatSupineProtoplasmicInvertebrateJellies_NextDrop/pull/80#discussion_r4172618343).
 
 ## Context
 
@@ -11,13 +13,13 @@
 
 ## Decision
 
-Propose storing OPEN, CLOSED, PLANNING, PUBLISHED, IN_PROGRESS and COMPLETE in PlanningDay.state. Add the four missing PostgreSQL enum values through a follow-up migration, preserving existing rows, the OPEN default and the immutable initial migration. The Prisma enum, contracts vocabulary, lifecycle specification and model documentation must agree, with automated drift checks and PostgreSQL persistence coverage.
+Store OPEN, CLOSED, PLANNING, PUBLISHED, IN_PROGRESS and COMPLETE in PlanningDay.state. Add the four missing PostgreSQL enum values through a follow-up migration, preserving existing rows, the OPEN default and the immutable initial migration. The Prisma enum, contracts vocabulary, lifecycle specification and model documentation must agree, with automated drift checks and PostgreSQL persistence coverage.
 
-This corrects storage capability only. Tick, draft, publish, departure and completion transitions stay with their existing implementation issues. Owner acceptance is required before this proposed decision becomes binding.
+This corrects storage capability only. Tick, draft, publish, departure and completion transitions stay with their existing implementation issues.
 
 ## Alternatives considered
 
-- Store only OPEN/CLOSED and derive later states: requires new derivation rules across drafts, publications and trips and changes the existing stored-state intent. Not proposed for this fix.
+- Store only OPEN/CLOSED and derive later states: requires new derivation rules across drafts, publications and trips and changes the existing stored-state intent. Not chosen for this fix.
 - Rewrite the initial migration: changes already-applied checksums and breaks deployed/readiness compatibility. Use an additive migration instead.
 
 ## Consequences
