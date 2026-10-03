@@ -8,7 +8,7 @@ sources: guide §14, §14.1
 
 ## 14.1 Shells and routes
 
-One SPA. Route groups `/store/*`, `/dispatch/*`, `/loader/*`, `/driver/*`, plus one login screen per role: `/login/store`, `/login/dispatch`, `/login/loader`, `/login/driver` (ADR 0028). `/` and `/login` redirect a signed-in user to their role's routes, and anyone else to the login screen the device used last.
+One SPA. Route groups `/store/*`, `/dispatch/*`, `/loader/*`, `/driver/*`, plus one login screen per role: `/login/store`, `/login/dispatch`, `/login/loader`, `/login/driver` (ADR 0031). `/` and `/login` redirect a signed-in user to their role's routes, and anyone else to the login screen the device used last.
 
 Route guards use `/auth/me`, asked once when the app loads; after that they use the session the app holds, so navigation works with no signal. A signed-out visitor who opens a role's routes is sent to that role's login. A signed-in user who opens another role's routes is sent to their own. A Store or Dispatcher shell leaves for the login screen when its session is lost later (a 401, or sign-out). A Loader or Driver shell stays on a 401 and asks for the PIN ([offline-client.md](../sync/offline-client.md)).
 

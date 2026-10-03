@@ -130,7 +130,7 @@ export function DispatcherLogin() {
             </div>
           </div>
 
-          {/* "Keep me signed in" is drawn here in Figma. It is left out until the login contract has it (ADR 0028). */}
+          {/* "Keep me signed in" is drawn here in Figma. It is left out until the login contract has it (ADR 0031). */}
           <div className="flex justify-end">
             <a href="#dispatcher-help" className="text-sm font-semibold text-link">
               {t("forgot")}

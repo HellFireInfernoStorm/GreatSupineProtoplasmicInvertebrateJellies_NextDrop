@@ -1,4 +1,4 @@
-# ADR 0028: Web shell login routes, session handling, build flags and login-screen departures
+# ADR 0031: Web shell login routes, session handling, build flags and login-screen departures
 
 - Status: proposed
 - Date: 2026-10-03

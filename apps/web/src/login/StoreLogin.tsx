@@ -136,7 +136,7 @@ export function StoreLogin() {
             inputClassName={INPUT}
           />
 
-          {/* "Keep me signed in" is drawn here in Figma. It is left out until the login contract has it (ADR 0028). */}
+          {/* "Keep me signed in" is drawn here in Figma. It is left out until the login contract has it (ADR 0031). */}
           <div className="hidden justify-end lg:flex">{forgotButton("")}</div>
 
           {/* No connection is amber, never red, and is not the password's fault. */}
