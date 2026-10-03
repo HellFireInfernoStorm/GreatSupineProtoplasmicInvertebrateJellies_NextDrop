@@ -11,7 +11,10 @@ export default [
     ],
   },
   ...base,
-  ...node.map((c) => ({ ...c, files: ["apps/api/**", "packages/**", "*.{js,ts}", "**/*.config.{js,ts}"] })),
+  ...node.map((c) => ({
+    ...c,
+    files: ["apps/api/**", "packages/**", "*.{js,ts}", "**/*.config.{js,ts}", "scripts/docs/**"],
+  })),
   ...react.map((c) => ({ ...c, files: ["apps/web/src/**/*.{ts,tsx}"] })),
   ...rulesPurity.map((c) => ({
     ...c,

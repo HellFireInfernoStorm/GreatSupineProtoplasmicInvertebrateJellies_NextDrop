@@ -18,6 +18,7 @@
     "test:int": "pnpm -r --if-present run test:int",
     "e2e": "node -e \"console.log('e2e: no end-to-end tests yet')\"",
     "seed:pick-fixtures": "pnpm --filter @nextdrop/api seed:pick-fixtures",
+    "docs:erd": "node scripts/docs/erd.mjs",
     "agent:check": "node scripts/agent-context/check.mjs",
     "agent:sync-skills": "node scripts/agent-context/sync-skills.mjs",
     "agent:index": "node scripts/agent-context/build-index.mjs"
