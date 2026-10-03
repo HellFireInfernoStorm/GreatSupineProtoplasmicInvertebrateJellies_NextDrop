@@ -4,7 +4,6 @@ import { useRoleLanguage } from "../i18n/language";
 import { Logo } from "../ui/Logo";
 import { Keypad, LanguageChips, PinDots } from "./pin";
 import { QuickLoginChips } from "./QuickLoginChips";
-import { useLogin } from "./useLogin";
 import { PIN_LENGTH, usePinLogin } from "./usePinLogin";
 
 /**
@@ -15,14 +14,11 @@ export function DriverLogin() {
   const { t } = useTranslation("driver/login");
   const language = useRoleLanguage("DRIVER");
   const pin = usePinLogin("DRIVER");
-  const demo = useLogin();
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
     void pin.signInWithPin();
   }
-
-  const failure = pin.failure ?? demo.failure;
 
   return (
     <div data-theme="driver" lang={language} className="flex min-h-dvh flex-col">
@@ -52,6 +48,7 @@ export function DriverLogin() {
             spellCheck={false}
             value={pin.loginId}
             onChange={(event) => pin.setLoginId(event.target.value)}
+            onKeyDown={pin.onIdKeyDown}
             placeholder={t("id.placeholder")}
             className="h-[52px] rounded-xl border-[1.5px] border-border bg-surface px-4 text-[15px] font-semibold text-text outline-primary placeholder:text-muted focus-visible:outline-2 short:h-12"
           />
@@ -66,9 +63,12 @@ export function DriverLogin() {
             className="h-[52px] gap-4 rounded-xl border-[1.5px] px-4 short:h-12"
             dotClassName="size-3.5 border-[1.5px]"
           />
-          {failure && (
-            <p role="alert" className="text-[13px] font-semibold text-danger-fg">
-              {t(`errors.${failure === "forbidden" ? "unknown" : failure}`)}
+          {pin.failure && (
+            <p
+              role="alert"
+              className={`text-[13px] font-semibold ${pin.failure === "network" ? "text-warn-fg" : "text-danger-fg"}`}
+            >
+              {t(`errors.${pin.failure === "forbidden" ? "unknown" : pin.failure}`)}
             </p>
           )}
         </div>
@@ -92,8 +92,8 @@ export function DriverLogin() {
         </button>
         <p className="text-xs font-medium text-muted">{t("offlineNote.phone")}</p>
         <QuickLoginChips
-          onSelect={(request) => void demo.submit(request)}
-          disabled={pin.pending || demo.pending}
+          onSelect={pin.quickLogin}
+          disabled={pin.pending}
           chipClassName="min-h-12 px-3.5 text-[13px]"
           singleRow
         />

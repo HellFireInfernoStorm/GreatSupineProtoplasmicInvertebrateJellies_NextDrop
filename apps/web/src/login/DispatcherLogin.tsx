@@ -2,6 +2,7 @@ import { loginRequestSchema } from "@nextdrop/contracts";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Logo } from "../ui/Logo";
+import { PasswordField } from "./PasswordField";
 import { QuickLoginChips } from "./QuickLoginChips";
 import { useLogin } from "./useLogin";
 
@@ -10,10 +11,6 @@ const DEPOTS = ["Peliyagoda", "Kandy"] as const;
 
 const INPUT =
   "h-11 w-full rounded-lg border bg-surface px-3.5 text-sm text-text outline-link placeholder:text-faint focus-visible:outline-2";
-
-/** The 18 px checkbox of the Figma frames, drawn with tokens so it looks the same in every browser. */
-const CHECKBOX =
-  "relative size-[18px] shrink-0 appearance-none rounded-[5px] border-[1.5px] border-border bg-surface outline-link checked:border-primary checked:bg-primary focus-visible:outline-2 after:absolute after:top-px after:left-[5px] after:hidden after:h-2.5 after:w-[5px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-on-primary checked:after:block";
 
 /**
  * Dispatcher sign-in. Figma `523:17408`: navy panel beside the form, with the depot that scopes everything the
@@ -25,14 +22,17 @@ export function DispatcherLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [depot, setDepot] = useState<(typeof DEPOTS)[number]>("Peliyagoda");
-  const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
+  const [badFormat, setBadFormat] = useState(false);
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
     const request = loginRequestSchema.safeParse({ role: "DISPATCHER", email: email.trim(), password, depot });
-    // The browser has already checked the email field, so a failure here is not expected.
-    if (request.success) void submit(request.data);
+    // The browser accepts some addresses the contract rejects, such as `ops@depot`.
+    if (!request.success) {
+      setBadFormat(true);
+      return;
+    }
+    void submit(request.data);
   }
 
   return (
@@ -71,48 +71,35 @@ export function DispatcherLogin() {
               value={email}
               onChange={(event) => {
                 setEmail(event.target.value);
+                setBadFormat(false);
                 clearFailure();
               }}
               placeholder={t("email.placeholder")}
-              className={`${INPUT} border-border`}
+              aria-invalid={badFormat}
+              aria-describedby={badFormat ? "dispatcher-email-error" : undefined}
+              className={`${INPUT} ${badFormat ? "border-danger" : "border-border"}`}
             />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="dispatcher-password" className="text-xs font-semibold">
-              {t("password.label")}
-            </label>
-            <div className="relative">
-              <input
-                id="dispatcher-password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value);
-                  clearFailure();
-                }}
-                placeholder={t("password.placeholder")}
-                aria-invalid={failure !== null}
-                aria-describedby={failure ? "dispatcher-login-error" : undefined}
-                className={`${INPUT} pr-16 ${failure ? "border-danger" : "border-border"}`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((shown) => !shown)}
-                className="absolute inset-y-0 right-3.5 text-sm font-semibold text-link"
-              >
-                {t(showPassword ? "password.hide" : "password.show")}
-              </button>
-            </div>
-            {failure && (
-              <p id="dispatcher-login-error" role="alert" className="text-xs text-danger">
-                {t(`errors.${failure}`)}
+            {badFormat && (
+              <p id="dispatcher-email-error" role="alert" className="text-xs text-danger">
+                {t("errors.format")}
               </p>
             )}
           </div>
+
+          <PasswordField
+            id="dispatcher-password"
+            label={t("password.label")}
+            placeholder={t("password.placeholder")}
+            showLabel={t("password.show")}
+            hideLabel={t("password.hide")}
+            value={password}
+            onChange={(value) => {
+              setPassword(value);
+              clearFailure();
+            }}
+            error={failure && failure !== "network" ? t(`errors.${failure}`) : undefined}
+            inputClassName={INPUT}
+          />
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="dispatcher-depot" className="text-xs font-semibold">
@@ -143,20 +130,19 @@ export function DispatcherLogin() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2.5 text-sm text-muted">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(event) => setRemember(event.target.checked)}
-                className={CHECKBOX}
-              />
-              {t("remember")}
-            </label>
+          {/* "Keep me signed in" is drawn here in Figma. It is left out until the login contract has it (ADR 0028). */}
+          <div className="flex justify-end">
             <a href="#dispatcher-help" className="text-sm font-semibold text-link">
               {t("forgot")}
             </a>
           </div>
+
+          {/* No connection is amber, never red, and is not the password's fault. */}
+          {failure === "network" && (
+            <p role="alert" className="rounded-lg bg-warn-bg px-3 py-2 text-xs font-semibold text-warn-fg">
+              {t("errors.network")}
+            </p>
+          )}
 
           <button
             type="submit"

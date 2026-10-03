@@ -24,7 +24,6 @@
       "Kandy": "Kandy hub"
     }
   },
-  "remember": "Keep me signed in",
   "forgot": "Forgot password?",
   "submit": "Sign in",
   "submitting": "Signing in…",
@@ -32,7 +31,8 @@
     "lockedOut": "Locked out? Ask your depot admin to reset your login."
   },
   "errors": {
-    "invalid": "Wrong email or password.",
+    "format": "Enter your work email, such as name@waypoint.lk.",
+    "invalid": "Wrong email or password, or no access to that depot.",
     "locked": "Too many attempts. Ask your depot admin to reset your login.",
     "forbidden": "This account has no access to that depot. Ask your depot admin.",
     "network": "Can't reach the server. Check your connection and try again.",

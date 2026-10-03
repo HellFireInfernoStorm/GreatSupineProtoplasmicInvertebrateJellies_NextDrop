@@ -4,7 +4,6 @@ import { useRoleLanguage } from "../i18n/language";
 import { Logo } from "../ui/Logo";
 import { Keypad, LanguageChips, PinDots } from "./pin";
 import { QuickLoginChips } from "./QuickLoginChips";
-import { useLogin } from "./useLogin";
 import { PIN_LENGTH, usePinLogin } from "./usePinLogin";
 
 /**
@@ -16,7 +15,6 @@ export function LoaderLogin() {
   const { t } = useTranslation("loader/login");
   const language = useRoleLanguage("LOADER");
   const pin = usePinLogin("LOADER");
-  const demo = useLogin();
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -32,7 +30,6 @@ export function LoaderLogin() {
       keyClassName={keyClassName}
     />
   );
-  const failure = pin.failure ?? demo.failure;
 
   return (
     <div data-theme="loader" lang={language} className="flex min-h-dvh flex-col lg:flex-row">
@@ -63,6 +60,7 @@ export function LoaderLogin() {
               spellCheck={false}
               value={pin.loginId}
               onChange={(event) => pin.setLoginId(event.target.value)}
+              onKeyDown={pin.onIdKeyDown}
               placeholder={t("id.placeholder")}
               className="h-16 rounded-2xl border-2 border-border bg-surface px-5 text-xl font-semibold text-text outline-primary placeholder:text-muted focus-visible:outline-2 short:h-14 lg:h-[72px]"
             />
@@ -77,9 +75,12 @@ export function LoaderLogin() {
               className="h-16 gap-5 rounded-2xl border-2 px-5 short:h-14 lg:h-[72px]"
               dotClassName="size-5 border-2"
             />
-            {failure && (
-              <p role="alert" className="text-lg font-semibold text-danger-fg">
-                {t(`errors.${failure === "forbidden" ? "unknown" : failure}`)}
+            {pin.failure && (
+              <p
+                role="alert"
+                className={`text-lg font-semibold ${pin.failure === "network" ? "text-warn-fg" : "text-danger-fg"}`}
+              >
+                {t(`errors.${pin.failure === "forbidden" ? "unknown" : pin.failure}`)}
               </p>
             )}
           </div>
@@ -100,8 +101,8 @@ export function LoaderLogin() {
             <span className="lg:hidden">{t("offlineNote.phone")}</span>
           </p>
           <QuickLoginChips
-            onSelect={(request) => void demo.submit(request)}
-            disabled={pin.pending || demo.pending}
+            onSelect={pin.quickLogin}
+            disabled={pin.pending}
             chipClassName="min-h-12 px-4 text-base"
             singleRow
           />

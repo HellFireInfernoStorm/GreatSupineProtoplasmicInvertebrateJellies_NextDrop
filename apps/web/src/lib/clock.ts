@@ -29,6 +29,11 @@ export function clockOffsetMs(): number {
   return useClockStore.getState().offsetMs;
 }
 
+/** False until a response has carried serverTime. Until then the device clock stands in, so do not show a date. */
+export function useClockSynced(): boolean {
+  return useClockStore((s) => s.synced);
+}
+
 /** The current server time as epoch milliseconds. */
 export function serverNowMs(deviceNowMs: number = Date.now()): number {
   return deviceNowMs + clockOffsetMs();

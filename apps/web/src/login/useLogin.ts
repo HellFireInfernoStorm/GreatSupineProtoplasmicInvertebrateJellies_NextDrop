@@ -18,23 +18,24 @@ export function loginFailureOf(error: unknown): LoginFailure {
   return "unknown";
 }
 
-/** Sign in and open the role's first screen. Resolves to false when the sign-in failed. */
+/** Sign in and open the role's first screen. `submit` resolves to why it failed, or null when it worked. */
 export function useLogin() {
   const navigate = useNavigate();
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<LoginFailure | null>(null);
 
   const submit = useCallback(
-    async (request: LoginRequest): Promise<boolean> => {
+    async (request: LoginRequest): Promise<LoginFailure | null> => {
       setPending(true);
       setFailure(null);
       try {
         const session = await signIn(request);
         await navigate(ROLE_PATHS[session.user.role].home, { replace: true });
-        return true;
+        return null;
       } catch (error) {
-        setFailure(loginFailureOf(error));
-        return false;
+        const reason = loginFailureOf(error);
+        setFailure(reason);
+        return reason;
       } finally {
         setPending(false);
       }
