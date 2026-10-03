@@ -21,16 +21,16 @@ export const WALKTHROUGH_VEHICLE_ID = "VEH039";
 export const WALKTHROUGH_DRIVER_ID = "DRV039";
 /**
  * The hill trip. Replaces the design placeholder `T001`; its display ID is assigned when the plan is proposed.
- * Stops are in delivery order.
+ * Stops are in delivery order: a chilled order at each, plus a dry order at the store stop.
  */
 export const WALKTHROUGH_TRIP = {
   vehicleId: "VEH039",
   tripNo: 1,
   brand: "Fresh",
   district: "Nuwara Eliya",
-  stopOutletIds: ["OUT105", "OUT108", "OUT104", "OUT106", "OUT107"],
+  stopOutletIds: ["OUT105", "OUT104", "OUT106", "OUT107"],
 } as const;
-/** The store receiving the walkthrough delivery: stop 2, the first one delivered offline. */
-export const HILL_STORE_OUTLET_ID = "OUT108";
+/** The store receiving the walkthrough delivery: stop 2, the first delivered offline. Chilled and dry orders. */
+export const HILL_STORE_OUTLET_ID = "OUT104";
 /** The Kandy loader account. */
 export const KANDY_LOADER_LOGIN_ID = "LDR002";

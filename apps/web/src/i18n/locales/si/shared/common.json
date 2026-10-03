@@ -1,0 +1,200 @@
+{
+  "roles": {
+    "STORE": {
+      "text": "වෙළඳසැල් කළමනාකරු",
+      "review": "draft"
+    },
+    "DISPATCHER": {
+      "text": "බෙදාහැරීම් සැලසුම්කරු",
+      "review": "draft"
+    },
+    "LOADER": {
+      "text": "පැටවුම්කරු",
+      "review": "draft"
+    },
+    "DRIVER": {
+      "text": "රියදුරු",
+      "review": "draft"
+    }
+  },
+  "session": {
+    "signedInAs": {
+      "text": "{{name}} ලෙස පිවිස ඇත",
+      "review": "draft"
+    },
+    "signOut": {
+      "text": "ඉවත් වන්න",
+      "review": "draft"
+    },
+    "signOutFailed": {
+      "text": "ඉවත් වීමට නොහැකි විය. සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
+      "review": "draft"
+    }
+  },
+  "resetBanner": {
+    "by": {
+      "text": "{{time}} ට {{role}} විසින් ආදර්ශන දත්ත යළි පිහිටුවන ලදී.",
+      "review": "draft"
+    },
+    "unknown": {
+      "text": "ආදර්ශන දත්ත යළි පිහිටුවන ලදී.",
+      "review": "draft"
+    }
+  },
+  "status": {
+    "loading": {
+      "text": "පූරණය වෙමින්…",
+      "review": "draft"
+    }
+  },
+  "errors": {
+    "title": {
+      "text": "යම් දෝෂයක් ඇති විය",
+      "review": "draft"
+    },
+    "unreachable": {
+      "text": "සේවාදායකයට සම්බන්ධ විය නොහැක. සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
+      "review": "draft"
+    },
+    "retry": {
+      "text": "නැවත උත්සාහ කරන්න",
+      "review": "draft"
+    }
+  },
+  "language": {
+    "label": {
+      "text": "භාෂාව",
+      "review": "draft"
+    }
+  },
+  "demo": {
+    "label": {
+      "text": "ආදර්ශන ගිණුම්",
+      "review": "draft"
+    },
+    "signInAs": {
+      "text": "{{account}} ලෙස පිවිසෙන්න",
+      "review": "draft"
+    }
+  },
+  "sync": {
+    "synced": {
+      "text": "සමමුහුර්තයි",
+      "review": "draft"
+    },
+    "syncing": {
+      "text": "සමමුහුර්ත වෙමින්",
+      "review": "draft"
+    },
+    "offline": {
+      "text": "සම්බන්ධතාව නැත",
+      "review": "draft"
+    },
+    "pending": {
+      "text": "{{count}}ක් යැවීමට ඇත",
+      "review": "draft"
+    },
+    "last": {
+      "text": "අවසන් සමමුහුර්තය {{time}}",
+      "review": "draft"
+    },
+    "failed": {
+      "text": "{{count}}ක් අසාර්ථකයි — සමමුහුර්ත විස්තර බලන්න",
+      "review": "draft"
+    },
+    "held": {
+      "text": "{{count}}ක් සැලසුම්කරුගේ විමසුමට",
+      "review": "draft"
+    },
+    "now": {
+      "text": "දැන් සමමුහුර්ත කරන්න",
+      "review": "draft"
+    },
+    "forceOffline": {
+      "text": "සම්බන්ධතාව නැති ලෙස ක්‍රියා කරන්න",
+      "review": "draft"
+    },
+    "reauth": {
+      "text": "නැවත සම්බන්ධ වීමට PIN ඇතුළත් කරන්න",
+      "review": "draft"
+    },
+    "pin": {
+      "text": "PIN",
+      "review": "draft"
+    },
+    "kept": {
+      "text": "සුරැකි වැඩ මෙම උපාංගයේ පවතී.",
+      "review": "draft"
+    },
+    "unlock": {
+      "text": "නැවත සම්බන්ධ කරන්න",
+      "review": "draft"
+    },
+    "update": {
+      "text": "යෙදුම් යාවත්කාලීනයක් ඇත.",
+      "review": "draft"
+    },
+    "safe": {
+      "text": "මම විවේකයෙන් හෝ නැවතුම් අතර සිටිමි.",
+      "review": "draft"
+    },
+    "apply": {
+      "text": "යෙදුම යාවත්කාලීන කරන්න",
+      "review": "draft"
+    },
+    "errors": {
+      "invalid": {
+        "text": "PIN පිළිගත්තේ නැත. නැවත උත්සාහ කරන්න.",
+        "review": "draft"
+      },
+      "locked": {
+        "text": "උත්සාහ වැඩියි. මඳක් රැඳී නැවත උත්සාහ කරන්න.",
+        "review": "draft"
+      },
+      "network": {
+        "text": "සම්බන්ධතාව නැත. වැඩ සුරැකී ඇත; සම්බන්ධ වූ විට නැවත උත්සාහ කරන්න.",
+        "review": "draft"
+      },
+      "unknown": {
+        "text": "නැවත සම්බන්ධ කළ නොහැක. නැවත උත්සාහ කරන්න.",
+        "review": "draft"
+      }
+    },
+    "details": {
+      "text": "සමමුහුර්ත විස්තර",
+      "review": "draft"
+    },
+    "failedAction": {
+      "text": "{{reference}} සඳහා ක්‍රියාව යෙදුනේ නැත.",
+      "review": "draft"
+    },
+    "reason": {
+      "text": "සේවාදායක හේතුව: {{code}}. වාර්තාව විමසීමට සුරැකී ඇත.",
+      "review": "draft"
+    },
+    "heldAction": {
+      "text": "{{reference}} සඳහා කරුණ සේවාදායකයේ සුරැකී සැලසුම්කරුගේ විමසුමට ඇත.",
+      "review": "draft"
+    },
+    "captured": {
+      "text": "සටහන් කළේ {{time}}",
+      "review": "draft"
+    },
+    "confirmed": {
+      "text": "සමමුහුර්තයෙන් පසු තහවුරු කළේ {{time}}",
+      "review": "draft"
+    },
+    "paused": {
+      "text": "නැවත සම්බන්ධ විය යුතුයි",
+      "review": "draft"
+    },
+    "retrying": {
+      "text": "සමමුහුර්තය නැවත උත්සාහ කරයි",
+      "review": "draft"
+    },
+    "waiting": {
+      "text": "සමමුහුර්තයට රැඳී සිටී",
+      "review": "draft"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "eyebrow": "Store manager",
+  "title": "Sign in",
+  "subtitle": "Use the email or outlet ID your dispatcher gave you.",
+  "pitch": {
+    "title": "Order for tomorrow, and know exactly when it arrives.",
+    "body": "Place fresh, chilled and dry orders, follow the truck, and confirm what you received."
+  },
+  "footer": "NextDrop · Store manager",
+  "loginId": {
+    "label": "Email or outlet ID",
+    "placeholder": "OUT0xx or name@store.lk"
+  },
+  "password": {
+    "label": "Password",
+    "placeholder": "Enter your password",
+    "show": "Show",
+    "hide": "Hide"
+  },
+  "forgot": "Forgot password?",
+  "submit": "Sign in",
+  "submitting": "Signing in…",
+  "help": {
+    "noAccount": "No account? Your dispatcher creates store logins. Call your dispatcher to get one.",
+    "forgot": "Forgot your password? Your dispatcher resets store logins. Call your dispatcher to reset it."
+  },
+  "errors": {
+    "format": "Enter an outlet ID such as OUT015, or an email address.",
+    "invalid": "Wrong email, outlet ID or password.",
+    "locked": "Too many attempts. Call your dispatcher.",
+    "network": "Can't reach the server. Check your connection and try again.",
+    "unknown": "Sign-in failed. Try again."
+  }
+}

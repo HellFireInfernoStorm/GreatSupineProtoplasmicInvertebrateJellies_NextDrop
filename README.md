@@ -33,18 +33,16 @@ The public deployment is shared by every judge. A demo reset by one judge is vis
 
 ## Seeded accounts
 
-One account per role, as the Booklet requires. The logins below are the **planned** seed accounts from the story fixtures (`agent-docs/spec/data/seed-and-demo.md` §15.3, ADR 0008, ADR 0027).
+One account per role, as the Booklet requires, created by the seed (`agent-docs/spec/data/seed-and-demo.md` §15.3, ADR 0008, ADR 0027, ADR 0030). The credentials are demo values, not secrets.
 
-> **TODO (#30):** confirm each login against the merged seed and add the demo credentials. Sign-in works (auth landed with #35), but no accounts exist until the seed merges.
-
-| Role | Planned login | Credential | Who and where |
+| Role | Login | Credential | Who and where |
 | --- | --- | --- | --- |
-| Store manager | **TODO (#30)** (Dilini, outlet `OUT004`) | **TODO (#30)** | Waypoint Fresh, Colombo, served from Peliyagoda |
-| Dispatcher | **TODO (#30)** (Nimal) | **TODO (#30)** | Peliyagoda depot, with a depot selector |
-| Loader | `LDR002` (Kandy dock) and `LDR001` (Peliyagoda dock) | **TODO (#30)** (PIN) | Night-shift dock loader |
-| Driver | `DRV039` (Sampath, vehicle `VEH039`) | **TODO (#30)** (PIN) | Kandy depot, Nuwara Eliya hill run |
+| Store manager | `OUT004` | password `nextdrop-demo` | Dilini, Waypoint Fresh, Colombo, served from Peliyagoda |
+| Dispatcher | `nimal@waypoint.test` | password `nextdrop-demo` | Nimal, every depot: choose Peliyagoda or Kandy at sign-in |
+| Loader | `LDR001` | PIN `2468` | Kasun, Peliyagoda dock |
+| Driver | `DRV039` | PIN `2468` | Sampath, vehicle `VEH039`, Kandy depot, Nuwara Eliya hill run |
 
-Planned extra accounts: driver `DRV001` (Ruwan S., Peliyagoda) and a second store manager at `OUT108` (the hill store). **TODO (#30):** confirm them.
+Extra accounts, with the same credentials: driver `DRV001` (Ruwan S., `VEH001`, Peliyagoda), loader `LDR002` (Pradeep, Kandy dock) and store manager `OUT104` (Ishara, the hill store on Sampath's trip).
 
 The login screens will have quick-login chips for the four seeded accounts. **TODO (#36, #56):** confirm once they ship.
 
@@ -90,7 +88,7 @@ docker compose up
 - **Profiles.** `--profile public` adds Caddy (automatic HTTPS for `CADDY_DOMAIN`), to be finished by #33. `--profile solver` is a placeholder: the solver is not built (ADR 0014).
 - **Several stacks at once** (one per worktree): copy `.env.example` to `.env.local`, set a free `APP_PORT`, then run `docker compose -p wp-<issue> --env-file .env.local up`. The project name keeps containers and volumes apart. The database is never published to the host, so only `APP_PORT` has to differ.
 
-**TODO (#30, #38):** say what the seed contains and how to reset the demo day once the seed (PR 91) and the demo tools merge.
+The seed loads the reference data, the seeded accounts, the Peliyagoda peak day and the Kandy story orders (see [Local development](#local-development-works-today)); under Compose it runs on every start. **TODO (#38):** say how to reset the demo day once the demo tools merge.
 
 ### Local development (works today)
 
@@ -114,7 +112,13 @@ The API reports database and migration readiness at `GET /api/readyz` and livene
 pnpm --filter @nextdrop/api db:deploy
 ```
 
-**TODO (#30):** add the seed command once the seed merges.
+To load the reference data, accounts and the story day into it:
+
+```bash
+pnpm --filter @nextdrop/api db:seed
+```
+
+The seed is idempotent: a second run writes nothing, and it never rewrites orders the demo has changed (ADR 0030). Set `SEED_ON_START=true` to run it every time the API starts.
 
 Environment variables read by the code today:
 
@@ -130,10 +134,11 @@ Environment variables read by the code today:
 | `PUBLIC_ORIGIN` | API auth | none | An `https://` origin makes the session cookie `Secure` |
 | `FIELD_REAUTH_GRACE_DAYS` | API auth | `30` | Days after expiry that a field device may still re-authenticate with its PIN (ADR 0024) |
 | `DEMO_MODE`, `DEMO_SCRIPT_KEY` | API auth | `false`, empty | Demo access; an empty key disables the script-key path (ADR 0024) |
+| `SEED_ON_START` | API | `false` | `true` runs the idempotent seed before the API listens; needs `DATABASE_URL` and the files in `data/reference/` |
 | `API_URL`, `API_PORT` | Vite dev proxy | `http://localhost:3000` | Where `/api` is proxied in development |
 | `WEB_PORT` | Vite dev server | `5173` | Web dev port |
 
-Compose also reads `APP_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `TZ`, `SEED_ON_START`, `SOLVER_ENABLED`, `SOLVER_URL`, `CADDY_DOMAIN` and `VAPID_*` (see `.env.example`), and sets `WEB_DIST_DIR`, which makes the API serve the built PWA. **TODO (#30, #38):** describe `SEED_ON_START` and the demo clock variables once the code reads them.
+Compose also reads `APP_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `TZ`, `SOLVER_ENABLED`, `SOLVER_URL`, `CADDY_DOMAIN` and `VAPID_*` (see `.env.example`), and sets `WEB_DIST_DIR`, which makes the API serve the built PWA. **TODO (#38):** add the demo clock variables when the code reads them.
 
 ### Checks
 
