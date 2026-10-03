@@ -7,6 +7,8 @@ import { createDatabase, type Database } from "./lib/database";
 import { rateLimited, registerErrorHandling } from "./lib/errors";
 import type { Readiness } from "./lib/readiness";
 import { authConfigFromEnv, registerAuth, type AuthConfig } from "./modules/auth";
+import { feedRoutes } from "./modules/feed";
+import { notificationRoutes } from "./modules/notifications";
 
 export interface ServerDependencies {
   ready?: Readiness;
@@ -14,6 +16,8 @@ export interface ServerDependencies {
   auth?: Partial<AuthConfig>;
   /** Clock for session expiry, lockout and serverTime. */
   now?: () => Date;
+  /** SSE timing; defaults to a 25 s heartbeat and a 1 s shared head poll. */
+  feed?: { heartbeatMs?: number; pollMs?: number };
 }
 
 export async function buildServer(opts: FastifyServerOptions = {}, dependencies: ServerDependencies = {}) {
@@ -46,13 +50,18 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
     global: false,
     errorResponseBuilder: (_request, context) => rateLimited(context.ttl),
   });
-  await registerAuth(app, {
-    prisma: database?.prisma ?? null,
-    config: { ...authConfigFromEnv(), ...dependencies.auth },
-    now: dependencies.now ?? (() => new Date()),
-  });
+  const prisma = database?.prisma ?? null;
+  const now = dependencies.now ?? (() => new Date());
+  await registerAuth(app, { prisma, config: { ...authConfigFromEnv(), ...dependencies.auth }, now });
 
   await app.register(healthRoutes, { prefix: "/api", ready: dependencies.ready ?? database!.ready });
+  await app.register(feedRoutes, {
+    prisma,
+    now,
+    heartbeatMs: dependencies.feed?.heartbeatMs ?? 25_000,
+    pollMs: dependencies.feed?.pollMs ?? 1_000,
+  });
+  await app.register(notificationRoutes, { prisma, now });
 
   return app;
 }

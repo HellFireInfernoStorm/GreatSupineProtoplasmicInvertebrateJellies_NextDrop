@@ -26,16 +26,21 @@ function readWith(change: (file: ReferenceFile, lines: string[]) => string[]): R
   };
 }
 
+/** The pinned hill trip as the seed fills it: a chilled order per stop and a dry order at the store. */
 function hillTrip(fixtures: ReturnType<typeof pickStoryFixtures>): PlanTrip {
-  const { trip } = fixtures.hillRun;
+  const { trip, storeOutletId } = fixtures.hillRun;
+  const stops = [
+    ...trip.stopOutletIds.map((outletId) => ({ outletId, temp: "chilled" as const })),
+    { outletId: storeOutletId, temp: "ambient" as const },
+  ];
   return {
     ref: "T-hill",
     vehicleId: trip.vehicleId,
     tripNo: trip.tripNo,
-    orders: trip.stopOutletIds.map((outletId) => ({
-      id: `o-${outletId}`,
+    orders: stops.map(({ outletId, temp }) => ({
+      id: `o-${outletId}-${temp}`,
       outletId,
-      temp: "chilled",
+      temp,
       weightG: 1000,
       volumeL: 1,
       deliveryDate: STORY_DATE,
@@ -61,9 +66,9 @@ describe("pickStoryFixtures on the committed reference CSVs", () => {
           tripNo: 1,
           brand: "Fresh",
           district: "Nuwara Eliya",
-          stopOutletIds: ["OUT105", "OUT108", "OUT104", "OUT106", "OUT107"],
+          stopOutletIds: ["OUT105", "OUT104", "OUT106", "OUT107"],
         },
-        storeOutletId: "OUT108",
+        storeOutletId: "OUT104",
         loaderLoginId: "LDR002",
       },
     });
@@ -79,10 +84,12 @@ describe("pickStoryFixtures on the committed reference CSVs", () => {
     for (const id of fixtures.hillRun.trip.stopOutletIds) {
       expect(ref.outlets.get(id)).toMatchObject({ brand: "Fresh", depot: KANDY, district: HILL_DISTRICT });
     }
-    expect(computeEtas(trip, ref).map((e) => e.outletId)).toEqual(fixtures.hillRun.trip.stopOutletIds);
+    const sequence = computeEtas(trip, ref).map((e) => e.outletId);
+    expect([...new Set(sequence)]).toEqual(fixtures.hillRun.trip.stopOutletIds);
+    expect(sequence.filter((id) => id === fixtures.hillRun.storeOutletId)).toHaveLength(2);
   });
 
-  it("binds the hill store to the trip's second stop, a Fresh outlet", () => {
+  it("binds the hill store to the trip's second stop, a Fresh outlet with two orders", () => {
     const { storeOutletId, trip } = fixtures.hillRun;
     expect(trip.stopOutletIds[1]).toBe(storeOutletId);
     expect(ref.outlets.get(storeOutletId)?.brand).toBe("Fresh");

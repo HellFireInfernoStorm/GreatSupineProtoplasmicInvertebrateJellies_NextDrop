@@ -42,10 +42,11 @@ export const KANDY = "Kandy";
 export const PEAK_STORE_DISTRICT = "Colombo";
 /** Talawakele lies in Nuwara Eliya district, a `hill` district served from Kandy. */
 export const HILL_DISTRICT = "Nuwara Eliya";
-/** The D4 "no signal" card reads "stop 3 of 5". */
-export const HILL_TRIP_MAX_STOPS = 5;
-/** Walkthrough steps 8 to 11 need one online stop, two offline stops and a later stop to edit. */
-export const HILL_TRIP_MIN_STOPS = 4;
+/**
+ * Walkthrough steps 8 to 11: stop 1 delivered online, stops 2 and 3 delivered offline (the dispatcher then cancels
+ * stop 3, which makes the clash), and stop 4 edited by the dispatcher.
+ */
+export const HILL_TRIP_STOPS = 4;
 /** Stop 1 is delivered online (step 8); stop 2 is the first delivered offline, so its store sees the late confirm. */
 export const STORE_STOP_INDEX = 1;
 /** Seeded loader logins: LDR001 is Peliyagoda (§15.3), the next one is the Kandy loader. */
@@ -71,10 +72,13 @@ export interface StoryFixtures {
       readonly tripNo: number;
       readonly brand: Outlet["brand"];
       readonly district: string;
-      /** Outlet IDs in delivery order, as `computeEtas` sequences them. */
+      /** Outlet IDs in delivery order, as `computeEtas` sequences them. The store stop takes two orders. */
       readonly stopOutletIds: readonly string[];
     };
-    /** The outlet receiving the walkthrough delivery (the store's delayed-confirmation view). */
+    /**
+     * The outlet receiving the walkthrough delivery (the store's delayed-confirmation view). It has a chilled and a dry
+     * order on the trip, so the store can confirm one and report a shortage on the other (step 13).
+     */
     readonly storeOutletId: string;
     readonly loaderLoginId: string;
   };
@@ -123,14 +127,15 @@ function pickPeakStore(ref: ReferenceData): Outlet {
     ),
   );
   const truck = trucks[0];
-  const pick = truck && outlets.find((o) => isClean(tripFor(truck, [o]), ref));
+  const pick = truck && outlets.find((o) => isClean(tripFor(truck, [{ outlet: o, temp: "chilled" }]), ref));
   if (!pick) throw new Error(`no ${PEAK_STORE_DISTRICT} Fresh outlet a ${PELIYAGODA} reefer truck can serve`);
   return pick;
 }
 
 /**
- * The first Kandy reefer truck, by vehicle ID, whose Fresh trip 1 to the hill district takes at least
- * `HILL_TRIP_MIN_STOPS` of that district's Fresh outlets. Outlets are added in ID order while the trip stays clean.
+ * The first Kandy reefer truck, by vehicle ID, whose Fresh trip 1 to the hill district takes `HILL_TRIP_STOPS` of that
+ * district's Fresh outlets: a chilled order at each, plus a dry order at the store stop. Outlets are added in ID order
+ * while the trip stays clean. The Booklet counts trip time per order, so the store's second order costs a stop.
  */
 function pickHillRun(ref: ReferenceData): StoryFixtures["hillRun"] {
   const district = ref.districts.get(HILL_DISTRICT);
@@ -143,12 +148,12 @@ function pickHillRun(ref: ReferenceData): StoryFixtures["hillRun"] {
   for (const vehicle of byId([...ref.vehicles.values()].filter((v) => isReeferTruck(v, KANDY)))) {
     const stops: Outlet[] = [];
     for (const outlet of outlets) {
-      if (stops.length === HILL_TRIP_MAX_STOPS) break;
-      if (isClean(tripFor(vehicle, [...stops, outlet]), ref)) stops.push(outlet);
+      if (stops.length === HILL_TRIP_STOPS) break;
+      if (isClean(hillTripFor(vehicle, [...stops, outlet], ref).trip, ref)) stops.push(outlet);
     }
-    if (stops.length < HILL_TRIP_MIN_STOPS) continue;
+    if (stops.length < HILL_TRIP_STOPS) continue;
 
-    const stopOutletIds = computeEtas(tripFor(vehicle, stops), ref).map((eta) => eta.outletId);
+    const { stopOutletIds } = hillTripFor(vehicle, stops, ref);
     return {
       depot: KANDY,
       district: HILL_DISTRICT,
@@ -159,7 +164,20 @@ function pickHillRun(ref: ReferenceData): StoryFixtures["hillRun"] {
       loaderLoginId: KANDY_LOADER_LOGIN_ID,
     };
   }
-  throw new Error(`no ${KANDY} reefer truck can run ${HILL_TRIP_MIN_STOPS}+ Fresh stops in ${HILL_DISTRICT}`);
+  throw new Error(`no ${KANDY} reefer truck can run ${HILL_TRIP_STOPS} Fresh stops in ${HILL_DISTRICT}`);
+}
+
+/** The hill trip over `outlets`: a chilled order at each, and a dry order at the stop that becomes the store stop. */
+export function hillTripFor(
+  vehicle: Vehicle,
+  outlets: readonly Outlet[],
+  ref: ReferenceData,
+): { trip: PlanTrip; stopOutletIds: string[] } {
+  const chilled = outlets.map((outlet) => ({ outlet, temp: "chilled" as const }));
+  const stopOutletIds = computeEtas(tripFor(vehicle, chilled), ref).map((eta) => eta.outletId);
+  const store = outlets.find((o) => o.id === stopOutletIds[STORE_STOP_INDEX]);
+  const trip = tripFor(vehicle, store ? [...chilled, { outlet: store, temp: "ambient" }] : chilled);
+  return { trip, stopOutletIds };
 }
 
 /** Driver display IDs follow the vehicle number: `DRV001` drives `VEH001`. */
@@ -175,12 +193,12 @@ function byId<T extends { readonly id: string }>(items: T[]): T[] {
   return items.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
-/** A Fresh trip 1 carrying one small chilled order per outlet. */
-function tripFor(vehicle: Vehicle, outlets: readonly Outlet[]): PlanTrip {
-  const orders = outlets.map((o): PlanOrder => ({
-    id: `fixture-${o.id}`,
-    outletId: o.id,
-    temp: "chilled",
+/** A Fresh trip 1 carrying one small order per entry. */
+function tripFor(vehicle: Vehicle, stops: readonly { outlet: Outlet; temp: PlanOrder["temp"] }[]): PlanTrip {
+  const orders = stops.map(({ outlet, temp }): PlanOrder => ({
+    id: `fixture-${outlet.id}-${temp}`,
+    outletId: outlet.id,
+    temp,
     weightG: 1000,
     volumeL: 1,
     deliveryDate: STORY_DATE,
@@ -220,7 +238,7 @@ export const WALKTHROUGH_VEHICLE_ID = ${q(hill.vehicleId)};
 export const WALKTHROUGH_DRIVER_ID = ${q(hill.driverId)};
 /**
  * The hill trip. Replaces the design placeholder \`T001\`; its display ID is assigned when the plan is proposed.
- * Stops are in delivery order.
+ * Stops are in delivery order: a chilled order at each, plus a dry order at the store stop.
  */
 export const WALKTHROUGH_TRIP = {
   vehicleId: ${q(hill.trip.vehicleId)},
@@ -229,7 +247,7 @@ export const WALKTHROUGH_TRIP = {
   district: ${q(hill.trip.district)},
   stopOutletIds: [${hill.trip.stopOutletIds.map(q).join(", ")}],
 } as const;
-/** The store receiving the walkthrough delivery: stop ${STORE_STOP_INDEX + 1}, the first one delivered offline. */
+/** The store receiving the walkthrough delivery: stop ${STORE_STOP_INDEX + 1}, the first delivered offline. Chilled and dry orders. */
 export const HILL_STORE_OUTLET_ID = ${q(hill.storeOutletId)};
 /** The Kandy loader account. */
 export const KANDY_LOADER_LOGIN_ID = ${q(hill.loaderLoginId)};

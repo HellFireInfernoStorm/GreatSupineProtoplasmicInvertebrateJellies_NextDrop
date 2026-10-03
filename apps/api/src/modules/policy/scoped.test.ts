@@ -38,3 +38,29 @@ describe("scoped()", () => {
     expect(scope.vehicles).toEqual({ id: "v1" });
   });
 });
+
+describe("scoped() feed audience and notifications", () => {
+  const unscoped = { depot: null, vehicleId: null, outletId: null };
+  it("matches each role's scope column or an unscoped row, for listed roles only", () => {
+    expect(scoped({ ...base, role: "STORE", outletId: "o1", depot: "P" }).changeFeed).toEqual({
+      roles: { has: "STORE" },
+      OR: [{ outletId: "o1" }, unscoped],
+    });
+    expect(scoped({ ...base, role: "DISPATCHER", depots: ["K", "P"] }).changeFeed).toEqual({
+      roles: { has: "DISPATCHER" },
+      OR: [{ depot: { in: ["K", "P"] } }, unscoped],
+    });
+    expect(scoped({ ...base, role: "LOADER", depot: "K", deviceId: null }).changeFeed).toEqual({
+      roles: { has: "LOADER" },
+      OR: [{ depot: "K" }, unscoped],
+    });
+    expect(scoped({ ...base, role: "DRIVER", vehicleId: "v1", depot: "K", deviceId: null }).changeFeed).toEqual({
+      roles: { has: "DRIVER" },
+      OR: [{ vehicleId: "v1" }, unscoped],
+    });
+  });
+
+  it("limits notifications to the user's own rows", () => {
+    expect(scoped({ ...base, role: "LOADER", depot: "K", deviceId: null }).notifications).toEqual({ userId: "u" });
+  });
+});

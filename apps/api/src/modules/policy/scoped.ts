@@ -6,6 +6,17 @@ export interface Scope {
   trips: Prisma.TripWhereInput;
   outlets: Prisma.OutletWhereInput;
   vehicles: Prisma.VehicleWhereInput;
+  /** Audience filter (ADR 0029): the role is listed and the row matches the role's scope column, or is unscoped. */
+  changeFeed: Prisma.ChangeFeedWhereInput;
+  /** Notifications are fanned out per user, so a user reads only their own rows. */
+  notifications: Prisma.NotificationWhereInput;
+}
+
+/** A feed row with no depot, vehicle or outlet reaches every role it lists. */
+const unscopedRow = { depot: null, vehicleId: null, outletId: null } satisfies Prisma.ChangeFeedWhereInput;
+
+function audience(actor: Actor, match: Prisma.ChangeFeedWhereInput): Prisma.ChangeFeedWhereInput {
+  return { roles: { has: actor.role }, OR: [match, unscopedRow] };
 }
 
 /**
@@ -13,6 +24,7 @@ export interface Scope {
  * `AND: [scoped(actor).orders, filter]` so a filter can never widen the scope.
  */
 export function scoped(actor: Actor): Scope {
+  const notifications = { userId: actor.userId };
   switch (actor.role) {
     case "STORE": {
       const { outletId } = actor;
@@ -21,6 +33,8 @@ export function scoped(actor: Actor): Scope {
         trips: { stops: { some: { order: { outletId } } } },
         outlets: { id: outletId },
         vehicles: { trip_vehicleId: { some: { stops: { some: { order: { outletId } } } } } },
+        changeFeed: audience(actor, { outletId }),
+        notifications,
       };
     }
     case "DISPATCHER": {
@@ -30,6 +44,8 @@ export function scoped(actor: Actor): Scope {
         trips: { planningDay: { depot: depots } },
         outlets: { depot: depots },
         vehicles: { depot: depots },
+        changeFeed: audience(actor, { depot: depots }),
+        notifications,
       };
     }
     case "LOADER": {
@@ -39,6 +55,8 @@ export function scoped(actor: Actor): Scope {
         trips: { planningDay: { depot } },
         outlets: { depot },
         vehicles: { depot },
+        changeFeed: audience(actor, { depot }),
+        notifications,
       };
     }
     case "DRIVER": {
@@ -49,6 +67,8 @@ export function scoped(actor: Actor): Scope {
         trips: { vehicleId },
         outlets: { order_outletId: { some: onOwnTrip } },
         vehicles: { id: vehicleId },
+        changeFeed: audience(actor, { vehicleId }),
+        notifications,
       };
     }
   }
