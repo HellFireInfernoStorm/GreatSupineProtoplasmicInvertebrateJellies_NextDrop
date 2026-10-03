@@ -1,0 +1,78 @@
+# NextDrop stack. `docker compose up` on a fresh clone: PostgreSQL, migrations, seed, then the API and the PWA
+# on http://localhost:${APP_PORT:-8080}. Every variable has a working default; see .env.example to change them.
+# Parallel stacks (one per worktree): docker compose -p wp-<issue> --env-file .env.local up (collisions.md).
+name: nextdrop
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nextdrop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nextdrop}
+      POSTGRES_DB: ${POSTGRES_DB:-nextdrop}
+      TZ: UTC
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    # Not published to the host: only the app talks to it, so parallel stacks never fight over a port.
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nextdrop}:${POSTGRES_PASSWORD:-nextdrop}@db:5432/${POSTGRES_DB:-nextdrop}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      TZ: ${TZ:-Asia/Colombo}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DEMO_MODE: ${DEMO_MODE:-true}
+      DEMO_SCRIPT_KEY: ${DEMO_SCRIPT_KEY:-}
+      FIELD_REAUTH_GRACE_DAYS: ${FIELD_REAUTH_GRACE_DAYS:-30}
+      SEED_ON_START: ${SEED_ON_START:-true}
+      SOLVER_ENABLED: ${SOLVER_ENABLED:-false}
+      SOLVER_URL: ${SOLVER_URL:-}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+    ports:
+      - "${APP_PORT:-8080}:3000"
+    volumes:
+      # Holds the generated session secret when SESSION_SECRET is not set.
+      - app-data:/var/lib/nextdrop
+    init: true
+    restart: unless-stopped
+
+  # Optional CP-SAT sidecar (spec section 17). Not built: ADR 0014. Placeholder so the profile exists.
+  solver:
+    profiles: ["solver"]
+    image: python:3.12-slim
+    command: ["python", "-c", "print('NextDrop solver sidecar is not built (ADR 0014); SOLVER_ENABLED stays false.')"]
+    restart: "no"
+
+  # Public deployment: TLS in front of the app (deployment.md). Minimal for now; #33 finishes it on the chosen host.
+  caddy:
+    profiles: ["public"]
+    image: caddy:2
+    command: ["caddy", "reverse-proxy", "--from", "${CADDY_DOMAIN:-localhost}", "--to", "app:3000"]
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  app-data:
+  caddy-data:
+  caddy-config:

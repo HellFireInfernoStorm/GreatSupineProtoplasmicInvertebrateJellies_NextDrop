@@ -29,7 +29,7 @@ NextDrop links ordering, planning, loading, delivery and receipt in one responsi
 | Repository | This monorepo |
 | Demo video | Not linked here; submitted through the submission form (#64). |
 
-The public deployment is shared by every judge. A demo reset by one judge is visible to all of them: a banner in every shell names who reset it and when (ADR 0007). For a private copy, run the stack locally with `docker compose up` ([Setup](#setup-and-configuration)).
+The public deployment is shared by every judge. A demo reset by one judge is visible to all of them: a banner in every shell names who reset it and when (ADR 0007). For a private copy, run the stack locally with `docker compose up` and open http://localhost:8080 ([Setup](#setup-and-configuration)).
 
 ## Seeded accounts
 
@@ -73,13 +73,22 @@ The login screens will have quick-login chips for the four seeded accounts. **TO
 
 ### Whole stack: `docker compose up`
 
-> **TODO (#31):** `docker-compose.yml`, the `Dockerfile` and `.env.example` are not merged yet. Once they are, document:
->
-> - prerequisites (Docker version);
-> - `cp .env.example .env` and each variable;
-> - `docker compose up`, which starts PostgreSQL, applies migrations, seeds the reference data, accounts and story day, and serves the app;
-> - the local URL and how to reset;
-> - the optional Compose profiles (`public` for TLS).
+Prerequisites: Docker with Compose v2 (Docker Desktop, or Docker Engine with the Compose plugin). Nothing else: no Node.js and no `.env` needed.
+
+```bash
+docker compose up
+```
+
+`docker compose up` builds the app image and starts PostgreSQL 16. The app waits for the database, applies the migrations, seeds the data (when `SEED_ON_START=true`, the default), then serves the API and the PWA together on **http://localhost:8080**. The first build takes a few minutes; later starts take seconds.
+
+- **Health.** `GET /api/readyz` returns OK once the database is reachable and every migration is applied.
+- **Stop.** `docker compose down`. Data stays in the `db-data` volume. `docker compose down -v` wipes it, and the next start migrates and seeds a fresh database.
+- **Configuration.** Optional. Copy `.env.example` to `.env` and edit it; Compose reads `.env` automatically. Every variable is explained in `.env.example`, and each one has a working default.
+- **Session secret.** If `SESSION_SECRET` is empty, the container generates one on first start and keeps it in the `app-data` volume, so sessions survive a restart. Set your own for a public deployment.
+- **Profiles.** `--profile public` adds Caddy (automatic HTTPS for `CADDY_DOMAIN`), to be finished by #33. `--profile solver` is a placeholder: the solver is not built (ADR 0014).
+- **Several stacks at once** (one per worktree): copy `.env.example` to `.env.local`, set a free `APP_PORT`, then run `docker compose -p wp-<issue> --env-file .env.local up`. The project name keeps containers and volumes apart. The database is never published to the host, so only `APP_PORT` has to differ.
+
+The seed loads the reference data, the seeded accounts, the Peliyagoda peak day and the Kandy story orders (see [Local development](#local-development-works-today)); under Compose it runs on every start. **TODO (#38):** say how to reset the demo day once the demo tools merge.
 
 ### Local development (works today)
 
@@ -126,10 +135,11 @@ Environment variables read by the code today:
 | `FIELD_REAUTH_GRACE_DAYS` | API auth | `30` | Days after expiry that a field device may still re-authenticate with its PIN (ADR 0024) |
 | `DEMO_MODE`, `DEMO_SCRIPT_KEY` | API auth | `false`, empty | Demo access; an empty key disables the script-key path (ADR 0024) |
 | `SEED_ON_START` | API | `false` | `true` runs the idempotent seed before the API listens; needs `DATABASE_URL` and the files in `data/reference/` |
+| `JOBS_ENABLED` | API | `true` | `false` stops the pg-boss planning-day tick (runs every minute) |
 | `API_URL`, `API_PORT` | Vite dev proxy | `http://localhost:3000` | Where `/api` is proxied in development |
 | `WEB_PORT` | Vite dev server | `5173` | Web dev port |
 
-**TODO (#31, #38):** add the demo clock variables when the code reads them.
+Compose also reads `APP_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `TZ`, `SOLVER_ENABLED`, `SOLVER_URL`, `CADDY_DOMAIN` and `VAPID_*` (see `.env.example`), and sets `WEB_DIST_DIR`, which makes the API serve the built PWA. The demo clock has no variable: its offset is stored in the database and moved with `POST /api/demo/clock` (ADR 0033).
 
 ### Checks
 
@@ -144,7 +154,7 @@ Environment variables read by the code today:
 | `pnpm agent:check` | Repository conventions: instruction files, spec headers, banned files |
 | `pnpm docs:erd` | Regenerates the ERD in `docs/data-model.md` from the Prisma schema |
 
-CI (`.github/workflows/ci.yml`) runs typecheck, lint, `deps:check`, unit tests, build, and the integration tests against a PostgreSQL 16 service on every PR and push to `main`. **TODO (#87):** add the Compose smoke job. **TODO (#62):** add `pnpm e2e`.
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, `deps:check`, unit tests, build, and the integration tests against a PostgreSQL 16 service on every PR and push to `main`. A Compose smoke job also runs `docker compose up` with every default and checks `/api/readyz` and the PWA. **TODO (#62):** add `pnpm e2e`.
 
 ## Significant departures from the Designathon design
 

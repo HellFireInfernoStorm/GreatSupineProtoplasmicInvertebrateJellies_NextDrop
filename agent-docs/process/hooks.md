@@ -9,7 +9,7 @@ Enforcement is by git hooks (lefthook), not by harness-specific hooks, so every 
 | `pre-commit` | `sync-skills.mjs` (refresh `.claude/skills/`), `build-index.mjs` (refresh the status table), `check.mjs`, then Prettier (writes and re-stages) and ESLint on the staged source files |
 | `commit-msg` | `commit-msg.mjs`: subject present and at most 72 characters |
 | `pre-push` | `check-branch.mjs`, `check.mjs`, then `typecheck` and `test` for any package that defines them, and the root `deps:check` (module boundaries) |
-| CI | `ci.yml` on every PR and push to `main`: cached pnpm install, `typecheck`, `lint`, `deps:check`, `test`, `test:int` against a PostgreSQL 16 service, `build`. `agent-context.yml`: `check.mjs`, and on pull requests `check-pr-body.mjs` (PR sections, departure rule, required labels, branch name). On issues, the `issue-labels` workflow applies the labels chosen in the Task form (`issue-labels.mjs`), and the `unblock` workflow keeps the `blocked` label in step with each issue's "Blocked by" list (`unblock.mjs`). |
+| CI | `ci.yml` on every PR and push to `main`: cached pnpm install, `typecheck`, `lint`, `deps:check`, `test`, `test:int` against a PostgreSQL 16 service, `build`, and a Compose smoke job (`docker compose up`, then `/api/readyz` and the PWA). `agent-context.yml`: `check.mjs`, and on pull requests `check-pr-body.mjs` (PR sections, departure rule, required labels, branch name). On issues, the `issue-labels` workflow applies the labels chosen in the Task form (`issue-labels.mjs`), and the `unblock` workflow keeps the `blocked` label in step with each issue's "Blocked by" list (`unblock.mjs`). |
 
 ## What `check.mjs` verifies
 
