@@ -16,6 +16,8 @@ sources: guide §6.2
 
 ## Initial migration implementation (ADR 0023)
 
+`PlanningDayState` is extended by a separate additive migration for issue #79 to store `OPEN`, `CLOSED`, `PLANNING`, `PUBLISHED`, `IN_PROGRESS` and `COMPLETE`, matching the [calendar lifecycle](../domain/cutoff-and-calendar.md). The initial migration is unchanged; existing rows and the `OPEN` default are preserved. This migration adds enum values only, without changing transitions, CHECK constraints, triggers or indexes.
+
 The Prisma schema expresses supported unique/index/FK constraints; the same initial migration contains the generated definitions plus hand-written CHECK constraints and append-only triggers. ChangeFeed(seq)'s unique index serves the listed sequence lookup (no duplicate non-unique index).
 
 `TripStop(tripId,tripStatus)` references `Trip(id,status)` with ON UPDATE CASCADE. Its partial unique index `trip_stops_active_order_key` covers orderId where tripStatus <> CANCELLED. Status mismatches fail the FK; cancellation updates the index membership; reactivation fails if it would create a duplicate assignment. Prisma 7.10.0 represents this predicate using its partialIndexes preview feature.

@@ -88,6 +88,10 @@ enum EventDisposition {
 enum PlanningDayState {
   OPEN
   CLOSED
+  PLANNING
+  PUBLISHED
+  IN_PROGRESS
+  COMPLETE
 }
 
 enum TripStatus {
