@@ -1,7 +1,8 @@
 import cookie from "@fastify/cookie";
 import Fastify from "fastify";
+import { DEMO_SCRIPT_KEY_HEADER } from "@nextdrop/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { actors, matrix, resources, routes } from "../../../tests/support/authorization-cases";
+import { actors, expectedRoles, matrix, resources, routes } from "../../../tests/support/authorization-cases";
 import { registerErrorHandling } from "../../lib/errors";
 import { can } from "../policy";
 import { buildServer } from "../../server";
@@ -65,8 +66,20 @@ beforeAll(async () => {
 afterAll(async () => app.close());
 
 describe("generated contract authorization matrix", () => {
-  it.each(matrix)("$action / $actor.role / $name", async ({ action, route, actor, resource, allowed }) => {
+  it.each(routes)("%s retains its reviewed role ceiling", (action, route) => {
+    expect([...route.roles].sort()).toEqual([...expectedRoles[action]].sort());
+  });
+
+  it.each(matrix)("$action / $actor.role / $name (policy)", ({ action, actor, resource, allowed }) => {
     expect(can(actor, action, resource)).toBe(allowed);
+  });
+
+  // Ownership is action-independent after the role ceiling. Keep every route/role HTTP check,
+  // and exercise every ownership scenario through the all-role notifications action once.
+  const httpCases = matrix.filter(
+    ({ action, name }) => name === "self" || (action === "notifications" && name !== "self"),
+  );
+  it.each(httpCases)("$action / $actor.role / $name (HTTP)", async ({ route, actor, resource, allowed }) => {
     const record = records[actors.indexOf(actor)]!;
     const response = await app.inject({
       method: route.method,
@@ -93,9 +106,15 @@ describe("generated contract authorization matrix", () => {
       const script = await app.inject({
         method: route.method,
         url: route.path,
-        headers: { "x-nextdrop-script-key": config.demoScriptKey },
+        headers: { [DEMO_SCRIPT_KEY_HEADER]: config.demoScriptKey },
       });
       expect(script.statusCode).toBe(200);
+      const wrongKey = await app.inject({
+        method: route.method,
+        url: route.path,
+        headers: { [DEMO_SCRIPT_KEY_HEADER]: "wrong-key" },
+      });
+      expect(wrongKey.statusCode).toBe(401);
     }
   });
 
@@ -120,9 +139,12 @@ describe("generated contract authorization matrix", () => {
   });
 
   it.each(routes.filter(([, route]) => route.method !== "GET"))(
-    "%s rejects a session mutation without CSRF",
+    "%s rejects a mutation without CSRF",
     async (_action, route) => {
-      const actor = actors.find((candidate) => route.roles.includes(candidate.role))!;
+      // Public mutations need a nonempty header even without a session/role ceiling.
+      const actor =
+        route.access === "public" ? actors[0]! : actors.find((candidate) => route.roles.includes(candidate.role));
+      if (!actor) throw new Error("Session mutation has no permitted role");
       const record = records[actors.indexOf(actor)]!;
       const response = await app.inject({
         method: route.method,

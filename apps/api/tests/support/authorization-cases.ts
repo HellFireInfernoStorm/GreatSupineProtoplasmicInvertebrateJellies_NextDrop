@@ -78,6 +78,63 @@ export const resources: readonly { name: string; resource: Resource; owners: rea
 ];
 
 export const routes = Object.entries(apiRoutes) as [ApiRouteName, ApiRouteDefinition][];
+// Reviewed role ceiling, independent of the live contracts read by can(). New actions require review here.
+const all = ["STORE", "DISPATCHER", "LOADER", "DRIVER"] as const;
+const store = ["STORE"] as const;
+const dispatch = ["DISPATCHER"] as const;
+const field = ["LOADER", "DRIVER"] as const;
+export const expectedRoles = {
+  login: all,
+  logout: all,
+  me: all,
+  reauth: field,
+  outlets: all,
+  vehicles: all,
+  products: all,
+  calendar: all,
+  reasons: all,
+  storeCutoff: store,
+  storeDeliveries: store,
+  createOrder: store,
+  storeOrders: store,
+  storeOrder: store,
+  cancelOrder: store,
+  receipt: store,
+  reportIssue: store,
+  storeNotifications: store,
+  storeNotificationsRead: store,
+  notifications: all,
+  notificationsRead: all,
+  dispatchDay: dispatch,
+  propose: dispatch,
+  getDraft: dispatch,
+  saveDraft: dispatch,
+  validate: dispatch,
+  publish: dispatch,
+  versions: dispatch,
+  runs: dispatch,
+  exceptions: dispatch,
+  resolveConflict: dispatch,
+  resolveIssue: dispatch,
+  resolveShort: dispatch,
+  requestReversal: dispatch,
+  getFleet: dispatch,
+  updateFleet: dispatch,
+  outlook: dispatch,
+  outletHistory: dispatch,
+  snapshot: field,
+  syncEvents: field,
+  uploadBlob: field,
+  heartbeat: field,
+  changes: all,
+  stream: all,
+  demoState: dispatch,
+  demoClock: dispatch,
+  demoReset: dispatch,
+  demoTick: dispatch,
+  health: [],
+  ready: [],
+} as const satisfies Record<ApiRouteName, readonly Actor["role"][]>;
 export const matrix = routes.flatMap(([action, route]) =>
   actors.flatMap((actor) =>
     resources.map((scenario) => ({
@@ -85,7 +142,10 @@ export const matrix = routes.flatMap(([action, route]) =>
       route,
       actor,
       ...scenario,
-      allowed: route.access !== "public" && route.roles.includes(actor.role) && scenario.owners.includes(actor.role),
+      allowed:
+        route.access !== "public" &&
+        (expectedRoles[action] as readonly Actor["role"][]).includes(actor.role) &&
+        scenario.owners.includes(actor.role),
     })),
   ),
 );

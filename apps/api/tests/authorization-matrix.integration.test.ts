@@ -2,16 +2,15 @@ import { randomUUID } from "node:crypto";
 import { HUMAN_ROLES, type HumanRole } from "@nextdrop/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { CSRF_HEADER, csrfToken, SESSION_COOKIE } from "../src/modules/auth";
-import { scoped, type Actor } from "../src/modules/policy";
 import { buildServer, type App } from "../src/server";
-import { routes } from "./support/authorization-cases";
+import { expectedRoles, routes } from "./support/authorization-cases";
 import { createSuiteDatabase, testDatabaseUrl, type SuiteDatabase } from "./support/suite-database";
 
 const secret = "authorization-matrix-secret-authorization-matrix";
 const now = new Date("2026-10-03T00:00:00Z");
 let suite: SuiteDatabase;
 let app: App;
-const callers = new Map<HumanRole, { actor: Actor; cookie: string; csrf: string; own: string; foreign: string }>();
+const callers = new Map<HumanRole, { cookie: string; csrf: string; own: string; foreign: string }>();
 // Generate currently implemented collection paths from the contracts, including store aliases.
 const collectionRoutes = routes.filter(([, route]) =>
   ["notificationsResponse", "readNotificationsResponse", "changesResponse"].includes(route.responses[200] ?? ""),
@@ -86,15 +85,6 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
           expiresAt: new Date(now.getTime() + 3_600_000),
         },
       });
-      const base = { userId: user.id, sessionId: session.id };
-      const actor: Actor =
-        role === "STORE"
-          ? { ...base, role, outletId: outlet.id, depot: "Own depot" }
-          : role === "DISPATCHER"
-            ? { ...base, role, depots: ["Own depot"] }
-            : role === "LOADER"
-              ? { ...base, role, depot: "Own depot", deviceId: null }
-              : { ...base, role, vehicleId: vehicle.id, depot: "Own depot", deviceId: null };
       const notification = (userId: string) =>
         prisma.notification.create({
           data: {
@@ -108,17 +98,13 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
       const own = await notification(user.id);
       const foreign = await notification(otherUser.id);
       callers.set(role, {
-        actor,
         cookie: session.id,
         csrf: csrfToken(secret, session.id),
         own: own.id,
         foreign: foreign.id,
       });
     }
-    await prisma.feedCounter.update({ where: { singleton: true }, data: { head: 2n } });
-    const store = callers.get("STORE")!.actor;
-    const driver = callers.get("DRIVER")!.actor;
-    if (store.role !== "STORE" || driver.role !== "DRIVER") throw new Error("Incorrect fixture roles");
+    await prisma.feedCounter.update({ where: { singleton: true }, data: { head: 4n } });
     await prisma.changeFeed.createMany({
       data: [
         {
@@ -128,8 +114,8 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
           entityId: randomUUID(),
           roles: [...HUMAN_ROLES],
           depot: "Own depot",
-          outletId: store.outletId,
-          vehicleId: driver.vehicleId,
+          outletId: outlet.id,
+          vehicleId: vehicle.id,
         },
         {
           seq: 2n,
@@ -140,6 +126,26 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
           depot: "Foreign depot",
           outletId: randomUUID(),
           vehicleId: randomUUID(),
+        },
+        {
+          seq: 3n,
+          kind: "order_changed",
+          entityType: "order",
+          entityId: randomUUID(),
+          roles: [...HUMAN_ROLES],
+          depot: "Own depot",
+          outletId: randomUUID(),
+          vehicleId: randomUUID(),
+        },
+        {
+          seq: 4n,
+          kind: "order_changed",
+          entityType: "order",
+          entityId: randomUUID(),
+          roles: ["DISPATCHER"],
+          depot: "Own depot",
+          outletId: outlet.id,
+          vehicleId: vehicle.id,
         },
       ],
     });
@@ -152,45 +158,46 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
   });
 
   const cases = collectionRoutes.flatMap(([action, route]) =>
-    HUMAN_ROLES.flatMap((role) => ["own", "foreign"].map((scope) => ({ action, route, role, scope }))),
+    HUMAN_ROLES.flatMap((role) =>
+      (route.method === "GET" ? ["collection"] : ["own", "foreign", "all"]).map((scope) => ({
+        action,
+        route,
+        role,
+        scope,
+      })),
+    ),
   );
-  it.each(cases)("$action / $role / $scope", async ({ route, role, scope }) => {
+  it.each(cases)("$action / $role / $scope", async ({ action, route, role, scope }) => {
     const caller = callers.get(role)!;
     const target = scope === "own" ? caller.own : caller.foreign;
-    // Independent expected IDs prove query predicates, not just the shape of Prisma where objects.
-    if (route.responses[200] === "changesResponse") {
-      const rows = await suite.prisma.changeFeed.findMany({
-        where: { AND: [scoped(caller.actor).changeFeed, { seq: scope === "own" ? 1n : 2n }] },
-      });
-      expect(rows.map((row) => row.seq)).toEqual(scope === "own" ? [1n] : []);
-    } else {
-      const rows = await suite.prisma.notification.findMany({
-        where: { AND: [scoped(caller.actor).notifications, { id: target }] },
-      });
-      expect(rows.map((row) => row.id)).toEqual(scope === "own" ? [target] : []);
-    }
+    // Use the real guard's sessions.actorFor and real handler query; no parallel hand-built actor.
     await suite.prisma.notification.updateMany({ data: { readAt: null } });
     const response = await app.inject({
       method: route.method,
       url: route.path + (route.responses[200] === "changesResponse" ? "?after=0" : ""),
       cookies: { [SESSION_COOKIE]: app.signCookie(caller.cookie) },
       headers: { [CSRF_HEADER]: caller.csrf },
-      ...(route.method === "POST" ? { payload: { all: false, ids: [target] } } : {}),
+      ...(route.method === "POST" ? { payload: scope === "all" ? { all: true } : { all: false, ids: [target] } } : {}),
     });
-    if (!route.roles.includes(role)) {
+    if (!(expectedRoles[action] as readonly HumanRole[]).includes(role)) {
       expect(response.statusCode).toBe(403);
       expect(response.json()).toMatchObject({ code: "FORBIDDEN" });
     } else {
       expect(response.statusCode).toBe(200);
       if (route.method === "POST") {
-        expect(response.json().updatedCount).toBe(scope === "own" ? 1 : 0);
+        expect(response.json().updatedCount).toBe(scope === "foreign" ? 0 : 1);
+        expect((await suite.prisma.notification.findUniqueOrThrow({ where: { id: caller.own } })).readAt).toEqual(
+          scope === "foreign" ? null : now,
+        );
         expect(
           (await suite.prisma.notification.findUniqueOrThrow({ where: { id: caller.foreign } })).readAt,
         ).toBeNull();
       } else if (route.responses[200] === "changesResponse") {
-        expect(response.json().items.map((item: { seq: string }) => item.seq)).toEqual(["1"]);
+        const visible = role === "DISPATCHER" ? ["1", "3", "4"] : role === "LOADER" ? ["1", "3"] : ["1"];
+        expect(response.json().items.map((item: { seq: string }) => item.seq)).toEqual(visible);
       } else {
         expect(response.json().items.map((item: { id: string }) => item.id)).toEqual([caller.own]);
+        expect(response.json().unreadCount).toBe(1);
       }
     }
   });
