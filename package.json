@@ -12,6 +12,7 @@
     "build": "pnpm -r --if-present run build",
     "typecheck": "pnpm -r --if-present run typecheck",
     "lint": "eslint . && prettier --check .",
+    "deps:check": "depcruise apps packages --config .dependency-cruiser.js",
     "format": "prettier --write .",
     "test": "pnpm -r --if-present run test",
     "test:int": "pnpm -r --if-present run test:int",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@nextdrop/config": "workspace:*",
+    "dependency-cruiser": "^18.5.0",
     "eslint": "^10.11.0",
     "lefthook": "^1.11.0",
     "prettier": "^3.9.9",

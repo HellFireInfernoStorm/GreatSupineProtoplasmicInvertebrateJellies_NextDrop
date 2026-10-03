@@ -1,0 +1,73 @@
+# Build and test gate for every PR and every push to main (issue #26). The agent-context and labels workflows are separate.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    name: Typecheck, lint, boundaries, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      # Version comes from packageManager in package.json.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint and formatting
+        run: pnpm lint
+      - name: Module boundaries (dependency-cruiser)
+        run: pnpm deps:check
+      - name: Unit tests
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+  integration:
+    name: Integration tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nextdrop
+          POSTGRES_PASSWORD: nextdrop
+          POSTGRES_DB: nextdrop_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nextdrop -d nextdrop_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Disposable CI database; the suite requires a name ending in _test (prisma-rules.md).
+      TEST_DATABASE_URL: postgresql://nextdrop:nextdrop@localhost:5432/nextdrop_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Integration tests
+        run: pnpm test:int
