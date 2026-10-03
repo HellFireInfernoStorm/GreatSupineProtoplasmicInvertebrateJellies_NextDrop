@@ -1,0 +1,65 @@
+{
+  "roles": {
+    "STORE": "Store manager",
+    "DISPATCHER": "Dispatcher",
+    "LOADER": "Loader",
+    "DRIVER": "Driver"
+  },
+  "session": {
+    "signedInAs": "Signed in as {{name}}",
+    "signOut": "Sign out",
+    "signOutFailed": "Couldn't sign out. Check the connection and try again."
+  },
+  "resetBanner": {
+    "by": "Demo data was reset by the {{role}} at {{time}}.",
+    "unknown": "Demo data was reset."
+  },
+  "status": {
+    "loading": "Loading…"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "unreachable": "Can't reach the server. Check the connection and try again.",
+    "retry": "Try again"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "demo": {
+    "label": "Demo accounts",
+    "signInAs": "Sign in as {{account}}"
+  },
+  "sync": {
+    "synced": "Synced",
+    "syncing": "Syncing",
+    "offline": "Offline",
+    "pending": "{{count}} pending",
+    "last": "Last synced {{time}}",
+    "failed": "{{count}} failed — open sync diagnostics",
+    "held": "{{count}} awaiting dispatcher review",
+    "now": "Sync now",
+    "forceOffline": "Force offline",
+    "reauth": "Enter your PIN to reconnect",
+    "pin": "PIN",
+    "kept": "Your saved work stays on this device.",
+    "unlock": "Reconnect",
+    "update": "An app update is ready.",
+    "safe": "I am idle or between stops.",
+    "apply": "Update app",
+    "errors": {
+      "invalid": "That PIN was not accepted. Try again.",
+      "locked": "Too many attempts. Wait and try again.",
+      "network": "No connection. Your work is kept; try again when connected.",
+      "unknown": "Could not reconnect. Try again."
+    },
+    "details": "Sync diagnostics",
+    "failedAction": "Action for {{reference}} was not applied.",
+    "reason": "Server reason: {{code}}. Your record is kept for review.",
+    "heldAction": "Fact for {{reference}} is saved on the server and awaiting dispatcher review.",
+    "captured": "Captured {{time}}",
+    "confirmed": "Confirmed {{time}} after sync",
+    "paused": "Reconnect needed",
+    "retrying": "Sync will retry",
+    "waiting": "Waiting to sync"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "title": "Sign in",
+  "subtitle": "Loader",
+  "id": {
+    "label": "Loader ID",
+    "placeholder": "LDR0xx"
+  },
+  "pin": {
+    "label": "PIN",
+    "entered": "{{count}} of {{total}} digits entered",
+    "backspace": "Delete the last digit"
+  },
+  "submit": "Sign in",
+  "submitting": "Signing in…",
+  "offlineNote": {
+    "tablet": "Works offline after your first sign-in on this tablet.",
+    "phone": "Works offline after your first sign-in on this phone."
+  },
+  "errors": {
+    "invalid": "Wrong Loader ID or PIN.",
+    "locked": "Too many tries. Ask the dock supervisor.",
+    "network": "Can't reach the server. Check the connection and try again.",
+    "unknown": "Sign-in failed. Try again."
+  }
+}
