@@ -50,6 +50,8 @@ const endpoints = [
   "GET /api/dispatch/exceptions",
   "POST /api/dispatch/conflicts/:id/resolve",
   "POST /api/dispatch/issues/:id/resolve",
+  "POST /api/dispatch/orders/:id/shorts/:lineId/resolve",
+  "POST /api/dispatch/orders/:id/reversal",
   "GET /api/dispatch/fleet",
   "PUT /api/dispatch/fleet",
   "GET /api/dispatch/outlook",

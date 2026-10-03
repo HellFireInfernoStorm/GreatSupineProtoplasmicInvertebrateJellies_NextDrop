@@ -42,6 +42,7 @@ void validationMatchesRules;
 void violationMatchesRules;
 
 export const idParamsSchema = z.strictObject({ id: uuidV7 });
+export const orderLineParamsSchema = z.strictObject({ id: uuidV7, lineId: nonempty });
 export const dateParamsSchema = z.strictObject({ date: localDate });
 export const dateQuerySchema = z.strictObject({ date: localDate });
 export const listQuerySchema = z.strictObject({
@@ -56,6 +57,7 @@ export const commonSchemas = {
   violation: violationSchema,
   validationResult: validationResultSchema,
   idParams: idParamsSchema,
+  orderLineParams: orderLineParamsSchema,
   dateParams: dateParamsSchema,
   dateQuery: dateQuerySchema,
   listQuery: listQuerySchema,

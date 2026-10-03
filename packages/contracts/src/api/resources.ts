@@ -10,7 +10,7 @@ import { z } from "zod";
 import { eventEnvelopeSchema } from "../envelope";
 import { orderDeferredPayloadSchema } from "../payloads/order-lifecycle";
 import { isoDateTime, localDate, uuidV7 } from "../primitives";
-import { orderFlagSchema, orderStatusSchema, tripStatusSchema } from "../vocab";
+import { orderFlagSchema, orderStatusSchema, tripStatusSchema, reversalTargetSchema } from "../vocab";
 import { count, minute, nonempty } from "./common";
 
 export const windowSchema = z.strictObject({ open: minute, close: minute });
@@ -92,6 +92,7 @@ export const orderSchema = z.strictObject({
   confirmedAt: isoDateTime.nullable(),
   deferredCount: count,
   replacesOrderId: uuidV7.nullable(),
+  pendingReversal: z.strictObject({ to: reversalTargetSchema, planVersion: count }).nullable(),
   lines: z.array(orderLineSchema).min(1),
   flags: orderFlagSchema,
   assignment: z

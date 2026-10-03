@@ -100,6 +100,22 @@ export const apiRouteFixtures = {
     responses: { 200: f.ackResponse, 409: error },
   },
   getFleet: { request: { query: f.dateQuery }, responses: { 200: f.fleetResponse } },
+  resolveShort: {
+    request: { params: f.orderLineParams, headers, body: f.resolveShortRequest },
+    responses: {
+      200: f.resolveShortResponse,
+      404: { ...error, code: "NOT_FOUND", message_key: "errors.not_found" },
+      409: { ...error, code: "ILLEGAL_TRANSITION", message_key: "errors.illegal_transition" },
+    },
+  },
+  requestReversal: {
+    request: { params: { id: f.order.id }, headers, body: f.requestReversalRequest },
+    responses: {
+      200: f.requestReversalResponse,
+      404: { ...error, code: "NOT_FOUND", message_key: "errors.not_found" },
+      409: { ...error, code: "ILLEGAL_TRANSITION", message_key: "errors.illegal_transition" },
+    },
+  },
   updateFleet: { request: { headers, body: f.updateFleetRequest }, responses: { 200: f.fleetResponse } },
   outlook: { request: { query: f.outlookQuery }, responses: { 200: f.outlookResponse } },
   outletHistory: { request: { params, query: f.listQuery }, responses: { 200: f.orderHistoryResponse } },
