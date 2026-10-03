@@ -59,6 +59,7 @@ const endpoints = [
   "GET /api/field/snapshot",
   "POST /api/sync/events",
   "PUT /api/sync/blobs/:id",
+  "GET /api/blobs/:id",
   "POST /api/sync/heartbeat",
   "GET /api/changes",
   "GET /api/stream",
@@ -133,6 +134,7 @@ describe("complete API DTO coverage", () => {
     expect(apiRoutes.login.access).toBe("public");
     expect(apiRoutes.stream.transport).toBe("sse");
     expect(apiRoutes.uploadBlob.transport).toBe("binary");
+    expect(apiRoutes.blob.transport).toBe("binary");
     expect(apiRoutes.demoReset.access).toBe("demo");
     expect(blobBodySchema.safeParse(new Uint8Array(0)).success).toBe(false);
     expect(blobBodySchema.safeParse(new Uint8Array(524289)).success).toBe(false);

@@ -95,3 +95,27 @@ describe("can(): ownership", () => {
     expect(can(driver, "outlets", { kind: "outlet", outletId: OUTLET_A, depot: "Kandy" })).toBe(false);
   });
 });
+
+describe("can(): blobs", () => {
+  const blob = (fields: Partial<{ depot: string; outletId: string; uploaderUserId: string }>): Resource => ({
+    kind: "blob",
+    depot: fields.depot ?? null,
+    outletId: fields.outletId ?? null,
+    uploaderUserId: fields.uploaderUserId ?? null,
+  });
+  it("serves the depot's dispatcher, the outlet's store and the uploading user only", () => {
+    const pod = blob({ depot: "Peliyagoda", outletId: OUTLET_A, uploaderUserId: "driver-user" });
+    expect(can(dispatcher, "blob", pod)).toBe(true);
+    expect(can({ ...base, role: "DISPATCHER", depots: ["Kandy"] }, "blob", pod)).toBe(false);
+    expect(can(store, "blob", pod)).toBe(true);
+    expect(can({ ...store, outletId: OUTLET_B }, "blob", pod)).toBe(false);
+    expect(can({ ...driver, userId: "driver-user" }, "blob", pod)).toBe(true);
+    expect(can(driver, "blob", pod)).toBe(false);
+    expect(can(loader, "blob", pod)).toBe(false);
+  });
+
+  it("serves nobody an unlinked blob", () => {
+    expect(can(dispatcher, "blob", blob({}))).toBe(false);
+    expect(can(store, "blob", blob({}))).toBe(false);
+  });
+});

@@ -7,6 +7,7 @@ import {
 } from "@nextdrop/contracts";
 import { applyEvent, ordersGoingOut, reduceOrder, shortLinesBlockingReady, type OrderEvent } from "@nextdrop/rules";
 import { Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { linkArrivedBlobs } from "../blobs";
 import { appendFeed, readFeedHint, type FeedRowInput } from "../feed";
 import type { NotificationInput, Notifier } from "../notifications";
 import { appendServerEvent, orderChanged, orderInclude, toRulesEvent, type OrderRecord } from "../orders";
@@ -216,6 +217,7 @@ export function createIngest(deps: IngestDependencies) {
       if (count === 0) throw new LostRace();
       const id = await insertOnce(tx, storedEvent(actor, event, receivedAt, subjects));
       if (id === null) return null;
+      await linkArrivedBlobs(tx, id, event.payload);
       if (event.type === "LOAD_CONFIRMED") {
         for (const line of event.payload.lines) {
           await tx.orderLine.update({ where: { id: line.lineId }, data: { qtyLoaded: line.qtyLoaded } });
@@ -278,6 +280,7 @@ export function createIngest(deps: IngestDependencies) {
       }
       const id = await insertOnce(tx, storedEvent(actor, event, receivedAt, subjects));
       if (id === null) return null;
+      await linkArrivedBlobs(tx, id, event.payload);
       const feed: FeedRowInput[] = [runUpdated(trip)];
       for (const { order } of states.filter(({ order }) => goingOut.includes(order.id))) {
         const { count } = await tx.order.updateMany({
@@ -311,6 +314,7 @@ export function createIngest(deps: IngestDependencies) {
     return prisma.$transaction(async (tx) => {
       const id = await insertOnce(tx, storedEvent(actor, event, receivedAt, subjects));
       if (id === null) return null;
+      await linkArrivedBlobs(tx, id, event.payload);
       const feed: FeedRowInput[] = subjects.trip ? [runUpdated(subjects.trip)] : [];
       for (const input of notificationsFor(event, subjects)) feed.push(...(await notifier.notify(tx, input)));
       await appendFeed(tx, feed);

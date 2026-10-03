@@ -9,6 +9,7 @@ import {
 } from "@nextdrop/rules";
 import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { ApiHttpError, notFound } from "../../lib/errors";
+import { linkArrivedBlobs } from "../blobs";
 import { appendFeed, type FeedRowInput } from "../feed";
 import type { Notifier } from "../notifications";
 import { dateOnly, type CalendarSource } from "./calendar";
@@ -230,6 +231,8 @@ export function createOrderCommands(deps: OrderCommandDependencies) {
         actor: { userId: actor.userId, role: "STORE" },
         at: now,
       });
+      // A referenced photo that already arrived is linked to the event (spec/sync/blobs.md).
+      await linkArrivedBlobs(tx, event.id, change.payload);
       const extra = (await change.also?.(tx, order, event.id)) ?? [];
       const vehicleId =
         (
