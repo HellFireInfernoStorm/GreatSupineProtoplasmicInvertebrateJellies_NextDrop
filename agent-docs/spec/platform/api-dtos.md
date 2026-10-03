@@ -61,6 +61,12 @@ Reference lists wrap `{ items }`. Optional depot query selection never overrides
 - Cutoff and deliveries take a local `date` query. Cutoff returns requested/delivery dates, cutoff instant, ordering flag, nullable guidance key, and server time.
 - Deliveries wraps order/trip, ONLINE or NO_SIGNAL, and nullable last-heard timestamp; the response includes server time.
 - Create body is `{ requestedDate, lines: [{ productId, qty }], replacesOrderId? }`; positive integer quantities. API derives totals and event line IDs. Success is 201 with the order.
+- Store order writes (ADR 0032):
+  - **Order shape.** One order holds one temperature and the outlet's brand. Mixed, foreign-brand, unknown or repeated products return 422 `VALIDATION_FAILED`.
+  - **Idempotency.** `idempotency-key` is unique per outlet; a retry returns the original order with 201.
+  - **Delivery date.** `currentDate` is `rules.deliveryDateFor` on the server clock. Display IDs are `ORD#####`.
+  - **Status changes.** Status moves only through `rules.applyEvent`, with a compare-and-set on the previous status. Illegal moves, lost races and no-op repeated cancels or receipts return 409 `ILLEGAL_TRANSITION`. A second issue on a disputed order is recorded.
+  - **Deliveries.** A store's trip shows only its own stops. `signal` is NO_SIGNAL only while the trip is DEPARTED and its driver's devices have been silent for 10 minutes.
 - Order list accepts optional date/status/after/limit and returns `{ items, nextCursor }` (null at end).
 - Cancel, receipt, issue-report, and issue-resolution bodies reuse existing payload shapes. Path IDs supply the subject, so conflict resolution does not repeat conflict ID or held-event ID in its body.
 - Cancel and receipt return the order. Issue report returns 201 `{ issueId, order }`. There is no Issue table: issueId, issue.id and the dispatch issue-resolution path ID are the ISSUE_REPORTED event's id. The issue projection's openedAt is that event's receivedAt; resolvedAt is the matching ISSUE_RESOLVED receivedAt, or null before resolution.

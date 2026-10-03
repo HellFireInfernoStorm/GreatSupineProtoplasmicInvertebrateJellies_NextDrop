@@ -7,10 +7,12 @@ import { createClock } from "./lib/clock";
 import { createDatabase, type Database } from "./lib/database";
 import { rateLimited, registerErrorHandling } from "./lib/errors";
 import type { Readiness } from "./lib/readiness";
+import { registerWebApp } from "./lib/web-app";
 import { authConfigFromEnv, registerAuth, type AuthConfig } from "./modules/auth";
 import { demoRoutes } from "./modules/demo";
 import { feedRoutes } from "./modules/feed";
 import { createNotifier, notificationRoutes } from "./modules/notifications";
+import { registerOrders } from "./modules/orders";
 
 export interface ServerDependencies {
   ready?: Readiness;
@@ -22,13 +24,16 @@ export interface ServerDependencies {
   demoRateLimit?: { max: number; timeWindowMs: number };
   /** SSE timing; defaults to a 25 s heartbeat and a 1 s shared head poll. */
   feed?: { heartbeatMs?: number; pollMs?: number };
+  /** Built PWA to serve from the API's origin; defaults to WEB_DIST_DIR (set in the container), unset in dev. */
+  webRoot?: string;
 }
 
 export async function buildServer(opts: FastifyServerOptions = {}, dependencies: ServerDependencies = {}) {
   const app = Fastify(opts).withTypeProvider<ZodTypeProvider>();
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
-  registerErrorHandling(app);
+  const webRoot = dependencies.webRoot ?? process.env.WEB_DIST_DIR;
+  registerErrorHandling(app, webRoot ? await registerWebApp(app, webRoot) : undefined);
 
   const database = dependencies.database ?? (dependencies.ready ? undefined : createDatabase());
   app.decorate("prisma", database?.prisma ?? null);
@@ -71,6 +76,8 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
     pollMs: dependencies.feed?.pollMs ?? 1_000,
   });
   await app.register(notificationRoutes, { prisma, now: clock.now });
+  // Store cutoffs are business time: they follow the demo clock.
+  await registerOrders(app, { prisma, now: clock.now });
   // Demo tooling needs the database: the clock offset, the tick and the reset all live there.
   if (prisma) {
     await app.register(demoRoutes, {
