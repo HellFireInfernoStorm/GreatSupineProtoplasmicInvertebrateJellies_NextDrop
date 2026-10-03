@@ -1,3 +1,4 @@
+import { runSeed } from "../prisma/seed";
 import { buildServer } from "./server";
 
 const port = Number(process.env.PORT ?? 3000);
@@ -10,6 +11,11 @@ const app = await buildServer({
     ...(pretty ? { transport: { target: "pino-pretty" } } : {}),
   },
 });
+
+if (process.env.SEED_ON_START === "true") {
+  if (!app.prisma) throw new Error("SEED_ON_START=true needs DATABASE_URL.");
+  app.log.info({ seed: await runSeed(app.prisma) }, "seed finished");
+}
 
 try {
   await app.listen({ port, host });
