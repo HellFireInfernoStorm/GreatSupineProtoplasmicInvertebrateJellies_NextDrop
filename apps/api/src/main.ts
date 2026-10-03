@@ -1,5 +1,5 @@
 import { runSeed } from "../prisma/seed";
-import { startJobs } from "./modules/jobs";
+import { startJobs, type Jobs } from "./modules/jobs";
 import { createNotifier } from "./modules/notifications";
 import { tickPlanningDays } from "./modules/planning";
 import { buildServer } from "./server";
@@ -28,19 +28,22 @@ try {
 }
 
 // The planning-day tick every minute (spec/planning/flow.md §8.1). JOBS_ENABLED=false turns it off.
+// Fastify refuses new hooks once listening, so the jobs are stopped from the signal handler below.
 const prisma = app.prisma;
+let jobs: Jobs | undefined;
 if (prisma && process.env.DATABASE_URL && process.env.JOBS_ENABLED !== "false") {
   const notifier = createNotifier();
-  const jobs = await startJobs({
+  jobs = await startJobs({
     connectionString: process.env.DATABASE_URL,
     tick: () => tickPlanningDays(prisma, app.clock.now(), notifier),
     log: app.log,
   });
-  app.addHook("onClose", () => jobs.stop());
 }
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.once(signal, () => {
-    void app.close().then(() => process.exit(0));
+    void Promise.resolve(jobs?.stop())
+      .then(() => app.close())
+      .then(() => process.exit(0));
   });
 }
