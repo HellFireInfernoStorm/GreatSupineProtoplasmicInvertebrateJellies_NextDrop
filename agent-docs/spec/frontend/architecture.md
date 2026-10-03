@@ -8,7 +8,11 @@ sources: guide §14, §14.1
 
 ## 14.1 Shells and routes
 
-One SPA. Route groups `/store/*`, `/dispatch/*`, `/loader/*`, `/driver/*`, plus `/login`. Route guards use `/auth/me`. Each role shell is a lazily loaded chunk; the **driver and loader chunks are precached** by the service worker, the others are runtime-cached. A shell sets `data-theme="store|dispatcher|loader|driver"` on its root.
+One SPA. Route groups `/store/*`, `/dispatch/*`, `/loader/*`, `/driver/*`, plus one login screen per role: `/login/store`, `/login/dispatch`, `/login/loader`, `/login/driver` (ADR 0027). `/` and `/login` redirect a signed-in user to their role's routes, and anyone else to the login screen the device used last.
+
+Route guards use `/auth/me`. A signed-out visitor who opens a role's routes is sent to that role's login. A signed-in user who opens another role's routes is sent to their own. A shell also leaves for the login screen when its session is lost later (a 401, or sign-out).
+
+Each role shell is a lazily loaded chunk; the **driver and loader chunks are precached** by the service worker, the others are runtime-cached. A shell declares the routes below its group in its own folder (`src/roles/<role>/index.tsx`), so a role's screens are added there and not in the shared router. A shell sets `data-theme="store|dispatcher|loader|driver"` on its root and renders the demo reset banner (ADR 0007) above its screens.
 
 Screen inventory. The authoritative list and visuals are the live Figma file (ADR 0015), summarised in `design/screens.md`.
 
@@ -22,3 +26,14 @@ Screen inventory. The authoritative list and visuals are the live Figma file (AD
 - **Outlet grouping** (ADR 0010): accounting stays per order, but Driver and Store views group adjacent stops of one outlet and trip into one card with expandable order rows. A card is done when all its orders are confirmed. Trip time still counts service time per order.
 - **Brand ordering guidance** (ADR 0010): the store order screen shows the notice from `orderingGuidance(brand, date, calendar)` (Style weekly day, Fresh chilled days, Tech single items). It is a notice only and never blocks submission. The seed obeys the same rule except on purpose.
 - **Capacity in m³**: the capacity outlook and its axes use m³. Tonnes may appear as a secondary label.
+
+## 14.4 Shared plumbing
+
+Every screen uses these, from `apps/web/src/lib`:
+
+- **API client**: `callApi(routeName, { params, query, body })`. The route names, paths and types come from the route table in `packages/contracts` ([api-dtos.md](../platform/api-dtos.md)). It checks the request and the response against the contract, adds the CSRF header to mutations, and rejects with `ApiRequestError` (`kind` is `http`, `network` or `invalid`).
+- **Mock mode**: a build with `VITE_API_MOCK=true` answers every call from the contract fixtures, so a screen can be built before its endpoint exists. Sign-in keeps a mock session for the tab. The password `wrong` or PIN `0000` gives the wrong-credentials answer; `locked` or `9999` gives the locked answer.
+- **Session**: `useSession()` inside a role shell.
+- **Server clock**: `useServerNow()` for every countdown, ETA and displayed "now". The offset is learned from the `serverTime` of API responses; `clockOffsetMs()` gives it to field events.
+- **Demo**: a build with `VITE_DEMO_MODE=true` shows the quick-login chips. `setDemoNotice()` feeds the reset banner.
+- **Desktop or phone design**: a role with both designs (the Store) uses the desktop design from 1024 px wide (Tailwind `lg`) and the phone design below it. A tablet held upright therefore gets the phone design, kept at phone width and centred. Use `lg:` classes where the two designs differ in layout, and `useIsDesktop()` where they need different components. The `short:` variant tightens spacing on a small or sideways phone.
