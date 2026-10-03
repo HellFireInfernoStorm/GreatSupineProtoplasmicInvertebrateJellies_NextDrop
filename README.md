@@ -35,14 +35,14 @@ The public deployment is shared by every judge. A demo reset by one judge is vis
 
 One account per role, as the Booklet requires. The logins below are the **planned** seed accounts from the story fixtures (`agent-docs/spec/data/seed-and-demo.md` §15.3, ADR 0008, ADR 0027).
 
-> **TODO (#30, #35):** confirm each login against the merged seed and add the demo credentials. Credentials are not set until the seed and auth issues merge.
+> **TODO (#30):** confirm each login against the merged seed and add the demo credentials. Sign-in works (auth landed with #35), but no accounts exist until the seed merges.
 
 | Role | Planned login | Credential | Who and where |
 | --- | --- | --- | --- |
-| Store manager | **TODO (#30)** (Dilini, outlet `OUT004`) | **TODO (#30, #35)** | Waypoint Fresh, Colombo, served from Peliyagoda |
-| Dispatcher | **TODO (#30)** (Nimal) | **TODO (#30, #35)** | Peliyagoda depot, with a depot selector |
-| Loader | `LDR002` (Kandy dock) and `LDR001` (Peliyagoda dock) | **TODO (#30, #35)** (PIN) | Night-shift dock loader |
-| Driver | `DRV039` (Sampath, vehicle `VEH039`) | **TODO (#30, #35)** (PIN) | Kandy depot, Nuwara Eliya hill run |
+| Store manager | **TODO (#30)** (Dilini, outlet `OUT004`) | **TODO (#30)** | Waypoint Fresh, Colombo, served from Peliyagoda |
+| Dispatcher | **TODO (#30)** (Nimal) | **TODO (#30)** | Peliyagoda depot, with a depot selector |
+| Loader | `LDR002` (Kandy dock) and `LDR001` (Peliyagoda dock) | **TODO (#30)** (PIN) | Night-shift dock loader |
+| Driver | `DRV039` (Sampath, vehicle `VEH039`) | **TODO (#30)** (PIN) | Kandy depot, Nuwara Eliya hill run |
 
 Planned extra accounts: driver `DRV001` (Ruwan S., Peliyagoda) and a second store manager at `OUT108` (the hill store). **TODO (#30):** confirm them.
 
@@ -116,11 +116,15 @@ Environment variables read by the code today:
 | `TEST_DATABASE_URL` | `pnpm test:int` | none (suite skips) | Disposable database whose name ends in `_test` |
 | `PORT`, `HOST` | API | `3000`, `0.0.0.0` | Listen address |
 | `LOG_LEVEL` | API | `info` | pino log level |
-| `NODE_ENV` | API | none | `production` turns off pretty logs |
+| `NODE_ENV` | API | none | `production` turns off pretty logs, requires `SESSION_SECRET` and makes the session cookie `Secure` |
+| `SESSION_SECRET` | API auth | random per start outside production | Signs session cookies and CSRF tokens; at least 32 characters in production |
+| `PUBLIC_ORIGIN` | API auth | none | An `https://` origin makes the session cookie `Secure` |
+| `FIELD_REAUTH_GRACE_DAYS` | API auth | `30` | Days after expiry that a field device may still re-authenticate with its PIN (ADR 0024) |
+| `DEMO_MODE`, `DEMO_SCRIPT_KEY` | API auth | `false`, empty | Demo access; an empty key disables the script-key path (ADR 0024) |
 | `API_URL`, `API_PORT` | Vite dev proxy | `http://localhost:3000` | Where `/api` is proxied in development |
 | `WEB_PORT` | Vite dev server | `5173` | Web dev port |
 
-**TODO (#31, #38):** add the demo and seed variables (`DEMO_MODE`, `SEED_ON_START`, `DEMO_SCRIPT_KEY` and others) when the code reads them.
+**TODO (#31, #38):** add the seed and demo clock variables (`SEED_ON_START` and others) when the code reads them.
 
 ### Checks
 
@@ -229,6 +233,7 @@ agent-docs/       Booklet copy, spec, ADRs, design notes and process docs
 
 - **Rules core tests.** The rules core has unit tests for the validator codes. They include the Booklet's worked trip-time examples (101 and 112 minutes, and 213 of 270), the trip time, ETA, fuel and priority rules, and the order reducer. Property tests (fast-check) check that every proposed plan passes the validator and that the allocator is deterministic.
 - **Contracts.** One zod schema registry and a typed route table, shared by web and API (ADR 0024).
+- **Authorization.** Every API route declares a policy action from the contracts route table; a route without one cannot be registered. `can()` and `scoped()` deny by default (ADR 0026, auth).
 - **Database.** Hand-written SQL migrations add immutability triggers, CHECK constraints and a partial unique index. Integration tests run against real PostgreSQL in an isolated schema per run (ADR 0023).
 - **Boundaries.** `apps/web` and `apps/api` never import each other. Rules live only in `packages/rules`. **TODO (#26):** say that CI enforces this with dependency-cruiser once it merges.
 - **Process.** Git hooks run formatting, lint, typecheck and tests. Every change goes through an issue, a plan comment and a PR with an AI assistance section. Lasting decisions become ADRs.
@@ -265,6 +270,7 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0024 | API wire contracts and client sync envelopes |
 | 0025 | Store the full planning-day lifecycle |
 | 0026 | Short-resolution and load-reversal routes |
+| 0026 | Auth sessions and policy details (numbered 0026 in parallel; renumbering tracked in **TODO (#88)**) |
 | 0027 D | Story fixture picks from the reference CSVs (under ADR 0008) |
 
 ## Submission documents

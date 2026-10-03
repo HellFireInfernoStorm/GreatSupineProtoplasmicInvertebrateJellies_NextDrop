@@ -78,8 +78,9 @@ As of 3 Oct 2026. **TODO (before submission):** refresh this table.
 | `packages/contracts`: event envelope and catalogue, API DTOs, route table | Built (v1) |
 | Database: Prisma schema, first migration with hand-written SQL, readiness check | Built |
 | API: server, `/api/healthz`, `/api/readyz` | Built |
+| API: auth (login, sessions, CSRF, lockout) and policy (`can()`, `scoped()`) | Built (#35) |
 | Story fixture picker (`pnpm seed:pick-fixtures`) | Built |
 | Web: routes, login and the four role shells | In progress (#36) |
-| API modules: auth, orders, planning, sync, feed, notify, demo, monitor | Planned (#35, #38, #41, #42, #45, #47, #48, #54, #59) |
+| API modules: orders, planning, sync, feed, notify, demo, monitor | Planned (#38, #41, #42, #45, #47, #48, #54, #59) |
 | Offline core, Loader and Driver apps | Planned (#40, #52, #53) |
 | Seed, Docker Compose, public deployment | Planned (#30, #31, #33) |
