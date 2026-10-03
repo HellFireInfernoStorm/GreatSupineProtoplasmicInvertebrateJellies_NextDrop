@@ -8,6 +8,8 @@ sources: guide §12
 
 Base path `/api`. JSON, zod-validated, errors as `{ code, message_key, params, requestId }`. Cookie sessions (httpOnly, SameSite=Lax) plus a required custom header on mutations. Field roles mutate only through `/sync/*`.
 
+Schemas, route registration metadata and exported mock fixtures live in `packages/contracts`. The [wire DTO draft](api-dtos.md) records the proposed field names, headers, nullable values, response statuses and binary/SSE boundaries for #29, pending owner review of ADR 0023. Stored event payloads are unchanged.
+
 | Area | Endpoints | Roles |
 | --- | --- | --- |
 | Auth | `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `POST /auth/reauth` | all |

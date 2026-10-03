@@ -14,6 +14,10 @@ Push: `POST /sync/events` (batched, idempotent). Blobs: `PUT /sync/blobs/:client
 
 Request: `{ deviceId, events: [EventEnvelope-from-client...] }` (max 100 events / 1 MB). Events are processed **in `deviceSeq` order**, each in its own short transaction (section 6.3):
 
+The client form reuses the catalogue payload schemas but omits server-assigned `id`, `receivedAt` and `disposition`. It requires `clientEventId`, `deviceId`, `deviceSeq`, `schemaVersion`, `subject`, `source: FIELD`, the loader/driver `actor`, and `capturedAt`; `clockOffsetMs` and `basedOnPlanVersion` remain optional. Only field-authored catalogue types are accepted. Each event's deviceId must match the batch deviceId. The API still verifies actor identity, allowed event author, subject ownership and monotonic processing; declared actor metadata does not authorize a client. The stored [event envelope](../events/envelope.md) is unchanged. These newly specified wire details are proposed in ADR 0023 for owner review.
+
+The request schema enforces the 100-event cap; the API enforces the serialized 1 MB transport cap. One malformed event must not reject valid neighbours: the handler validates each raw event independently and returns a per-event rejection, rather than using a failed whole-batch schema parse to abort processing. The complete batch schema describes valid requests for clients and mocks.
+
 1. Validate with zod (`SCHEMA_INVALID` on failure) and upcast old `schemaVersion`s.
 2. Authorize: actor, role, and subject must be in the actor's scope (`FORBIDDEN`, `NOT_ASSIGNED`).
 3. Idempotency: known `clientEventId` -> `DUPLICATE`.
@@ -30,3 +34,5 @@ Response: `{ results: [{ clientEventId, status, code?, conflictId?, serverEventI
 | network/5xx (no result) | keep pending; retry with backoff |
 
 One bad event never fails the batch. Later events that depend on a rejected one are rejected with `ILLEGAL_TRANSITION` and shown grouped with it.
+
+The result DTO is discriminated by status: ACCEPTED carries its serverEventId, HELD_CONFLICT carries conflictId, and REJECTED requires code. DUPLICATE can include the original serverEventId/code. Every result has receivedAt; feedHead is a decimal string, preserving feed sequence precision. The API must recover clientEventId from invalid events where possible to give callers a matchable rejection. String cursor and result-detail conventions are part of the proposed #29 wire contracts.
