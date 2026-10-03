@@ -31,11 +31,11 @@ Seeding is idempotent and runs on every start when `SEED_ON_START=true`. Histori
 
 | Role | Login | Notes |
 | --- | --- | --- |
-| Store manager | outlet `OUT015` / Dilini | Waypoint Fresh, Wellawatte (Peliyagoda-served) |
+| Store manager | outlet `OUT004` / Dilini | Waypoint Fresh, Colombo (Peliyagoda-served); the design's Wellawatte `OUT015` (15.5) |
 | Dispatcher | Nimal, Peliyagoda | Depot selector available |
 | Loader | `LDR001`, Peliyagoda dock | PIN login |
-| Driver | Sampath, Kandy depot (fixture IDs from `story-fixtures`) | The walkthrough driver on the Kandy hill run; PIN login |
-| Extras | `DRV001` Ruwan S. (Peliyagoda), a Kandy loader, a second store manager | Second driver; Kandy and multi-outlet scenarios |
+| Driver | Sampath, `DRV039` on `VEH039`, Kandy depot (IDs from `story-fixtures`) | The walkthrough driver on the Kandy hill run; PIN login |
+| Extras | `DRV001` Ruwan S. (Peliyagoda), Kandy loader `LDR002`, a second store manager at `OUT108` (hill store) | Second driver; Kandy and multi-outlet scenarios |
 
 ## 15.4 Reference judge walkthrough (basis for the README and the Playwright test)
 
@@ -64,4 +64,23 @@ The invented design IDs (`OUT015`, `VEH001`, `T001`) are placeholders. A script 
 - **Overload demo**: the Peliyagoda peak day (dispatcher steps 3 to 5) is unchanged. The field steps 7 to 12 run on the Kandy depot with the pinned vehicle, driver and loader, and the dispatcher switches depot with the selector.
 - The dispatcher's 'no signal' card (D4) and the store's delayed-confirmation view use the same driver and trip.
 
-Fixture picks are recorded in the PR that first adds the CSVs.
+The picker reads only the approved reference CSVs and takes candidates in ID order. It asks `packages/rules` (`validateTrip`, `computeEtas`) for every feasibility check on the story date, Tue 29 Sep 2026, and accepts a trip only with no violation or warning (ADR 0027). `outlets.csv` records districts but not localities, so the criteria resolve as follows:
+
+- "Talawakele area" is Nuwara Eliya district, a `hill` district served from Kandy.
+- No outlet can be identified as Wellawatte, and every Colombo outlet is the same distance from Peliyagoda. The peak-day store is therefore the first Colombo Fresh outlet, by ID, that a Peliyagoda reefer truck can serve. This skips the `van_only` street outlets.
+- The walkthrough vehicle is the first Kandy reefer truck whose Fresh trip 1 to Nuwara Eliya takes 4 to 5 of that district's Fresh outlets, added in ID order while the trip stays clean. The hill store is stop 2, the first stop delivered offline (stop 1 is delivered online in step 8).
+- Driver display IDs follow the vehicle number (`DRV001` drives `VEH001`). The Kandy loader is `LDR002`. The trip's display ID is assigned by the plan, so the fixtures pin the trip as vehicle, trip number, brand, district and stops.
+
+Picks on the committed CSVs (#24):
+
+| Fixture | Pick | Replaces |
+| --- | --- | --- |
+| Peak-day store (Dilini) | `OUT004`: Fresh, Colombo, Peliyagoda, street dock, normal parking, window 05:30–08:00 | `OUT015` (Wellawatte) |
+| Walkthrough vehicle | `VEH039`: Kandy reefer truck, 6,180 kg / 29.9 m³ | `VEH001` |
+| Walkthrough driver | `DRV039` Sampath | |
+| Walkthrough trip | `VEH039` Fresh trip 1, Nuwara Eliya: `OUT105` 05:21 → `OUT108` 05:56 → `OUT104` 06:31 → `OUT106` 07:06 → `OUT107` 07:41 (validation ETAs, departure 03:30, 266 of 270 Fresh minutes) | `T001` |
+| Hill store (delayed confirmation) | `OUT108`: Fresh, Nuwara Eliya, rear dock, window 04:00–07:45 | |
+| Kandy loader | `LDR002`, Kandy depot | |
+| Depots and districts | Peliyagoda / Colombo; Kandy / Nuwara Eliya | |
+
+To change a pick, change the criteria in `apps/api/prisma/seed/pick-fixtures.ts` and run `pnpm seed:pick-fixtures`. A test fails when the committed `story-fixtures.ts` differs from a fresh run.
