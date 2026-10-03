@@ -135,9 +135,11 @@ Environment variables read by the code today:
 | `pnpm test` | Vitest unit and property tests |
 | `pnpm test:int` | API integration tests against PostgreSQL (`TEST_DATABASE_URL`) |
 | `pnpm build` | Web production build and Prisma client generation |
+| `pnpm deps:check` | Module boundaries (dependency-cruiser, `.dependency-cruiser.js`) |
 | `pnpm agent:check` | Repository conventions: instruction files, spec headers, banned files |
+| `pnpm docs:erd` | Regenerates the ERD in `docs/data-model.md` from the Prisma schema |
 
-**TODO (#26):** add `pnpm deps:check` (module boundaries) and the CI workflow when that PR merges. **TODO (#62):** add `pnpm e2e`.
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, `deps:check`, unit tests, build, and the integration tests against a PostgreSQL 16 service on every PR and push to `main`. **TODO (#87):** add the Compose smoke job. **TODO (#62):** add `pnpm e2e`.
 
 ## Significant departures from the Designathon design
 
@@ -235,8 +237,9 @@ agent-docs/       Booklet copy, spec, ADRs, design notes and process docs
 - **Contracts.** One zod schema registry and a typed route table, shared by web and API (ADR 0024).
 - **Authorization.** Every API route declares a policy action from the contracts route table; a route without one cannot be registered. `can()` and `scoped()` deny by default (ADR 0026, auth).
 - **Database.** Hand-written SQL migrations add immutability triggers, CHECK constraints and a partial unique index. Integration tests run against real PostgreSQL in an isolated schema per run (ADR 0023).
-- **Boundaries.** `apps/web` and `apps/api` never import each other. Rules live only in `packages/rules`. **TODO (#26):** say that CI enforces this with dependency-cruiser once it merges.
-- **Process.** Git hooks run formatting, lint, typecheck and tests. Every change goes through an issue, a plan comment and a PR with an AI assistance section. Lasting decisions become ADRs.
+- **Boundaries.** `apps/web` and `apps/api` never import each other, `apps/web` never imports Prisma, and API modules talk only through each module's `index.ts`. Rules live only in `packages/rules`. dependency-cruiser enforces this in CI and in the pre-push hook.
+- **CI.** Every PR and push to `main` runs typecheck, lint, boundaries, unit and property tests, integration tests against PostgreSQL 16, and the build.
+- **Process.** Git hooks run formatting, lint, typecheck, boundaries and tests. Every change goes through an issue, a plan comment and a PR with an AI assistance section. Lasting decisions become ADRs.
 
 ## Architecture decision records
 

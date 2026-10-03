@@ -62,11 +62,11 @@ In production, one `app` container runs the API and serves the built PWA from th
 From `agent-docs/spec/platform/stack-and-layout.md` §3.3:
 
 - `packages/rules` imports nothing from the repo and has no runtime dependencies.
-- `packages/contracts` may import types from `rules`.
+- `packages/contracts` may import types and shared constants from `rules`, and nothing else in the repo.
 - `apps/web` and `apps/api` may import `rules` and `contracts`, and never each other. `apps/web` never imports Prisma.
 - Inside `apps/api`, modules talk only through each module's `index.ts`. Prisma models never cross the HTTP boundary; DTOs from `contracts` do.
 
-**TODO (#26):** once it merges, note that CI enforces these rules with dependency-cruiser.
+dependency-cruiser enforces these rules (`pnpm deps:check`, `.dependency-cruiser.js`) in CI and in the pre-push hook, including web importing api and deep imports between API modules.
 
 ## Build status
 
@@ -80,6 +80,7 @@ As of 3 Oct 2026. **TODO (before submission):** refresh this table.
 | API: server, `/api/healthz`, `/api/readyz` | Built |
 | API: auth (login, sessions, CSRF, lockout) and policy (`can()`, `scoped()`) | Built (#35) |
 | Story fixture picker (`pnpm seed:pick-fixtures`) | Built |
+| CI: typecheck, lint, boundaries, unit and integration tests, build | Built (#26); Compose smoke job planned (#87) |
 | Web: routes, login and the four role shells | In progress (#36) |
 | API modules: orders, planning, sync, feed, notify, demo, monitor | Planned (#38, #41, #42, #45, #47, #48, #54, #59) |
 | Offline core, Loader and Driver apps | Planned (#40, #52, #53) |
