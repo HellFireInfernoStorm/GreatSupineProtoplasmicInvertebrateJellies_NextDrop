@@ -7,10 +7,9 @@ import { create } from "zustand";
 interface ClockState {
   /** Server minus device, in milliseconds. Zero until a response has been observed. */
   offsetMs: number;
-  synced: boolean;
 }
 
-const useClockStore = create<ClockState>(() => ({ offsetMs: 0, synced: false }));
+const useClockStore = create<ClockState>(() => ({ offsetMs: 0 }));
 
 /** Server minus device for one observation. */
 export function offsetFrom(serverTimeIso: string, deviceNowMs: number): number | null {
@@ -21,7 +20,7 @@ export function offsetFrom(serverTimeIso: string, deviceNowMs: number): number |
 /** Record the serverTime of an API response. Called by the API client for every response that carries one. */
 export function observeServerTime(serverTimeIso: string, deviceNowMs: number = Date.now()): void {
   const offsetMs = offsetFrom(serverTimeIso, deviceNowMs);
-  if (offsetMs !== null) useClockStore.setState({ offsetMs, synced: true });
+  if (offsetMs !== null) useClockStore.setState({ offsetMs });
 }
 
 /** Server minus device as last known. Field events record it as clockOffsetMs (spec/events/envelope.md). */
