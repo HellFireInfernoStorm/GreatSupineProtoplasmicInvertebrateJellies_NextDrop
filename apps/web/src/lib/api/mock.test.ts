@@ -1,4 +1,11 @@
-import { apiRoutes, apiSchemas, apiVariantFixtures, HUMAN_ROLES, type ApiRouteName } from "@nextdrop/contracts";
+import {
+  apiFixtures,
+  apiRoutes,
+  apiSchemas,
+  apiVariantFixtures,
+  HUMAN_ROLES,
+  type ApiRouteName,
+} from "@nextdrop/contracts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockRespond } from "./mock";
 
@@ -60,4 +67,14 @@ describe("mock mode", () => {
       if (parsed.serverTime !== undefined) expect(parsed.serverTime, name).toBe("2026-10-03T12:00:00.000Z");
     }
   });
+});
+
+it("renews a cold field session using its request role and remembers the renewed session", () => {
+  const request = { ...apiFixtures.reauthRequest, role: "DRIVER", pin: "1234" };
+  expect(mockRespond("reauth", { ...request, pin: "0000" }).status).toBe(401);
+  expect(mockRespond("reauth", { ...request, pin: "9999" }).status).toBe(429);
+  expect(mockRespond("me", undefined).status).toBe(401);
+  expect(mockRespond("reauth", request).status).toBe(200);
+  expect(apiSchemas.sessionResponse.parse(mockRespond("me", undefined).body).user.role).toBe("DRIVER");
+  expect(mockRespond("reauth", { ...request, role: "LOADER" }).status).toBe(401);
 });
