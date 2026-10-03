@@ -129,7 +129,9 @@ Environment variables read by the code today:
 | `API_URL`, `API_PORT` | Vite dev proxy | `http://localhost:3000` | Where `/api` is proxied in development |
 | `WEB_PORT` | Vite dev server | `5173` | Web dev port |
 
-**TODO (#31, #38):** add the demo clock variables when the code reads them.
+| `JOBS_ENABLED` | API | `true` | `false` stops the pg-boss planning-day tick (runs every minute) |
+
+The demo clock offset is stored in the database and moved with `POST /api/demo/clock` (ADR 0033).
 
 ### Checks
 

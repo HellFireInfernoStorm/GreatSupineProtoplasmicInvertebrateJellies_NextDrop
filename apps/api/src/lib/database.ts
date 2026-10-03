@@ -4,6 +4,8 @@ import { createReadiness, repositoryMigrations, type Migration, type Readiness }
 
 export type Database = {
   prisma: PrismaClient | null;
+  /** The PostgreSQL schema the models live in. Raw SQL does not inherit it from the adapter. */
+  schema?: string;
   ready: Readiness;
   close: () => Promise<void>;
 };
@@ -40,6 +42,7 @@ export function createDatabase(url = process.env.DATABASE_URL, options: { migrat
   });
   return {
     prisma,
+    schema,
     ready: createReadiness(
       {
         connect: async () => {

@@ -32,8 +32,8 @@ A second run on a seeded database writes nothing. Historic/Training/Test Datatho
 
 ## 15.2 Demo tooling (`DEMO_MODE=true`)
 
-- **Demo clock**: server `Clock` service (`now = realNow + offset`); all cutoff, state-transition and ETA logic reads it. `POST /demo/clock` sets the time; a `tick` job (and `POST /demo/tick`) applies time-driven transitions idempotently.
-- **Reset and presets**: `POST /demo/reset { preset }` restores operational tables to a known checkpoint: `before-cutoff`, `orders-closed`, `plan-published`, `loading`, `mid-run`, `clash-ready`. A judge can jump to any role's step.
+- **Demo clock** (ADR 0033): server `Clock` service (`now = realNow + offset`, offset in `DemoState.clockOffsetMs`, only with `DEMO_MODE`); all cutoff, state-transition and ETA logic and every `serverTime` read it. Session expiry, lockout and rate limits keep real time. `POST /demo/clock` sets the time; a pg-boss `tick` job every minute (and `POST /demo/tick`) applies time-driven transitions idempotently.
+- **Reset and presets**: `POST /demo/reset { preset }` restores operational tables to a known checkpoint: `before-cutoff`, `orders-closed`, `plan-published`, `loading`, `mid-run`, `clash-ready`. A judge can jump to any role's step. `before-cutoff` (ADR 0033) truncates the operational tables, re-runs the seed, sets the clock to Mon 28 Sep 2026 14:00 Asia/Colombo and opens the planning days for Tue 29 Sep; users and sessions are kept. The other presets return 409 until they are built.
 - **Reset epoch and visibility** (ADR 0007, ADR 0030): every reset increments `DemoState.resetEpoch`. The seed creates `DemoState` with epoch 1, and increments the epoch only when a run wrote something, so a restart that finds everything in place keeps field outboxes. Reset and clock changes need a confirm step, are rate-limited, and the actor and time are shown in a persistent banner in every shell ('Reset by dispatcher at 14:02'). The README advises judges who need isolation to run `docker compose up` locally.
 - **Quick-login chips** on the login screens for the four seeded accounts.
 - **Force-offline switch** in Loader/Driver (section 10).

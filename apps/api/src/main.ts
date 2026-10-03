@@ -1,4 +1,7 @@
 import { runSeed } from "../prisma/seed";
+import { startJobs } from "./modules/jobs";
+import { createNotifier } from "./modules/notifications";
+import { tickPlanningDays } from "./modules/planning";
 import { buildServer } from "./server";
 
 const port = Number(process.env.PORT ?? 3000);
@@ -22,6 +25,18 @@ try {
 } catch (err) {
   app.log.error(err);
   process.exit(1);
+}
+
+// The planning-day tick every minute (spec/planning/flow.md §8.1). JOBS_ENABLED=false turns it off.
+const prisma = app.prisma;
+if (prisma && process.env.DATABASE_URL && process.env.JOBS_ENABLED !== "false") {
+  const notifier = createNotifier();
+  const jobs = await startJobs({
+    connectionString: process.env.DATABASE_URL,
+    tick: () => tickPlanningDays(prisma, app.clock.now(), notifier),
+    log: app.log,
+  });
+  app.addHook("onClose", () => jobs.stop());
 }
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
