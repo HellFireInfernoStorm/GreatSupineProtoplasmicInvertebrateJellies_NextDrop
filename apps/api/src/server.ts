@@ -8,6 +8,7 @@ import { rateLimited, registerErrorHandling } from "./lib/errors";
 import type { Readiness } from "./lib/readiness";
 import { authConfigFromEnv, registerAuth, type AuthConfig } from "./modules/auth";
 import { feedRoutes } from "./modules/feed";
+import { registerField } from "./modules/field";
 import { notificationRoutes } from "./modules/notifications";
 import { registerOrders } from "./modules/orders";
 
@@ -64,6 +65,7 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
   });
   await app.register(notificationRoutes, { prisma, now });
   await registerOrders(app, { prisma, now });
+  await registerField(app, { prisma, now });
 
   return app;
 }
