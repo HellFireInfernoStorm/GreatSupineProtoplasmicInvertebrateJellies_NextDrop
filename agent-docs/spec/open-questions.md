@@ -18,6 +18,5 @@ The Booklet needs a live URL through the review, semifinal and Grand Finale peri
 
 ## To verify
 
-- **Prisma and raw SQL**: confirm in the first schema PR that `migrate dev` and `migrate deploy` report no drift and do not drop hand-written SQL objects ([prisma-rules.md](data/prisma-rules.md)). Result goes into that file.
 - **Story fixtures**: run the fixture picker once the reference CSVs are committed and record the picks ([seed-and-demo.md](data/seed-and-demo.md) 15.5).
 - **Native review**: Sinhala and Tamil core vocabulary reviewed by a native speaker ([design-system.md](frontend/design-system.md)).

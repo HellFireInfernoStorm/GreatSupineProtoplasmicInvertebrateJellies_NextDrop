@@ -1,0 +1,651 @@
+// Prisma/client/adapter are pinned together; raw SQL safeguards live in the initial migration.
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Brand {
+  Fresh
+  Style
+  Tech
+}
+
+enum DockType {
+  rear_dock
+  street
+  mall_bay
+}
+
+enum ParkingConstraint {
+  normal
+  van_only
+  mall_dock
+}
+
+enum VehicleType {
+  truck
+  van
+}
+
+enum VehicleTemp {
+  reefer
+  ambient
+}
+
+enum TempRequirement {
+  chilled
+  ambient
+}
+
+enum Role {
+  STORE
+  DISPATCHER
+  LOADER
+  DRIVER
+}
+
+enum EventActorRole {
+  STORE
+  DISPATCHER
+  LOADER
+  DRIVER
+  SYSTEM
+}
+
+enum SessionKind {
+  WEB
+  FIELD
+}
+
+enum OrderStatus {
+  ORDERED
+  PLANNED
+  DEFERRED
+  LOADED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  RECEIVED
+  FAILED
+  DISPUTED
+  CANCELLED
+}
+
+enum EventSource {
+  SERVER
+  FIELD
+}
+
+enum EventDisposition {
+  APPLIED
+  HELD
+}
+
+enum PlanningDayState {
+  OPEN
+  CLOSED
+}
+
+enum TripStatus {
+  PLANNED
+  READY
+  DEPARTED
+  COMPLETE
+  CANCELLED
+}
+
+enum PlanChange {
+  ADDED
+  REMOVED
+  MOVED_VEHICLE
+  MOVED_TRIP
+  RESEQUENCED
+  ETA_CHANGED
+  DEFERRED
+}
+
+enum DecisionAuthor {
+  DISPATCHER
+  SYSTEM
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  IN_WORKSHOP
+}
+
+enum AvailabilityReason {
+  SERVICE
+  BREAKDOWN
+}
+
+enum ConflictState {
+  OPEN
+  RESOLVED
+}
+
+model Outlet {
+  id                          String              @id @default(uuid(7)) @db.Uuid
+  displayId                   String              @unique
+  brand                       Brand
+  depot                       String
+  dockType                    DockType
+  parkingConstraint           ParkingConstraint
+  mallWindow                  String?
+  windowOpen                  Int
+  windowClose                 Int
+  districtId                  String              @db.Uuid
+  district                    District            @relation("Outlet_districtId", fields: [districtId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user_outletId               User[]              @relation("User_outletId")
+  order_outletId              Order[]             @relation("Order_outletId")
+  outletServiceState_outletId OutletServiceState? @relation("OutletServiceState_outletId")
+
+  @@map("outlets")
+}
+
+model Vehicle {
+  id                            String                @id @default(uuid(7)) @db.Uuid
+  displayId                     String                @unique
+  type                          VehicleType
+  temp                          VehicleTemp
+  weightCapKg                   Decimal               @db.Decimal(10, 3)
+  volumeCapM3                   Decimal               @db.Decimal(10, 3)
+  fuelType                      String
+  kmPerL                        Decimal               @db.Decimal(10, 3)
+  weeklyFuelQuotaL              Decimal               @db.Decimal(10, 3)
+  depot                         String
+  driver_vehicleId              Driver?               @relation("Driver_vehicleId")
+  user_vehicleId                User[]                @relation("User_vehicleId")
+  orderEvent_vehicleId          OrderEvent[]          @relation("OrderEvent_vehicleId")
+  trip_vehicleId                Trip[]                @relation("Trip_vehicleId")
+  vehicleAvailability_vehicleId VehicleAvailability[] @relation("VehicleAvailability_vehicleId")
+
+  @@map("vehicles")
+}
+
+model District {
+  trafficSpeeds              TrafficSpeed[]
+  id                         String          @id @default(uuid(7)) @db.Uuid
+  name                       String          @unique
+  depot                      String
+  roadClass                  String
+  freeFlowKmh                Decimal         @db.Decimal(10, 3)
+  depotToDistrictKm          Decimal         @db.Decimal(10, 3)
+  depotToDistrictFreeflowMin Int
+  interStopKm                Decimal         @db.Decimal(10, 3)
+  interStopFreeflowMin       Int
+  outlet_districtId          Outlet[]        @relation("Outlet_districtId")
+  roadCondition_districtId   RoadCondition[] @relation("RoadCondition_districtId")
+  trip_districtId            Trip[]          @relation("Trip_districtId")
+
+  @@map("districts")
+}
+
+model ServiceAllowance {
+  id       String   @id @default(uuid(7)) @db.Uuid
+  brand    Brand
+  dockType DockType
+  minutes  Int
+
+  @@unique([brand, dockType])
+  @@map("service_allowances")
+}
+
+model CalendarDay {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  date         DateTime @unique @db.Date
+  dow          Int
+  isoYear      Int
+  isoWeek      Int
+  isPayday     Boolean
+  festival     String?
+  festivalRamp Decimal  @db.Decimal(10, 3)
+  isHoliday    Boolean
+  monsoon      Boolean
+  isOperating  Boolean
+
+  @@map("calendar_days")
+}
+
+model TrafficSpeed {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  hour       Int
+  monsoon    Boolean
+  speedIndex Decimal  @db.Decimal(10, 3)
+  districtId String   @db.Uuid
+  district   District @relation(fields: [districtId], references: [id], onDelete: Restrict)
+
+  @@unique([districtId, hour, monsoon])
+  @@map("traffic_speeds")
+}
+
+model RoadCondition {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  date            DateTime @db.Date
+  disruptionIndex Decimal  @db.Decimal(10, 3)
+  note            String?
+  districtId      String   @db.Uuid
+  district        District @relation("RoadCondition_districtId", fields: [districtId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([districtId, date])
+  @@map("road_conditions")
+}
+
+model Product {
+  id                  String          @id @default(uuid(7)) @db.Uuid
+  sku                 String          @unique
+  name                String
+  brand               Brand
+  tempRequirement     TempRequirement
+  unitLabel           String
+  unitWeightKg        Decimal         @db.Decimal(13, 6)
+  unitVolumeM3        Decimal         @db.Decimal(13, 6)
+  orderLine_productId OrderLine[]     @relation("OrderLine_productId")
+
+  @@map("products")
+}
+
+model Driver {
+  id        String  @id @default(uuid(7)) @db.Uuid
+  displayId String  @unique
+  name      String
+  phone     String
+  vehicleId String  @unique @db.Uuid
+  vehicle   Vehicle @relation("Driver_vehicleId", fields: [vehicleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("drivers")
+}
+
+model User {
+  id                        String                @id @default(uuid(7)) @db.Uuid
+  loginId                   String                @unique
+  role                      Role
+  displayName               String
+  passwordHash              String
+  locale                    String                @default("en")
+  depot                     String?
+  outletId                  String?               @db.Uuid
+  outlet                    Outlet?               @relation("User_outletId", fields: [outletId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  vehicleId                 String?               @db.Uuid
+  vehicle                   Vehicle?              @relation("User_vehicleId", fields: [vehicleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  session_userId            Session[]             @relation("Session_userId")
+  device_userId             Device[]              @relation("Device_userId")
+  orderEvent_actorUserId    OrderEvent[]          @relation("OrderEvent_actorUserId")
+  planDraft_updatedBy       PlanDraft[]           @relation("PlanDraft_updatedBy")
+  planVersion_publishedBy   PlanVersion[]         @relation("PlanVersion_publishedBy")
+  vehicleAvailability_setBy VehicleAvailability[] @relation("VehicleAvailability_setBy")
+  conflict_openedBy         Conflict[]            @relation("Conflict_openedBy")
+  conflict_resolvedBy       Conflict[]            @relation("Conflict_resolvedBy")
+  notification_userId       Notification[]        @relation("Notification_userId")
+  demoState_lastResetBy     DemoState[]           @relation("DemoState_lastResetBy")
+
+  @@map("users")
+}
+
+model Session {
+  id        String      @id @default(uuid(7)) @db.Uuid
+  kind      SessionKind
+  expiresAt DateTime    @db.Timestamptz(3)
+  userId    String      @db.Uuid
+  user      User        @relation("Session_userId", fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  deviceId  String?     @db.Uuid
+  device    Device?     @relation("Session_deviceId", fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("sessions")
+}
+
+model Device {
+  id                  String       @id @default(uuid(7)) @db.Uuid
+  kind                SessionKind
+  appVersion          String
+  lastSeenAt          DateTime     @db.Timestamptz(3)
+  lastSyncAt          DateTime?    @db.Timestamptz(3)
+  pendingCount        Int          @default(0)
+  lastKnownStop       String?      @db.Uuid
+  session_deviceId    Session[]    @relation("Session_deviceId")
+  userId              String       @db.Uuid
+  user                User         @relation("Device_userId", fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  orderEvent_deviceId OrderEvent[] @relation("OrderEvent_deviceId")
+
+  @@map("devices")
+}
+
+model Order {
+  id                        String              @id @default(uuid(7)) @db.Uuid
+  displayId                 String              @unique
+  brand                     Brand
+  tempRequirement           TempRequirement
+  requestedDate             DateTime            @db.Date
+  currentDate               DateTime            @db.Date
+  status                    OrderStatus         @default(ORDERED)
+  weightG                   Int
+  volumeL                   Int
+  placedAt                  DateTime            @default(now()) @db.Timestamptz(3)
+  confirmedAt               DateTime?           @db.Timestamptz(3)
+  deferredCount             Int                 @default(0)
+  idempotencyKey            String              @unique
+  outletId                  String              @db.Uuid
+  outlet                    Outlet              @relation("Order_outletId", fields: [outletId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  replacesOrderId           String?             @db.Uuid
+  replacesOrder             Order?              @relation("Order_replacesOrderId", fields: [replacesOrderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  order_replacesOrderId     Order[]             @relation("Order_replacesOrderId")
+  orderLine_orderId         OrderLine[]         @relation("OrderLine_orderId")
+  orderEvent_orderId        OrderEvent[]        @relation("OrderEvent_orderId")
+  planVersionChange_orderId PlanVersionChange[] @relation("PlanVersionChange_orderId")
+  tripStop_orderId          TripStop[]          @relation("TripStop_orderId")
+  deferral_orderId          Deferral[]          @relation("Deferral_orderId")
+  conflict_orderId          Conflict[]          @relation("Conflict_orderId")
+
+  @@index([currentDate, status])
+  @@map("orders")
+}
+
+model OrderLine {
+  id           String  @id @default(uuid(7)) @db.Uuid
+  qtyOrdered   Int
+  qtyLoaded    Int     @default(0)
+  qtyDelivered Int     @default(0)
+  qtyReceived  Int     @default(0)
+  unitWeightKg Decimal @db.Decimal(13, 6)
+  unitVolumeM3 Decimal @db.Decimal(13, 6)
+  orderId      String  @db.Uuid
+  order        Order   @relation("OrderLine_orderId", fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  productId    String  @db.Uuid
+  product      Product @relation("OrderLine_productId", fields: [productId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([orderId, productId])
+  @@map("order_lines")
+}
+
+model OrderEvent {
+  id                   String           @id @default(uuid(7)) @db.Uuid
+  clientEventId        String?          @unique @db.Uuid
+  deviceSeq            Int?
+  type                 String
+  schemaVersion        Int              @default(1)
+  source               EventSource
+  actorRole            EventActorRole
+  capturedAt           DateTime         @db.Timestamptz(3)
+  clockOffsetMs        BigInt?
+  receivedAt           DateTime         @default(now()) @db.Timestamptz(3)
+  basedOnPlanVersion   Int?
+  disposition          EventDisposition @default(APPLIED)
+  payload              Json             @db.JsonB
+  orderId              String?          @db.Uuid
+  order                Order?           @relation("OrderEvent_orderId", fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tripId               String?          @db.Uuid
+  trip                 Trip?            @relation("OrderEvent_tripId", fields: [tripId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  vehicleId            String?          @db.Uuid
+  vehicle              Vehicle?         @relation("OrderEvent_vehicleId", fields: [vehicleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  deviceId             String?          @db.Uuid
+  device               Device?          @relation("OrderEvent_deviceId", fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  actorUserId          String           @db.Uuid
+  actorUser            User             @relation("OrderEvent_actorUserId", fields: [actorUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  conflict_heldEventId Conflict?        @relation("Conflict_heldEventId")
+  blob_ownerEventId    Blob[]           @relation("Blob_ownerEventId")
+
+  @@unique([deviceId, deviceSeq])
+  @@index([orderId, receivedAt])
+  @@map("order_events")
+}
+
+model OutletServiceState {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  lastServedDate  DateTime? @db.Date
+  deferredLastRun Boolean   @default(false)
+  outletId        String    @unique @db.Uuid
+  outlet          Outlet    @relation("OutletServiceState_outletId", fields: [outletId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("outlet_service_states")
+}
+
+model PlanningDay {
+  id                        String           @id @default(uuid(7)) @db.Uuid
+  depot                     String
+  date                      DateTime         @db.Date
+  state                     PlanningDayState @default(OPEN)
+  ordersClosedAt            DateTime?        @db.Timestamptz(3)
+  currentVersion            Int              @default(0)
+  planDraft_planningDayId   PlanDraft?       @relation("PlanDraft_planningDayId")
+  planVersion_planningDayId PlanVersion[]    @relation("PlanVersion_planningDayId")
+  trip_planningDayId        Trip[]           @relation("Trip_planningDayId")
+  deferral_planningDayId    Deferral[]       @relation("Deferral_planningDayId")
+
+  @@unique([depot, date])
+  @@map("planning_days")
+}
+
+model PlanDraft {
+  id            String      @id @default(uuid(7)) @db.Uuid
+  revision      Int         @default(0)
+  data          Json        @db.JsonB
+  baseVersion   Int         @default(0)
+  updatedAt     DateTime    @updatedAt @db.Timestamptz(3)
+  planningDayId String      @unique @db.Uuid
+  planningDay   PlanningDay @relation("PlanDraft_planningDayId", fields: [planningDayId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  updatedBy     String      @db.Uuid
+  updatedByUser User        @relation("PlanDraft_updatedBy", fields: [updatedBy], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("plan_drafts")
+}
+
+model PlanVersion {
+  id                              String              @id @default(uuid(7)) @db.Uuid
+  version                         Int
+  draftRevision                   Int
+  publishedAt                     DateTime            @default(now()) @db.Timestamptz(3)
+  snapshot                        Json                @db.JsonB
+  summary                         Json                @db.JsonB
+  planningDayId                   String              @db.Uuid
+  planningDay                     PlanningDay         @relation("PlanVersion_planningDayId", fields: [planningDayId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  publishedBy                     String              @db.Uuid
+  publishedByUser                 User                @relation("PlanVersion_publishedBy", fields: [publishedBy], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  planVersionChange_planVersionId PlanVersionChange[] @relation("PlanVersionChange_planVersionId")
+
+  @@unique([planningDayId, version])
+  @@unique([planningDayId, draftRevision])
+  @@map("plan_versions")
+}
+
+model PlanVersionChange {
+  id            String      @id @default(uuid(7)) @db.Uuid
+  change        PlanChange
+  planVersionId String      @db.Uuid
+  planVersion   PlanVersion @relation("PlanVersionChange_planVersionId", fields: [planVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  orderId       String      @db.Uuid
+  order         Order       @relation("PlanVersionChange_orderId", fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tripId        String?     @db.Uuid
+  trip          Trip?       @relation("PlanVersionChange_tripId", fields: [tripId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([planVersionId, orderId])
+  @@map("plan_version_changes")
+}
+
+model Trip {
+  id                       String              @id @default(uuid(7)) @db.Uuid
+  displayId                String              @unique
+  tripNo                   Int
+  brand                    Brand
+  status                   TripStatus          @default(PLANNED)
+  plannedDepart            Int
+  plannedMinutes           Int
+  km                       Decimal             @db.Decimal(10, 3)
+  litres                   Decimal             @db.Decimal(10, 3)
+  stops                    TripStop[]
+  orderEvent_tripId        OrderEvent[]        @relation("OrderEvent_tripId")
+  planVersionChange_tripId PlanVersionChange[] @relation("PlanVersionChange_tripId")
+  planningDayId            String              @db.Uuid
+  planningDay              PlanningDay         @relation("Trip_planningDayId", fields: [planningDayId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  vehicleId                String              @db.Uuid
+  vehicle                  Vehicle             @relation("Trip_vehicleId", fields: [vehicleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  districtId               String              @db.Uuid
+  district                 District            @relation("Trip_districtId", fields: [districtId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  conflict_tripId          Conflict[]          @relation("Conflict_tripId")
+
+  @@unique([planningDayId, vehicleId, tripNo])
+  @@unique([id, status])
+  @@index([planningDayId])
+  @@map("trips")
+}
+
+model TripStop {
+  id          String     @id @default(uuid(7)) @db.Uuid
+  tripId      String     @db.Uuid
+  tripStatus  TripStatus @default(PLANNED)
+  seq         Int
+  etaMin      Int
+  windowOpen  Int
+  windowClose Int
+  serviceMin  Int
+  trip        Trip       @relation(fields: [tripId, tripStatus], references: [id, status], onDelete: Restrict, onUpdate: Cascade)
+  orderId     String     @db.Uuid
+  order       Order      @relation("TripStop_orderId", fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([tripId, seq])
+  @@unique([tripId, orderId])
+  @@unique([orderId], map: "trip_stops_active_order_key", where: raw("\"tripStatus\" <> 'CANCELLED'::\"TripStatus\""))
+  @@map("trip_stops")
+}
+
+model Deferral {
+  id                   String         @id @default(uuid(7)) @db.Uuid
+  planVersion          Int
+  reasonCode           String
+  causeKind            String
+  bindingConstraint    String?
+  scoreInputs          Json           @db.JsonB
+  decidedBy            DecisionAuthor
+  note                 String?
+  nextServiceableDate  DateTime       @db.Date
+  daysUnserved         Int
+  consecutiveDeferrals Int
+  orderId              String         @db.Uuid
+  order                Order          @relation("Deferral_orderId", fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  planningDayId        String         @db.Uuid
+  planningDay          PlanningDay    @relation("Deferral_planningDayId", fields: [planningDayId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([orderId, planningDayId, planVersion])
+  @@map("deferrals")
+}
+
+model VehicleAvailability {
+  id        String              @id @default(uuid(7)) @db.Uuid
+  date      DateTime            @db.Date
+  status    AvailabilityStatus
+  reason    AvailabilityReason?
+  note      String?
+  setAt     DateTime            @default(now()) @db.Timestamptz(3)
+  vehicleId String              @db.Uuid
+  vehicle   Vehicle             @relation("VehicleAvailability_vehicleId", fields: [vehicleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  setBy     String              @db.Uuid
+  setByUser User                @relation("VehicleAvailability_setBy", fields: [setBy], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([vehicleId, date])
+  @@map("vehicle_availability")
+}
+
+model Conflict {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  kind           String
+  state          ConflictState @default(OPEN)
+  openedAt       DateTime      @default(now()) @db.Timestamptz(3)
+  resolvedAt     DateTime?     @db.Timestamptz(3)
+  resolution     String?
+  note           String?
+  orderId        String?       @db.Uuid
+  order          Order?        @relation("Conflict_orderId", fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tripId         String?       @db.Uuid
+  trip           Trip?         @relation("Conflict_tripId", fields: [tripId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  heldEventId    String        @unique @db.Uuid
+  heldEvent      OrderEvent    @relation("Conflict_heldEventId", fields: [heldEventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  openedBy       String        @db.Uuid
+  openedByUser   User          @relation("Conflict_openedBy", fields: [openedBy], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  resolvedBy     String?       @db.Uuid
+  resolvedByUser User?         @relation("Conflict_resolvedBy", fields: [resolvedBy], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("conflicts")
+}
+
+model Blob {
+  id           String      @id @default(uuid(7)) @db.Uuid
+  clientBlobId String      @unique @db.Uuid
+  mime         String
+  size         Int
+  bytes        Bytes
+  ownerEventId String?     @db.Uuid
+  ownerEvent   OrderEvent? @relation("Blob_ownerEventId", fields: [ownerEventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("blobs")
+}
+
+model ChangeFeed {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  seq        BigInt   @unique
+  kind       String
+  entityType String
+  entityId   String   @db.Uuid
+  version    Int?
+  depot      String?
+  vehicleId  String?  @db.Uuid
+  outletId   String?  @db.Uuid
+  roles      Role[]
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  @@map("change_feed")
+}
+
+model FeedCounter {
+  id        String  @id @default(uuid(7)) @db.Uuid
+  singleton Boolean @unique @default(true)
+  head      BigInt  @default(0)
+
+  @@map("feed_counter")
+}
+
+model Notification {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  role      Role?
+  depot     String?
+  vehicleId String?   @db.Uuid
+  outletId  String?   @db.Uuid
+  kind      String
+  titleKey  String
+  params    Json      @db.JsonB
+  entityRef Json      @db.JsonB
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  readAt    DateTime? @db.Timestamptz(3)
+  userId    String?   @db.Uuid
+  user      User?     @relation("Notification_userId", fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("notifications")
+}
+
+model WeeklyDemandHistory {
+  id              String  @id @default(uuid(7)) @db.Uuid
+  depot           String
+  brand           Brand
+  isoYear         Int
+  isoWeek         Int
+  totalVolumeM3   Decimal @db.Decimal(10, 3)
+  chilledVolumeM3 Decimal @db.Decimal(10, 3)
+
+  @@unique([depot, brand, isoYear, isoWeek])
+  @@map("weekly_demand_history")
+}
+
+model DemoState {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  singleton       Boolean   @unique @default(true)
+  clockOffsetMs   BigInt    @default(0)
+  preset          String
+  resetEpoch      Int       @default(0)
+  lastResetAt     DateTime? @db.Timestamptz(3)
+  lastResetBy     String?   @db.Uuid
+  lastResetByUser User?     @relation("DemoState_lastResetBy", fields: [lastResetBy], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("demo_state")
+}

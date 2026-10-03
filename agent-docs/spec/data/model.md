@@ -17,7 +17,7 @@ Schema lives in `apps/api/prisma/schema.prisma`. Prisma models stay inside `apps
 | | `District` | name, depot, roadClass, freeFlowKmh, depotToDistrictKm, depotToDistrictFreeflowMin, interStopKm, interStopFreeflowMin |
 | | `ServiceAllowance` | (brand, dockType) -> minutes |
 | | `CalendarDay` | date, dow, isoYear, isoWeek, isPayday, festival, festivalRamp, isHoliday, monsoon, isOperating |
-| | `TrafficSpeed`, `RoadCondition` | used only for displayed ETAs/risk |
+| | `TrafficSpeed`, `RoadCondition` | districtId + hour + monsoon -> speedIndex; districtId + date -> disruptionIndex; used only for displayed ETAs/risk |
 | | `Product` | synthetic catalogue: sku, name, brand, tempRequirement, unitLabel, unitWeightKg, unitVolumeM3 |
 | | `Driver` | name, vehicleId, phone (every vehicle has a driver; only some have logins) |
 | Identity | `User` | loginId (unique), role, displayName, passwordHash, locale, depot?, outletId?, vehicleId? |
@@ -29,16 +29,28 @@ Schema lives in `apps/api/prisma/schema.prisma`. Prisma models stay inside `apps
 | | `OutletServiceState` | outletId, lastServedDate, deferredLastRun (drives priority inputs) |
 | Planning | `PlanningDay` | depot, date, state, ordersClosedAt, currentVersion |
 | | `PlanDraft` | planningDayId, revision (optimistic concurrency), data JSONB (trips/stops/unassigned), baseVersion, updatedBy |
-| | `PlanVersion` | planningDayId, version, publishedAt, publishedBy, snapshot JSONB (immutable), summary |
+| | `PlanVersion` | planningDayId, version, draftRevision (unique within day for publish idempotency), publishedAt, publishedBy, snapshot JSONB (immutable), summary |
 | | `PlanVersionChange` | planVersionId, orderId, tripId, change (ADDED, REMOVED, MOVED_VEHICLE, MOVED_TRIP, RESEQUENCED, ETA_CHANGED, DEFERRED) |
 | | `Trip` | displayId (`T001`), planningDayId, vehicleId, tripNo (1/2), brand, district, status (PLANNED, READY, DEPARTED, COMPLETE, CANCELLED), plannedDepart, plannedMinutes, km, litres |
-| | `TripStop` | tripId, orderId, seq, etaMin, windowOpen/Close snapshot, serviceMin |
+| | `TripStop` | tripId, tripStatus (FK-synchronized from Trip.status), orderId, seq, etaMin, windowOpen/Close snapshot, serviceMin |
 | | `Deferral` | orderId, planningDayId, planVersion, reasonCode, causeKind, bindingConstraint, scoreInputs JSON, decidedBy (DISPATCHER/SYSTEM), note, nextServiceableDate, daysUnserved, consecutiveDeferrals |
 | | `VehicleAvailability` | vehicleId, date, status (AVAILABLE, IN_WORKSHOP), reason (SERVICE, BREAKDOWN), note, setBy, setAt (ADR 0017) |
 | Sync | `Conflict` | kind, state (OPEN/RESOLVED), orderId, tripId, heldEventId, opened/resolved by and at, resolution, note |
 | | `Blob` | clientBlobId (unique), ownerEventId?, mime, size, bytes (`bytea`) behind a `BlobStore` interface |
 | | `ChangeFeed` | seq (BigInt unique), kind, entityType, entityId, version?, audience columns (depot, vehicleId, outletId, roles[]), createdAt |
-| | `FeedCounter` | single row, `head` BigInt |
+| | `FeedCounter` | UUID id, unique checked singleton=true, `head` BigInt; sole row initialized by the migration |
 | | `Notification` | recipient (userId or role+scope), kind, titleKey, params, entityRef, createdAt, readAt |
 | Support | `WeeklyDemandHistory` | depot, brand, isoYear, isoWeek, totalVolumeM3, chilledVolumeM3 (seeded aggregate for the outlook) |
 | | `DemoState` | clockOffsetMs, preset, resetEpoch (int, ADR 0007), lastResetBy, lastResetAt |
+
+## Storage conventions (ADR 0023)
+
+Every model has a UUID primary key. Prisma generates UUID v7 defaults; the client-assigned `Device.id` may be provided explicitly. Outlet, Vehicle, Driver and Order/Trip display IDs are globally unique separate columns; Product.sku and User.loginId are unique natural IDs. SQL tables use snake_case mappings, with Prisma field names retained as column names. Foreign keys restrict deletion so history cannot disappear through cascades.
+
+Reference capacities and WeeklyDemandHistory volumes use Decimal(10,3). Product/OrderLine unit sizes use Decimal(13,6), retaining sub-gram/sub-litre precision. Order.weightG and Order.volumeL are positive integer grams/litres computed once by ceiling the exact decimal aggregate of quantity times each saved unit snapshot; individual units are not rounded before multiplication. `aggregateOrderQuantities` in `packages/rules` performs this conversion (ADR 0023). Instants use timestamptz(3); delivery dates use date. Window, ETA and departure values are local minutes from midnight; mallWindow retains the reference HH:MM-HH:MM text. Calendar.dow follows the reference 0..6 values. Role enums are STORE, DISPATCHER, LOADER, DRIVER; reference enums preserve the CSV spelling. TrafficSpeed is unique by district/hour/monsoon; RoadCondition by district/date.
+
+PlanningDay is unique by depot/date, PlanDraft and OutletServiceState are one per parent, PlanVersion by day/version and day/draftRevision, VehicleAvailability by vehicle/date, and WeeklyDemandHistory by depot/brand/ISO year/week. TripStop's composite FK to Trip(id,status) cascades status updates; its partial order uniqueness covers all statuses except CANCELLED. An inserting/moving writer supplies the current trip status. Moving a failed order removes/moves its current mutable stop, while prior immutable plan snapshots retain history.
+
+DemoState has a unique checked singleton=true key but is populated by the separate seed task. OrderEvent includes the full event envelope and nullable orderId/tripId/vehicleId subjects. Notification supports a user recipient or role plus depot/vehicle/outlet scope.
+
+Cancelled trip slots are reused only by updating/reactivating their existing row, not by inserting a replacement row. A failed order's stop moved off a COMPLETE trip no longer appears in that trip's mutable relational stop list; its immutable publication snapshot/event history remains. EventActorRole separately includes SYSTEM; User.role and audience roles remain the four login roles. System producers identify a persisted audit/automation user by UUID rather than a bare synthetic string.

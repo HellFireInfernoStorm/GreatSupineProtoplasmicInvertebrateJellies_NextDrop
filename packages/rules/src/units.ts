@@ -66,3 +66,51 @@ export function intersectWindows(a: TimeWindow, b: TimeWindow): TimeWindow | nul
   const close = Math.min(a.close, b.close);
   return close < open ? null : { open, close };
 }
+
+type UnitSize = string | number | { toString(): string };
+/** Order quantities and totals are stored as 32-bit integers. */
+const MAX_INT32 = 2147483647;
+const UNIT_DECIMAL = /^(\d+)(?:\.(\d*?)0*)?$/;
+
+/** Exact kg or m³ unit size (at most 6 decimals, as stored) to millionths, without floating point. */
+function parseMicroUnits(value: UnitSize): bigint {
+  const match = UNIT_DECIMAL.exec(String(value).trim());
+  const fraction = match?.[2] ?? "";
+  if (!match || fraction.length > 6) throw new RangeError(`not a unit size with at most 6 decimals: ${String(value)}`);
+  const micro = BigInt(match[1] + fraction.padEnd(6, "0"));
+  if (micro === 0n) throw new RangeError(`unit size must be positive: ${String(value)}`);
+  return micro;
+}
+
+/** Storage conversion: aggregate exact line snapshots before rounding the final order totals. */
+export function aggregateOrderQuantities(
+  lines: readonly { qtyOrdered: number; unitWeightKg: UnitSize; unitVolumeM3: UnitSize }[],
+): { weightG: number; volumeL: number } {
+  let kgMicro = 0n;
+  let m3Micro = 0n;
+  for (const line of lines) {
+    if (!Number.isSafeInteger(line.qtyOrdered) || line.qtyOrdered < 0 || line.qtyOrdered > MAX_INT32) {
+      throw new RangeError("Invalid quantity");
+    }
+    const weightMicro = parseMicroUnits(line.unitWeightKg);
+    const volumeMicro = parseMicroUnits(line.unitVolumeM3);
+    const qty = BigInt(line.qtyOrdered);
+    kgMicro += weightMicro * qty;
+    m3Micro += volumeMicro * qty;
+  }
+
+  const weightG = Number((kgMicro + 999n) / 1000n);
+  const volumeL = Number((m3Micro + 999n) / 1000n);
+
+  if (
+    !Number.isSafeInteger(weightG) ||
+    !Number.isSafeInteger(volumeL) ||
+    weightG <= 0 ||
+    volumeL <= 0 ||
+    weightG > MAX_INT32 ||
+    volumeL > MAX_INT32
+  ) {
+    throw new RangeError("Invalid order totals");
+  }
+  return { weightG, volumeL };
+}

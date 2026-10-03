@@ -14,7 +14,7 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "pnpm -r --if-present run test",
-    "test:int": "node -e \"console.log('test:int: no integration tests yet')\"",
+    "test:int": "pnpm -r --if-present run test:int",
     "e2e": "node -e \"console.log('e2e: no end-to-end tests yet')\"",
     "agent:check": "node scripts/agent-context/check.mjs",
     "agent:sync-skills": "node scripts/agent-context/sync-skills.mjs",
