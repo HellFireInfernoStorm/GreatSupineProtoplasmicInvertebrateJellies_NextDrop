@@ -10,7 +10,7 @@ import { Pool, type PoolClient } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createDatabase } from "../src/lib/database";
 import { buildServer } from "../src/server";
-import { aggregateOrderQuantities } from "../src/lib/order-quantities";
+import { aggregateOrderQuantities } from "@nextdrop/rules";
 import { repositoryMigrations } from "../src/lib/readiness";
 
 const url = process.env.TEST_DATABASE_URL;

@@ -1,6 +1,6 @@
 # ADR 0023: Database foundation, active assignments and raw SQL migration ownership
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-03
 - Issue / PR: #25
 - Designathon departure: no
@@ -30,7 +30,6 @@ The owner must also confirm these existing-spec choices before accepting this AD
 - Cancelled trips retain their unique `(planningDayId, vehicleId, tripNo)` slot. Reactivating/updating that existing trip row is the only slot-reuse path; a new replacement trip row is rejected. Immutable events and version snapshots preserve the prior publication. A partial slot index is an alternative requiring an explicit schema/spec change.
 - COMPLETE trips remain non-cancelled. A failed order's current stop must be moved/removed before replanning; the completed trip's relational stop list changes, while immutable plan snapshots/events retain history. Preserving every completed relational stop would require a separate active-assignment model or predicate change. Neither alternative is silently selected in this PR.
 
-Status remains proposed. Draft spec edits in this PR describe the reviewable proposal and must merge together with owner acceptance; they do not supersede accepted ADRs until then. Flip the status only after explicit owner sign-off.
 
 Merged contracts v1 (PR #75) already defines `subject.vehicleId`; no contract edit or contract-change label is needed here. Storage also permits its SYSTEM actor role and zero-based device sequences. SYSTEM events retain a UUID `actorUserId` FK to an existing audit/automation user (with one of the four login roles); the event role SYSTEM grants no extra login role or authorization. Bare synthetic actor IDs such as "system" are not persisted as user IDs; system producers use that configured audit user's UUID.
 

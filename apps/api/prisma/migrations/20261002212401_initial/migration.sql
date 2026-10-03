@@ -1,5 +1,4 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
+
 
 -- CreateEnum
 CREATE TYPE "Brand" AS ENUM ('Fresh', 'Style', 'Tech');

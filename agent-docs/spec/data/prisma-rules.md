@@ -9,7 +9,7 @@ sources: guide §6.3
 ## 6.3 Prisma usage rules (known pitfalls)
 
 - **BigInt** (`ChangeFeed.seq`) does not JSON-serialize: convert to string at the API boundary.
-- **Decimal(10,3)** for reference capacities/demand; **Decimal(13,6)** for Product and OrderLine unit sizes. Aggregate exact saved unit sizes before ceiling final order totals once to integer grams/litres using aggregateOrderQuantities (proposed precision exception in ADR 0023; owner approval required). Reference converters remain unchanged.
+- **Decimal(10,3)** for reference capacities/demand; **Decimal(13,6)** for Product and OrderLine unit sizes. Aggregate exact saved unit sizes before ceiling final order totals once to integer grams/litres using aggregateOrderQuantities (ADR 0023). Reference converters remain unchanged.
 - **Locks**: use tagged `$queryRaw` for `SELECT ... FOR UPDATE` and `pg_advisory_xact_lock(hashtextextended(...))`. Never build SQL by string concatenation.
 - **A failed statement aborts a Postgres transaction** and Prisma does not add savepoints. Therefore: ingest each field event in its **own short transaction**; detect duplicates with a pre-check plus `createMany({ skipDuplicates: true })` (ON CONFLICT DO NOTHING) and re-read, never by catching a unique violation inside a larger transaction.
 - Set explicit `maxWait`/`timeout` on interactive transactions; keep them short; do JSON-heavy reads outside the transaction.

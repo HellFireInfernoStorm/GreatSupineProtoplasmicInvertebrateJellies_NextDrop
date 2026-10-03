@@ -66,3 +66,47 @@ export function intersectWindows(a: TimeWindow, b: TimeWindow): TimeWindow | nul
   const close = Math.min(a.close, b.close);
   return close < open ? null : { open, close };
 }
+
+type UnitSize = string | number | { toString(): string };
+const POSTGRES_INT_MAX = 2147483647;
+
+function parseMicroUnits(val: UnitSize): bigint {
+  const num = Number(val.toString());
+  if (!Number.isFinite(num) || num <= 0) {
+    throw new RangeError("Invalid unit size");
+  }
+  return BigInt(Math.round(num * 1_000_000));
+}
+
+/** Storage conversion: aggregate exact line snapshots before rounding the final order totals. */
+export function aggregateOrderQuantities(
+  lines: readonly { qtyOrdered: number; unitWeightKg: UnitSize; unitVolumeM3: UnitSize }[],
+): { weightG: number; volumeL: number } {
+  let kgMicro = 0n;
+  let m3Micro = 0n;
+  for (const line of lines) {
+    if (!Number.isSafeInteger(line.qtyOrdered) || line.qtyOrdered < 0 || line.qtyOrdered > POSTGRES_INT_MAX) {
+      throw new RangeError("Invalid quantity");
+    }
+    const weightMicro = parseMicroUnits(line.unitWeightKg);
+    const volumeMicro = parseMicroUnits(line.unitVolumeM3);
+    const qty = BigInt(line.qtyOrdered);
+    kgMicro += weightMicro * qty;
+    m3Micro += volumeMicro * qty;
+  }
+
+  const weightG = Number((kgMicro + 999n) / 1000n);
+  const volumeL = Number((m3Micro + 999n) / 1000n);
+
+  if (
+    !Number.isSafeInteger(weightG) ||
+    !Number.isSafeInteger(volumeL) ||
+    weightG <= 0 ||
+    volumeL <= 0 ||
+    weightG > POSTGRES_INT_MAX ||
+    volumeL > POSTGRES_INT_MAX
+  ) {
+    throw new RangeError("Invalid order totals");
+  }
+  return { weightG, volumeL };
+}
