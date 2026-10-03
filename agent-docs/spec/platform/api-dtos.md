@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §12; issue 29; accepted ADR 0024
+sources: guide §12; issues 29, 78; accepted ADRs 0024, 0026
 ---
 
 # API wire DTOs
@@ -34,7 +34,7 @@ Reference DTOs use rules-owned brand, vehicle, dock, parking and temperature voc
 - Vehicle: identity, type/temperature, capacities, fuel type/economy/quota, depot, driver contact.
 - Product: UUID, sku/name, brand/temperature, unit label and unit weight/volume.
 - Calendar: local date, day/week/year, payday/festival/ramp, holiday/monsoon/operating flags.
-- Order: identity, outlet, brand/temperature, requested/current dates, status, aggregate sizes, placed/confirmed timestamps, deferral count, replacement link, populated lines, short/damaged flags, assignment and deferral.
+- Order: identity, outlet, brand/temperature, requested/current dates, status, aggregate sizes, placed/confirmed timestamps, deferral count, replacement link, populated lines, short/damaged flags, assignment and deferral. Required nullable `pendingReversal` is `{ to: PLANNED | DEFERRED, planVersion }`, projected from the reducer without its internal `next` decision.
 - Assignment and deferral are present nullable values: no current assignment or deferral is `null`, not omission. Confirmation and replacement links are also present nullable fields.
 - Order detail wraps `{ order, timeline }`; timeline entries use the stored event envelope.
 - Trip: identity, vehicle/trip number, brand/district/status, departure, minutes, distance/fuel, populated stops. Stops carry order, outlet, sequence, ETA band, window/service time, and separate arrived/delivered/confirmed timestamps. No field fact timestamp is merged with its confirmation time.
@@ -79,11 +79,21 @@ Hard validation fails with 422 `{ code: VALIDATION_FAILED, message_key, params, 
 
 Runs wraps vehicle, trips, progress counts, separate last-heard/last-sync times, pending count, late risk and the documented state vocabulary, plus server time. Exceptions are discriminated ACK, CONFLICT, ISSUE, SHORT, DAMAGED, FAILED or PROBLEM rows. ACK is `{ type: ACK, tripId, planVersion, actor, at }`, projected from PLAN_ACKNOWLEDGED subject.tripId, payload.planVersion, actor and capturedAt to match the design's Ack inbox row. Conflict.orderId is required nullable for trip-level conflicts; tripId and resolution are also required nullable. `apiConflictFixtures` exports order-level, trip-level and resolved examples. Fleet wraps date and vehicle/availability pairs. Read availability is `{ status, reason, note, changedAt }`, with required nullable reason/note/changedAt; a never-changed available vehicle has all three null. PUT takes `{ changes: [availability payloads without sourceEventId] }`. Outlook takes depot/from/weeks and returns weekly brand demand/chilled/capacity in litres. Outlet history returns `{ items, total, nextCursor }`; pass non-null nextCursor as the next after query, and null means completion.
 
+### Dispatcher dock commands (ADR 0026)
+
+Both commands require a DISPATCHER session and `mutationHeaders` (CSRF), use JSON, and retain common 400/401/403/429/500 responses.
+
+`resolveShort`: `POST /api/dispatch/orders/:id/shorts/:lineId/resolve`, params `{ id: uuidV7, lineId: nonempty }`, strict body `{ outcome: SHIP_PARTIAL | HOLD_TRIP | BACKORDER, note? }`. Path IDs are omitted from the existing SHORT_RESOLVED payload schema. Success is 200 `{ order, backorder: order | null, serverTime }`. The system proposes SHIP_PARTIAL; the UI preselects it for dispatcher confirmation/change. BACKORDER emits SHORT_RESOLVED and ORDER_PLACED in the same transaction. The follow-up order has `replacesOrderId` pointing to the original, one line with the short line's product (`skuId` in ORDER_PLACED), and quantity `qtyShort`. Its requested date is `nextOperatingDate(original.currentDate)` from rules/calendar.ts. It is server-authored, so store cutoff does not apply. Its idempotency key is `backorder:<orderId>:<lineId>`. Other outcomes return backorder null. Repeating the same outcome returns 200/current state with the same response shape as the first call: for BACKORDER, backorder is the existing follow-up found by idempotency key `backorder:<orderId>:<lineId>`; for other outcomes it remains null. No new event or follow-up order is emitted; SHIP_PARTIAL and BACKORDER are final: any different outcome on a line resolved to either, including HOLD_TRIP, returns 409 ILLEGAL_TRANSITION. HOLD_TRIP is not final: re-resolving it to SHIP_PARTIAL or BACKORDER returns 200 and emits a new SHORT_RESOLVED; BACKORDER creates the follow-up as usual. HOLD_TRIP to HOLD_TRIP is a same-outcome retry (200, no new event). Missing/out-of-scope order, missing line, or no LOAD_SHORT returns 404 NOT_FOUND. TRIP_READY remains refused while any short line on the trip is unresolved or on HOLD_TRIP; the UI shows "waiting on dispatcher" for unresolved shorts or "held by dispatcher" for HOLD_TRIP. #51 implements the transaction and the HOLD_TRIP rules/readiness change, under the owner decision recorded in ADR 0026.
+
+`requestReversal`: `POST /api/dispatch/orders/:id/reversal`, params `idParams`, strict body `{ to: PLANNED | DEFERRED }`. The existing LOAD_REVERSAL_REQUESTED schema omits body orderId and planVersion; the server uses the planning day's current published version. Success is 200 `{ order, serverTime }` with order still LOADED and pendingReversal set. Repeating the same pending target returns 200 without another event. A non-LOADED order (reducer NOT_LOADED) or different already-pending target returns 409 ILLEGAL_TRANSITION; a missing/out-of-scope order returns 404 NOT_FOUND. The old assignment remains until LOAD_REVERSED; newly published decisions wait with WAITING_FOR_REVERSAL. Cancellation is out of scope. #60 implements this workflow.
+
+`apiShortResolutionFixtures` exports all three outcomes, including a populated one-line backorder. `apiOrderReversalFixtures` exports orders with null/pending reversal, and `apiLoaderReversalFixture` shows reversal tasks independent of current trips. No stored event payload or SCHEMA_VERSION changes.
+
 ## Field, feed and transport
 
 The client sync envelope and batch are documented in [push protocol](../sync/push-protocol.md). The persisted event envelope is unchanged.
 
-Snapshot is discriminated by `role`. Common fields are `planVersion`, `serverTime`, `feedCursor`, `resetEpoch`, `scope`, `config`. `planVersion` is null before publication. Loader scope is `{ depot, date, trips }`; driver scope is `{ date, vehicle, trips }`. Populated stops provide order lines, outlet contacts/docks/windows, and ETAs. Config is `{ rules, reasons, noSignalAfterMin, lateGraceMin }`. Snapshot replaces server-derived tables only; it does not contain or replace the outbox.
+Snapshot is discriminated by `role`. Common fields are `planVersion`, `serverTime`, `feedCursor`, `resetEpoch`, `scope`, `config`. `planVersion` is null before publication. Loader scope is `{ depot, date, trips, reversals }`; `reversals` contains the depot/date orders that are LOADED with pendingReversal, regardless of the current plan. These loader tasks are confirmed through the existing LOAD_REVERSED field event. Driver scope is `{ date, vehicle, trips }`. Populated stops provide order lines, outlet contacts/docks/windows, and ETAs. Config is `{ rules, reasons, noSignalAfterMin, lateGraceMin }`. Snapshot replaces server-derived tables only; it does not contain or replace the outbox.
 
 Heartbeat body is `{ deviceId, appVersion, pendingCount, lastSyncAt, lastKnownStop }`; the last two fields are required nullable values. Response is `{ serverTime, feedHead, resetEpoch }`.
 

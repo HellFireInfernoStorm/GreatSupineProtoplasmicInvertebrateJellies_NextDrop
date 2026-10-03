@@ -107,6 +107,7 @@ export const apiFixtures = {
   violation,
   validationResult: validation,
   idParams: { id: MOCK_ID },
+  orderLineParams: { id: r.order.id, lineId: r.orderLine.id },
   dateParams: { date: MOCK_DATE },
   dateQuery: { date: MOCK_DATE },
   listQuery: { limit: 20 },
@@ -182,6 +183,22 @@ export const apiFixtures = {
   },
   resolveConflictRequest: { resolution: "ACCEPT_FACT", note: "Mock resolution" },
   resolveIssueRequest: { resolution: "CREDIT", note: "Mock credit" },
+  resolveShortRequest: { outcome: "SHIP_PARTIAL", note: "Mock dispatcher decision" },
+  resolveShortResponse: {
+    order: {
+      ...r.order,
+      status: "LOADED",
+      lines: [{ ...r.orderLine, qtyLoaded: 1 }],
+      flags: { short: [{ lineId: r.orderLine.id, qtyShort: 1, resolution: "SHIP_PARTIAL" }], damaged: [] },
+    },
+    backorder: null,
+    serverTime: MOCK_TIME,
+  },
+  requestReversalRequest: { to: "DEFERRED" },
+  requestReversalResponse: {
+    order: { ...r.order, status: "LOADED", pendingReversal: { to: "DEFERRED", planVersion: 1 } },
+    serverTime: MOCK_TIME,
+  },
   fleetResponse: {
     date: MOCK_DATE,
     items: [
@@ -228,7 +245,7 @@ export const apiFixtures = {
     feedCursor: "9007199254740993",
     resetEpoch: 1,
     config: snapshotConfig,
-    scope: { depot: "Peliyagoda", date: MOCK_DATE, trips: [r.trip] },
+    scope: { depot: "Peliyagoda", date: MOCK_DATE, trips: [r.trip], reversals: [] },
   },
   heartbeatRequest: {
     deviceId: MOCK_ID,

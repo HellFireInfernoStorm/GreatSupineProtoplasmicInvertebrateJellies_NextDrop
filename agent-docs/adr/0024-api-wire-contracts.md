@@ -41,7 +41,7 @@ Web and API can build against one typed inventory with realistic examples. Clien
 
 ## Open items
 
-[Issue #78](https://github.com/HellFireInfernoStorm/GreatSupineProtoplasmicInvertebrateJellies_NextDrop/issues/78) tracks the existing missing SHORT_RESOLVED and LOAD_REVERSAL_REQUESTED route contracts. Existing implementation tasks #51 and #60 cover the workflows. Owner route decisions are required before adding endpoints; this PR does not invent them or claim that the current inventory completes those workflows.
+The missing SHORT_RESOLVED and LOAD_REVERSAL_REQUESTED route contracts tracked in [issue #78](https://github.com/HellFireInfernoStorm/GreatSupineProtoplasmicInvertebrateJellies_NextDrop/issues/78) are settled by accepted [ADR 0026](0026-short-resolution-and-load-reversal-routes.md). Handler and workflow implementation remains in #51 and #60; route contracts alone do not implement those workflows.
 
 [Issue #79](https://github.com/HellFireInfernoStorm/GreatSupineProtoplasmicInvertebrateJellies_NextDrop/issues/79) tracks the pre-existing planning-day state mismatch between the contracts vocabulary and database enum; this ADR does not settle that separate vocabulary change.
 

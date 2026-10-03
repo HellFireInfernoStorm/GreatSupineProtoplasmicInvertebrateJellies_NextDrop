@@ -9,7 +9,7 @@ import { isoDateTime, localDate, uuidV7 } from "../primitives";
 import { count, cursorSchema, nonempty } from "./common";
 import { rulesConfigSchema } from "./planning-resources";
 import { reasonsResponseSchema } from "./reference";
-import { tripSchema, vehicleSchema } from "./resources";
+import { orderSchema, tripSchema, vehicleSchema } from "./resources";
 
 export const FIELD_EVENT_TYPES = [
   "PLAN_ACKNOWLEDGED",
@@ -150,7 +150,12 @@ const snapshotBase = z.strictObject({
 export const fieldSnapshotSchema = z.discriminatedUnion("role", [
   snapshotBase.extend({
     role: z.literal("LOADER"),
-    scope: z.strictObject({ depot: nonempty, date: localDate, trips: z.array(tripSchema) }),
+    scope: z.strictObject({
+      depot: nonempty,
+      date: localDate,
+      trips: z.array(tripSchema),
+      reversals: z.array(orderSchema),
+    }),
   }),
   snapshotBase.extend({
     role: z.literal("DRIVER"),

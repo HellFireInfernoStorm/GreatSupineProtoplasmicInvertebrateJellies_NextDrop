@@ -69,3 +69,50 @@ export const apiConflictFixtures = {
   tripLevel: { ...f.conflict, kind: "ILLEGAL_TRANSITION", orderId: null, tripId: f.trip.id },
   resolved: { ...f.conflict, state: "RESOLVED", resolution: "ACCEPT_FACT", resolvedAt: f.clientEvent.capturedAt },
 } satisfies Record<"orderLevel" | "tripLevel" | "resolved", ApiDtoInput<"conflict">>;
+
+/** All short outcomes, including the one-line next-operating-day backorder. */
+export const apiShortResolutionFixtures = {
+  SHIP_PARTIAL: f.resolveShortResponse,
+  HOLD_TRIP: {
+    ...f.resolveShortResponse,
+    order: {
+      ...f.resolveShortResponse.order,
+      flags: { short: [{ lineId: f.orderLine.id, qtyShort: 1, resolution: "HOLD_TRIP" }], damaged: [] },
+    },
+  },
+  BACKORDER: {
+    ...f.resolveShortResponse,
+    order: {
+      ...f.resolveShortResponse.order,
+      flags: { short: [{ lineId: f.orderLine.id, qtyShort: 1, resolution: "BACKORDER" }], damaged: [] },
+    },
+    backorder: {
+      ...f.order,
+      id: f.idParams.id,
+      displayId: "ORD-BACKORDER-MOCK",
+      status: "ORDERED",
+      requestedDate: "2026-10-05",
+      currentDate: "2026-10-05",
+      replacesOrderId: f.order.id,
+      placedAt: f.ackResponse.serverTime,
+      confirmedAt: f.ackResponse.serverTime,
+      lines: [
+        { ...f.orderLine, id: "mock-backorder-line", qtyOrdered: 1, qtyLoaded: 0, qtyDelivered: 0, qtyReceived: 0 },
+      ],
+      weightG: f.orderLine.unitWeightG,
+      volumeL: Math.ceil(f.orderLine.unitVolumeM3 * 1000),
+      assignment: null,
+    },
+  },
+} satisfies Record<"SHIP_PARTIAL" | "HOLD_TRIP" | "BACKORDER", ApiDtoInput<"resolveShortResponse">>;
+
+export const apiOrderReversalFixtures = {
+  none: f.order,
+  pending: f.requestReversalResponse.order,
+} satisfies Record<"none" | "pending", ApiDtoInput<"order">>;
+
+/** Reversal tasks remain available even when the new plan no longer includes their old trip. */
+export const apiLoaderReversalFixture = {
+  ...f.fieldSnapshot,
+  scope: { ...f.fieldSnapshot.scope, trips: [], reversals: [f.requestReversalResponse.order] },
+} satisfies ApiDtoInput<"fieldSnapshot">;

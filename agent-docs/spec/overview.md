@@ -14,7 +14,7 @@ Core product idea: **one record per order, with a timeline.** Every role reads t
 
 | Role | Persona (design) | Device | Connectivity | Key jobs |
 | --- | --- | --- | --- | --- |
-| Store manager | Dilini, Waypoint Fresh OUT015 (Wellawatte) | Phone + desktop | Online; degrades gracefully | Place orders before 16:00 cutoff, see ETA and deferral notices, confirm receipt, report issues |
+| Store manager | Dilini, Waypoint Fresh `OUT004` (Colombo; design placeholder `OUT015`, Wellawatte) | Phone + desktop | Online; degrades gracefully | Place orders before 16:00 cutoff, see ETA and deferral notices, confirm receipt, report issues |
 | Dispatcher | Nimal, Peliyagoda DC | Desktop (1600x1000) | Stable | Review queue, propose/edit plan, defer with reason codes, publish, monitor live runs, resolve exceptions, capacity outlook |
 | Loader | Kasun, night shift, Peliyagoda dock | Shared tablet (landscape 1280x800); MUST also work at phone width | Offline-capable | See trips by departure, load in reverse stop order, flag short/damaged, hold-to-mark-ready |
 | Driver | Sampath (walkthrough, Kandy hill run, fixtures per ADR 0008); Ruwan S. (Peliyagoda, extra account) | Personal Android phone (360x800) | Offline-first | One stop per screen, record outcome and proof of delivery, sync when signal returns |

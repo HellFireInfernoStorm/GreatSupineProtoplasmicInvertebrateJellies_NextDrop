@@ -15,7 +15,7 @@ Schemas, route registration metadata and exported mock fixtures live in `package
 | Auth | `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `POST /auth/reauth` | all |
 | Reference | `GET /ref/{outlets,vehicles,products,calendar,reasons}` | all (scoped) |
 | Store | `GET /store/cutoff`, `GET /store/deliveries`, `POST /store/orders` (idempotency key), `GET /store/orders`, `GET /store/orders/:id`, `POST /store/orders/:id/cancel`, `POST /store/orders/:id/receipt`, `POST /store/orders/:id/issues`, `GET /store/notifications`, `POST /store/notifications/read` | store |
-| Dispatch | `GET /dispatch/days/:date` (state, queue, demand vs capacity), `POST .../propose`, `GET/PUT .../draft`, `POST .../validate`, `POST .../publish`, `GET .../versions`, `GET /dispatch/runs`, `GET /dispatch/exceptions`, `POST /dispatch/conflicts/:id/resolve`, `POST /dispatch/issues/:id/resolve`, `GET/PUT /dispatch/fleet`, `GET /dispatch/outlook`, `GET /dispatch/outlets/:id/history` | dispatcher |
+| Dispatch | `GET /dispatch/days/:date` (state, queue, demand vs capacity), `POST .../propose`, `GET/PUT .../draft`, `POST .../validate`, `POST .../publish`, `GET .../versions`, `GET /dispatch/runs`, `GET /dispatch/exceptions`, `POST /dispatch/conflicts/:id/resolve`, `POST /dispatch/issues/:id/resolve`, `POST /dispatch/orders/:id/shorts/:lineId/resolve`, `POST /dispatch/orders/:id/reversal`, `GET/PUT /dispatch/fleet`, `GET /dispatch/outlook`, `GET /dispatch/outlets/:id/history` | dispatcher |
 | Field | `GET /field/snapshot`, `POST /sync/events`, `PUT /sync/blobs/:id`, `POST /sync/heartbeat` | loader, driver |
 | Feed | `GET /changes`, `GET /stream` (SSE) | all (audience-filtered) |
 | Notifications | `GET /notifications`, `POST /notifications/read` | all |

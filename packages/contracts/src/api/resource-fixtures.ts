@@ -73,6 +73,7 @@ const order = {
   confirmedAt: "2026-10-02T05:00:01.000Z",
   deferredCount: 0,
   replacesOrderId: null,
+  pendingReversal: null,
   lines: [orderLine],
   flags: { short: [], damaged: [] },
   assignment: {
