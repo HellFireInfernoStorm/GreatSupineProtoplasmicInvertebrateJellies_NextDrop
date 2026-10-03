@@ -1,0 +1,41 @@
+{
+  "eyebrow": "Dispatcher",
+  "title": "Sign in",
+  "subtitle": "Use your depot work email.",
+  "pitch": {
+    "title": "Plan tonight's runs. Watch tomorrow's morning.",
+    "body": "One board for the order queue, the trips and every truck on the road."
+  },
+  "footer": "NextDrop · Dispatcher · {{depot}}",
+  "email": {
+    "label": "Work email",
+    "placeholder": "name@waypoint.lk"
+  },
+  "password": {
+    "label": "Password",
+    "placeholder": "Enter your password",
+    "show": "Show",
+    "hide": "Hide"
+  },
+  "depot": {
+    "label": "Depot",
+    "options": {
+      "Peliyagoda": "Peliyagoda DC",
+      "Kandy": "Kandy hub"
+    }
+  },
+  "remember": "Keep me signed in",
+  "forgot": "Forgot password?",
+  "submit": "Sign in",
+  "submitting": "Signing in…",
+  "help": {
+    "lockedOut": "Locked out? Ask your depot admin to reset your login."
+  },
+  "errors": {
+    "invalid": "Wrong email or password.",
+    "locked": "Too many attempts. Ask your depot admin to reset your login.",
+    "forbidden": "This account has no access to that depot. Ask your depot admin.",
+    "network": "Can't reach the server. Check your connection and try again.",
+    "unknown": "Sign-in failed. Try again."
+  }
+}

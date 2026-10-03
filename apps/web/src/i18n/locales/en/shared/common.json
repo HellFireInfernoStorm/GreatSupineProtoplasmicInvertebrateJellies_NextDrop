@@ -1,0 +1,31 @@
+{
+  "roles": {
+    "STORE": "Store manager",
+    "DISPATCHER": "Dispatcher",
+    "LOADER": "Loader",
+    "DRIVER": "Driver"
+  },
+  "session": {
+    "signedInAs": "Signed in as {{name}}",
+    "signOut": "Sign out"
+  },
+  "resetBanner": {
+    "by": "Demo data was reset by the {{role}} at {{time}}.",
+    "unknown": "Demo data was reset."
+  },
+  "status": {
+    "loading": "Loading…"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "unreachable": "Can't reach the server. Check the connection and try again.",
+    "retry": "Try again"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "demo": {
+    "label": "Demo accounts",
+    "signInAs": "Sign in as {{account}}"
+  }
+}

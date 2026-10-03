@@ -1,0 +1,24 @@
+{
+  "title": "Sign in",
+  "subtitle": "Driver",
+  "id": {
+    "label": "Driver ID",
+    "placeholder": "DRV0xx"
+  },
+  "pin": {
+    "label": "PIN",
+    "entered": "{{count}} of {{total}} digits entered",
+    "backspace": "Delete the last digit"
+  },
+  "submit": "Sign in",
+  "submitting": "Signing in…",
+  "offlineNote": {
+    "phone": "Works offline after your first sign-in on this phone."
+  },
+  "errors": {
+    "invalid": "Wrong Driver ID or PIN.",
+    "locked": "Too many tries. Ask the dispatcher.",
+    "network": "Can't reach the server. Check the connection and try again.",
+    "unknown": "Sign-in failed. Try again."
+  }
+}

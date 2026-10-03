@@ -1,0 +1,76 @@
+{
+  "roles": {
+    "STORE": {
+      "text": "වෙළඳසැල් කළමනාකරු",
+      "review": "draft"
+    },
+    "DISPATCHER": {
+      "text": "බෙදාහැරීම් සැලසුම්කරු",
+      "review": "draft"
+    },
+    "LOADER": {
+      "text": "පැටවුම්කරු",
+      "review": "draft"
+    },
+    "DRIVER": {
+      "text": "රියදුරු",
+      "review": "draft"
+    }
+  },
+  "session": {
+    "signedInAs": {
+      "text": "{{name}} ලෙස පිවිස ඇත",
+      "review": "draft"
+    },
+    "signOut": {
+      "text": "ඉවත් වන්න",
+      "review": "draft"
+    }
+  },
+  "resetBanner": {
+    "by": {
+      "text": "{{time}} ට {{role}} විසින් ආදර්ශන දත්ත යළි පිහිටුවන ලදී.",
+      "review": "draft"
+    },
+    "unknown": {
+      "text": "ආදර්ශන දත්ත යළි පිහිටුවන ලදී.",
+      "review": "draft"
+    }
+  },
+  "status": {
+    "loading": {
+      "text": "පූරණය වෙමින්…",
+      "review": "draft"
+    }
+  },
+  "errors": {
+    "title": {
+      "text": "යම් දෝෂයක් ඇති විය",
+      "review": "draft"
+    },
+    "unreachable": {
+      "text": "සේවාදායකයට සම්බන්ධ විය නොහැක. සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
+      "review": "draft"
+    },
+    "retry": {
+      "text": "නැවත උත්සාහ කරන්න",
+      "review": "draft"
+    }
+  },
+  "language": {
+    "label": {
+      "text": "භාෂාව",
+      "review": "draft"
+    }
+  },
+  "demo": {
+    "label": {
+      "text": "ආදර්ශන ගිණුම්",
+      "review": "draft"
+    },
+    "signInAs": {
+      "text": "{{account}} ලෙස පිවිසෙන්න",
+      "review": "draft"
+    }
+  }
+}

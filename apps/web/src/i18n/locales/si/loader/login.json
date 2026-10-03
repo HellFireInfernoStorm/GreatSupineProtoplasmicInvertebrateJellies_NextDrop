@@ -1,0 +1,70 @@
+{
+  "title": {
+    "text": "පිවිසෙන්න",
+    "review": "draft"
+  },
+  "subtitle": {
+    "text": "පැටවුම්කරු",
+    "review": "draft"
+  },
+  "id": {
+    "label": {
+      "text": "පැටවුම්කරු අංකය",
+      "review": "draft"
+    },
+    "placeholder": {
+      "text": "LDR0xx",
+      "review": "draft"
+    }
+  },
+  "pin": {
+    "label": {
+      "text": "PIN අංකය",
+      "review": "draft"
+    },
+    "entered": {
+      "text": "ඉලක්කම් {{total}} න් {{count}} ක් ඇතුළත් කර ඇත",
+      "review": "draft"
+    },
+    "backspace": {
+      "text": "අවසන් ඉලක්කම මකන්න",
+      "review": "draft"
+    }
+  },
+  "submit": {
+    "text": "පිවිසෙන්න",
+    "review": "draft"
+  },
+  "submitting": {
+    "text": "පිවිසෙමින්…",
+    "review": "draft"
+  },
+  "offlineNote": {
+    "tablet": {
+      "text": "මෙම ටැබ්ලටයේ පළමු පිවිසීමෙන් පසු අන්තර්ජාලය නැතිවත් වැඩ කරයි.",
+      "review": "draft"
+    },
+    "phone": {
+      "text": "මෙම දුරකථනයේ පළමු පිවිසීමෙන් පසු අන්තර්ජාලය නැතිවත් වැඩ කරයි.",
+      "review": "draft"
+    }
+  },
+  "errors": {
+    "invalid": {
+      "text": "පැටවුම්කරු අංකය හෝ PIN වැරදියි.",
+      "review": "draft"
+    },
+    "locked": {
+      "text": "උත්සාහ වාර ගණන ඉක්මවා ඇත. පැටවුම් අංගනයේ අධීක්ෂකගෙන් විමසන්න.",
+      "review": "draft"
+    },
+    "network": {
+      "text": "සේවාදායකයට සම්බන්ධ විය නොහැක. සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
+      "review": "draft"
+    },
+    "unknown": {
+      "text": "පිවිසීම අසාර්ථකයි. නැවත උත්සාහ කරන්න.",
+      "review": "draft"
+    }
+  }
+}
