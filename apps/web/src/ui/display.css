@@ -572,11 +572,11 @@
     margin-top: 0;
   }
 }
-.nd-button[data-variant="on-panel"] {
+.nd-button[data-variant="on-panel"]:not(:disabled) {
   background: var(--nd-on-panel);
   color: var(--nd-panel);
 }
-.nd-button[data-variant="on-panel-outline"] {
+.nd-button[data-variant="on-panel-outline"]:not(:disabled) {
   background: transparent;
   color: var(--nd-on-panel);
   border-color: var(--nd-panel-line);
