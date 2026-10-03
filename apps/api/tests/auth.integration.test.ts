@@ -1,28 +1,16 @@
-import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
 import type { LightMyRequestResponse } from "fastify";
-import { Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PrismaClient } from "../src/generated/prisma/client";
-import { createDatabase, type Database } from "../src/lib/database";
+import type { Database } from "../src/lib/database";
 import { notFound } from "../src/lib/errors";
 import { CSRF_HEADER, hashSecret, SESSION_COOKIE, type AuthConfig } from "../src/modules/auth";
 import { collectionResource, scoped } from "../src/modules/policy";
 import { buildServer, type App } from "../src/server";
+import { createSuiteDatabase, testDatabaseUrl, type SuiteDatabase } from "./support/suite-database";
 
-const url = process.env.TEST_DATABASE_URL;
-if (url && !new URL(url).pathname.endsWith("_test")) {
-  throw new Error(
-    "Set TEST_DATABASE_URL to a disposable PostgreSQL database whose name ends in _test; see prisma-rules.md.",
-  );
-}
-if (!url) console.info("Skipping auth integration tests: set TEST_DATABASE_URL to a disposable _test database.");
-const suiteSchema = `issue35_${randomUUID().replaceAll("-", "")}`;
-const suiteUrl = url ? new URL(url) : undefined;
-suiteUrl?.searchParams.set("schema", suiteSchema);
-const admin = new Pool({ connectionString: url, connectionTimeoutMillis: 2000 });
+if (!testDatabaseUrl)
+  console.info("Skipping auth integration tests: set TEST_DATABASE_URL to a disposable _test database.");
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -272,7 +260,8 @@ function sessionCookie(res: LightMyRequestResponse) {
   return cookie;
 }
 
-describe.skipIf(!url)("auth and policy against PostgreSQL", () => {
+describe.skipIf(!testDatabaseUrl)("auth and policy against PostgreSQL", () => {
+  let suite: SuiteDatabase;
   let database: Database;
   let prisma: PrismaClient;
   let app: App;
@@ -291,18 +280,11 @@ describe.skipIf(!url)("auth and policy against PostgreSQL", () => {
   }
 
   beforeAll(async () => {
-    await admin.query(`CREATE SCHEMA "${suiteSchema}"`);
-    const cli = fileURLToPath(new URL("../node_modules/prisma/build/index.js", import.meta.url));
-    await promisify(execFile)(process.execPath, [cli, "migrate", "deploy"], {
-      cwd: fileURLToPath(new URL("../", import.meta.url)),
-      env: { ...process.env, DATABASE_URL: suiteUrl!.toString() },
-      timeout: 30000,
-    });
-    database = createDatabase(suiteUrl!.toString());
-    prisma = database.prisma!;
+    suite = await createSuiteDatabase("issue35");
+    ({ prisma } = suite);
+    database = suite.appDatabase;
     await seedFixtures(prisma);
-    // The suite owns the database lifecycle; the app must not close the shared client.
-    app = await buildServer({}, { database: { ...database, close: async () => {} }, auth, now: () => clock });
+    app = await buildServer({}, { database, auth, now: () => clock });
     registerScopeProbes(app);
     await app.ready();
   });
@@ -311,12 +293,7 @@ describe.skipIf(!url)("auth and policy against PostgreSQL", () => {
   });
   afterAll(async () => {
     await app?.close();
-    await database?.close();
-    try {
-      await admin.query(`DROP SCHEMA IF EXISTS "${suiteSchema}" CASCADE`);
-    } finally {
-      await admin.end();
-    }
+    await suite?.drop();
   });
 
   describe("login", () => {
@@ -644,7 +621,7 @@ describe.skipIf(!url)("auth and policy against PostgreSQL", () => {
       const limited = await buildServer(
         {},
         {
-          database: { ...database, close: async () => {} },
+          database,
           auth: { ...auth, loginRateLimit: { max: 2, timeWindowMs: 60_000 } },
           now: () => clock,
         },
