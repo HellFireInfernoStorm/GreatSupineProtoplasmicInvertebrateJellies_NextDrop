@@ -1,0 +1,70 @@
+{
+  "title": {
+    "text": "உள்நுழைக",
+    "review": "draft"
+  },
+  "subtitle": {
+    "text": "ஏற்றுநர்",
+    "review": "draft"
+  },
+  "id": {
+    "label": {
+      "text": "ஏற்றுநர் அடையாள எண்",
+      "review": "draft"
+    },
+    "placeholder": {
+      "text": "LDR0xx",
+      "review": "draft"
+    }
+  },
+  "pin": {
+    "label": {
+      "text": "PIN எண்",
+      "review": "draft"
+    },
+    "entered": {
+      "text": "{{total}} இலக்கங்களில் {{count}} உள்ளிடப்பட்டது",
+      "review": "draft"
+    },
+    "backspace": {
+      "text": "கடைசி இலக்கத்தை அழி",
+      "review": "draft"
+    }
+  },
+  "submit": {
+    "text": "உள்நுழைக",
+    "review": "draft"
+  },
+  "submitting": {
+    "text": "உள்நுழைகிறது…",
+    "review": "draft"
+  },
+  "offlineNote": {
+    "tablet": {
+      "text": "இந்த டேப்லெட்டில் முதல் உள்நுழைவுக்குப் பிறகு இணையம் இல்லாமலும் இயங்கும்.",
+      "review": "draft"
+    },
+    "phone": {
+      "text": "இந்தத் தொலைபேசியில் முதல் உள்நுழைவுக்குப் பிறகு இணையம் இல்லாமலும் இயங்கும்.",
+      "review": "draft"
+    }
+  },
+  "errors": {
+    "invalid": {
+      "text": "ஏற்றுநர் அடையாள எண் அல்லது PIN தவறு.",
+      "review": "draft"
+    },
+    "locked": {
+      "text": "பல முறை தவறான முயற்சி. ஏற்றுமிட மேற்பார்வையாளரிடம் கேளுங்கள்.",
+      "review": "draft"
+    },
+    "network": {
+      "text": "சேவையகத்தை அணுக முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.",
+      "review": "draft"
+    },
+    "unknown": {
+      "text": "உள்நுழைவு தோல்வி. மீண்டும் முயலவும்.",
+      "review": "draft"
+    }
+  }
+}
