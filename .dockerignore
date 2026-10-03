@@ -1,0 +1,18 @@
+# Keep the build context small and secret-free. data/reference/ stays: the seed reads it.
+**/node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+apps/api/src/generated
+.git
+.github
+.claude
+.agents
+agent-docs
+docs
+e2e
+.env
+.env.*
+!.env.example
+**/*.log
+.pnpm-store

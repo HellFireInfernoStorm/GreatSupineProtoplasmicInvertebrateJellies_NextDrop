@@ -6,6 +6,7 @@ import { healthRoutes } from "./health";
 import { createDatabase, type Database } from "./lib/database";
 import { rateLimited, registerErrorHandling } from "./lib/errors";
 import type { Readiness } from "./lib/readiness";
+import { registerWebApp } from "./lib/web-app";
 import { authConfigFromEnv, registerAuth, type AuthConfig } from "./modules/auth";
 import { feedRoutes } from "./modules/feed";
 import { notificationRoutes } from "./modules/notifications";
@@ -18,13 +19,16 @@ export interface ServerDependencies {
   now?: () => Date;
   /** SSE timing; defaults to a 25 s heartbeat and a 1 s shared head poll. */
   feed?: { heartbeatMs?: number; pollMs?: number };
+  /** Built PWA to serve from the API's origin; defaults to WEB_DIST_DIR (set in the container), unset in dev. */
+  webRoot?: string;
 }
 
 export async function buildServer(opts: FastifyServerOptions = {}, dependencies: ServerDependencies = {}) {
   const app = Fastify(opts).withTypeProvider<ZodTypeProvider>();
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
-  registerErrorHandling(app);
+  const webRoot = dependencies.webRoot ?? process.env.WEB_DIST_DIR;
+  registerErrorHandling(app, webRoot ? await registerWebApp(app, webRoot) : undefined);
 
   const database = dependencies.database ?? (dependencies.ready ? undefined : createDatabase());
   app.decorate("prisma", database?.prisma ?? null);

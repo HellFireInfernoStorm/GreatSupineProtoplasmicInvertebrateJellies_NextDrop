@@ -44,7 +44,7 @@ flowchart TB
   Contracts -. types .-> Rules
 ```
 
-In production, one `app` container runs the API and serves the built PWA from the same origin, beside a `db` container (`postgres:16`). An optional `caddy` profile adds TLS for the public deployment. **TODO (#31, #33):** confirm these against the merged Compose file and the chosen host.
+`docker-compose.yml` runs one `app` container beside a `db` container (`postgres:16`). The app container applies migrations, seeds, and serves the API and the built PWA from one origin (`@fastify/static`, with client-side routes falling back to `index.html`). An optional `public` profile adds Caddy for TLS. **TODO (#33):** name the host once the public deployment is live.
 
 ## How the parts fit
 
@@ -84,4 +84,5 @@ As of 3 Oct 2026. **TODO (before submission):** refresh this table.
 | Web: routes, login and the four role shells | In progress (#36) |
 | API modules: orders, planning, sync, feed, notify, demo, monitor | Planned (#38, #41, #42, #45, #47, #48, #54, #59) |
 | Offline core, Loader and Driver apps | Planned (#40, #52, #53) |
-| Seed, Docker Compose, public deployment | Planned (#30, #31, #33) |
+| Docker Compose, Dockerfile, `.env.example` | Built (#31) |
+| Seed, public deployment | Planned (#30, #33) |

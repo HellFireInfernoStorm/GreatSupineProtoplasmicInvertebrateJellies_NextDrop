@@ -41,8 +41,11 @@ function send(reply: FastifyReply, status: number, payload: ApiError) {
   return reply.code(status).type("application/json").send(payload);
 }
 
+/** Handles an unmatched request itself (returns the reply) or leaves it to the JSON 404 (returns undefined). */
+export type NotFoundFallback = (request: FastifyRequest, reply: FastifyReply) => FastifyReply | undefined;
+
 /** One error shape for every route (spec/platform/api.md). Register before any route. */
-export function registerErrorHandling(app: FastifyInstance) {
+export function registerErrorHandling(app: FastifyInstance, notFoundFallback?: NotFoundFallback) {
   app.setErrorHandler((error: FastifyError | ApiHttpError, request, reply) => {
     if (error instanceof ApiHttpError) {
       reply.headers(error.headers);
@@ -55,5 +58,8 @@ export function registerErrorHandling(app: FastifyInstance) {
     request.log.error({ err: error }, "unhandled error");
     return send(reply, 500, body(request, "INTERNAL_ERROR", "errors.internal"));
   });
-  app.setNotFoundHandler((request, reply) => send(reply, 404, body(request, "NOT_FOUND", "errors.notFound")));
+  app.setNotFoundHandler(
+    (request, reply) =>
+      notFoundFallback?.(request, reply) ?? send(reply, 404, body(request, "NOT_FOUND", "errors.notFound")),
+  );
 }

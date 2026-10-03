@@ -24,6 +24,7 @@
     "@fastify/cookie": "^11.1.2",
     "@fastify/helmet": "^13.1.1",
     "@fastify/rate-limit": "^11.2.0",
+    "@fastify/static": "^10.1.5",
     "@nextdrop/contracts": "workspace:*",
     "@nextdrop/rules": "workspace:*",
     "@prisma/adapter-pg": "7.10.0",
