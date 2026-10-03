@@ -6,14 +6,13 @@ import { ApiRequestError } from "../lib/api";
 import { signIn } from "../lib/session";
 
 /** Why a sign-in failed, as the login screens word it. */
-export type LoginFailure = "invalid" | "locked" | "forbidden" | "network" | "unknown";
+export type LoginFailure = "invalid" | "locked" | "network" | "unknown";
 
 export function loginFailureOf(error: unknown): LoginFailure {
   if (error instanceof ApiRequestError) {
     if (error.kind === "network") return "network";
     if (error.status === 401) return "invalid";
     if (error.status === 429) return "locked";
-    if (error.status === 403) return "forbidden";
   }
   return "unknown";
 }

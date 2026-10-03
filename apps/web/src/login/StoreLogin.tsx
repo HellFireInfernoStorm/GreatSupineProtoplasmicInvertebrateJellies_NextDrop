@@ -1,8 +1,6 @@
 import { loginRequestSchema } from "@nextdrop/contracts";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { useClockSynced, useServerNow } from "../lib/clock";
-import { formatDay } from "../lib/time";
 import { Logo } from "../ui/Logo";
 import { PasswordField } from "./PasswordField";
 import { QuickLoginChips } from "./QuickLoginChips";
@@ -17,10 +15,6 @@ const INPUT =
  */
 export function StoreLogin() {
   const { t } = useTranslation("store/login");
-  const today = useServerNow(60_000);
-  // Before sign-in no response has carried the server's time yet, and the demo clock can sit a day away from the
-  // device clock. The date is shown only once the server clock is known.
-  const clockSynced = useClockSynced();
   const { pending, failure, submit, clearFailure } = useLogin();
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -69,9 +63,8 @@ export function StoreLogin() {
         <div className="mx-auto flex w-full max-w-md flex-col gap-2.5">
           <Logo panel="store" className="h-5 w-auto self-start" />
           <h1 className="text-3xl leading-[1.25] font-bold text-on-panel">{t("title")}</h1>
-          <p className="text-sm text-on-panel-muted">
-            {clockSynced ? t("phoneSubtitle", { date: formatDay(today) }) : t("eyebrow")}
-          </p>
+          {/* The frame adds today's date. No response carries the server's time before sign-in, so it is left out. */}
+          <p className="text-sm text-on-panel-muted">{t("eyebrow")}</p>
         </div>
       </header>
 
@@ -128,11 +121,7 @@ export function StoreLogin() {
               setPassword(value);
               clearFailure();
             }}
-            error={
-              failure && failure !== "network"
-                ? t(`errors.${failure === "forbidden" ? "unknown" : failure}`)
-                : undefined
-            }
+            error={failure && failure !== "network" ? t(`errors.${failure}`) : undefined}
             inputClassName={INPUT}
           />
 

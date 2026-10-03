@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { LANGUAGE_LABELS, setFieldLanguage } from "../i18n/language";
 import { LANGUAGES, type Language } from "../i18n/resources";
-import { PIN_LENGTH } from "./usePinLogin";
+import { PIN_KEY_ATTRIBUTE, PIN_LENGTH } from "./usePinLogin";
 
 // The pieces the Loader and Driver sign-in share. Sizes differ per role, so each takes the classes for its targets.
 
@@ -86,6 +86,7 @@ export function Keypad({ onDigit, onBackspace, backspaceLabel, className, keyCla
           <button
             key={key}
             type="button"
+            {...{ [PIN_KEY_ATTRIBUTE]: "" }}
             aria-label={isBack ? backspaceLabel : undefined}
             onClick={() => (isBack ? onBackspace() : onDigit(key))}
             className={`flex items-center justify-center bg-surface-2 font-bold text-text active:bg-border ${keyClassName}`}

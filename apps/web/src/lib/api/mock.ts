@@ -1,11 +1,13 @@
 import {
   apiRouteFixtures,
   apiVariantFixtures,
+  HUMAN_ROLES,
   loginRequestSchema,
   type ApiDtoInput,
   type ApiRouteName,
   type HumanRole,
 } from "@nextdrop/contracts";
+import { isFieldRole } from "../fieldRoles";
 import { readStored, writeStored } from "../storage";
 import type { RawResponse, Transport } from "./types";
 
@@ -24,11 +26,11 @@ const LATENCY_MS = 120;
 const routeFixtures: Record<string, { responses: Record<number, unknown> }> = apiRouteFixtures;
 
 function isRole(value: string | null): value is HumanRole {
-  return value !== null && value in apiVariantFixtures.sessionUser;
+  return HUMAN_ROLES.some((role) => role === value);
 }
 
 function session(role: HumanRole, nowMs: number): ApiDtoInput<"sessionResponse"> {
-  const lifetime = role === "LOADER" || role === "DRIVER" ? FIELD_SESSION_MS : WEB_SESSION_MS;
+  const lifetime = isFieldRole(role) ? FIELD_SESSION_MS : WEB_SESSION_MS;
   return {
     user: apiVariantFixtures.sessionUser[role],
     expiresAt: new Date(nowMs + lifetime).toISOString(),

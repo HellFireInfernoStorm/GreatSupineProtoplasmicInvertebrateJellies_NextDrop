@@ -28,7 +28,8 @@ describe("login failures", () => {
   it("words each kind of failure the way the login screens show it", () => {
     expect(loginFailureOf(new ApiRequestError("http", 401, null, ""))).toBe("invalid");
     expect(loginFailureOf(new ApiRequestError("http", 429, null, ""))).toBe("locked");
-    expect(loginFailureOf(new ApiRequestError("http", 403, null, ""))).toBe("forbidden");
+    // The only 403 a login can get is a missing CSRF header: a client fault, not something to explain to the user.
+    expect(loginFailureOf(new ApiRequestError("http", 403, null, ""))).toBe("unknown");
     expect(loginFailureOf(new ApiRequestError("network", null, null, ""))).toBe("network");
     expect(loginFailureOf(new ApiRequestError("http", 500, null, ""))).toBe("unknown");
     expect(loginFailureOf(new Error("boom"))).toBe("unknown");

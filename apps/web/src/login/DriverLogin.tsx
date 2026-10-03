@@ -68,7 +68,7 @@ export function DriverLogin() {
               role="alert"
               className={`text-[13px] font-semibold ${pin.failure === "network" ? "text-warn-fg" : "text-danger-fg"}`}
             >
-              {t(`errors.${pin.failure === "forbidden" ? "unknown" : pin.failure}`)}
+              {t(`errors.${pin.failure}`)}
             </p>
           )}
         </div>

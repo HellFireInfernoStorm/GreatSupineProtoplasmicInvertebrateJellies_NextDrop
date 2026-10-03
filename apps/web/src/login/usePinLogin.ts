@@ -1,5 +1,5 @@
 import { loginRequestSchema, type LoginRequest } from "@nextdrop/contracts";
-import { useCallback, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useCallback, useEffect, useEffectEvent, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { getDeviceId } from "../lib/device";
 import type { FieldRole } from "../lib/fieldRoles";
 import { readStored, writeStored } from "../lib/storage";
@@ -7,6 +7,9 @@ import { useLogin } from "./useLogin";
 
 /** The Loader and Driver PIN is four digits (login rationales in the Figma file). */
 export const PIN_LENGTH = 4;
+
+/** Marks the on-screen keypad keys, so Enter on one of them signs in instead of repeating its digit. */
+export const PIN_KEY_ATTRIBUTE = "data-pin-key";
 
 const lastIdKey = (role: FieldRole) => `nextdrop.lastLoginId.${role}`;
 
@@ -34,18 +37,21 @@ export function usePinLogin(role: FieldRole) {
     [clearFailure],
   );
 
+  // While a sign-in is in flight the PIN is frozen: keys from the keypad or a keyboard must not change it.
   const pressDigit = useCallback(
     (digit: string) => {
+      if (pending) return;
       setPin((current) => (current.length < PIN_LENGTH ? current + digit : current));
       clearFailure();
     },
-    [clearFailure],
+    [clearFailure, pending],
   );
 
   const backspace = useCallback(() => {
+    if (pending) return;
     setPin((current) => current.slice(0, -1));
     clearFailure();
-  }, [clearFailure]);
+  }, [clearFailure, pending]);
 
   const signInWithPin = useCallback(async () => {
     if (!request.success || !canSubmit) return;
@@ -80,16 +86,24 @@ export function usePinLogin(role: FieldRole) {
     [backspace, idComplete, pin.length, pressDigit],
   );
 
-  // Outside the ID field, a hardware keyboard types the PIN directly.
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.target instanceof HTMLInputElement || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (/^\d$/.test(event.key)) pressDigit(event.key);
-      else if (event.key === "Backspace") backspace();
+  // Outside the ID field, a hardware keyboard types the PIN directly, and Enter signs in once it is complete.
+  // Enter on a focused button keeps its own meaning, except on a keypad key, where it would only repeat a digit.
+  const onWindowKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (/^\d$/.test(event.key)) pressDigit(event.key);
+    else if (event.key === "Backspace") backspace();
+    else if (event.key === "Enter" && canSubmit) {
+      if (target instanceof HTMLButtonElement && !target.hasAttribute(PIN_KEY_ATTRIBUTE)) return;
+      event.preventDefault();
+      void signInWithPin();
     }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [backspace, pressDigit]);
+  });
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onWindowKeyDown(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
 
   return {
     loginId,
