@@ -1,0 +1,80 @@
+{
+  "roles": {
+    "STORE": {
+      "text": "கடை மேலாளர்",
+      "review": "draft"
+    },
+    "DISPATCHER": {
+      "text": "விநியோகத் திட்டமிடுநர்",
+      "review": "draft"
+    },
+    "LOADER": {
+      "text": "ஏற்றுநர்",
+      "review": "draft"
+    },
+    "DRIVER": {
+      "text": "ஓட்டுநர்",
+      "review": "draft"
+    }
+  },
+  "session": {
+    "signedInAs": {
+      "text": "{{name}} ஆக உள்நுழைந்துள்ளீர்கள்",
+      "review": "draft"
+    },
+    "signOut": {
+      "text": "வெளியேறு",
+      "review": "draft"
+    },
+    "signOutFailed": {
+      "text": "வெளியேற முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.",
+      "review": "draft"
+    }
+  },
+  "resetBanner": {
+    "by": {
+      "text": "{{time}} மணிக்கு {{role}} டெமோ தரவை மீட்டமைத்தார்.",
+      "review": "draft"
+    },
+    "unknown": {
+      "text": "டெமோ தரவு மீட்டமைக்கப்பட்டது.",
+      "review": "draft"
+    }
+  },
+  "status": {
+    "loading": {
+      "text": "ஏற்றுகிறது…",
+      "review": "draft"
+    }
+  },
+  "errors": {
+    "title": {
+      "text": "ஏதோ தவறு ஏற்பட்டது",
+      "review": "draft"
+    },
+    "unreachable": {
+      "text": "சேவையகத்தை அணுக முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.",
+      "review": "draft"
+    },
+    "retry": {
+      "text": "மீண்டும் முயலவும்",
+      "review": "draft"
+    }
+  },
+  "language": {
+    "label": {
+      "text": "மொழி",
+      "review": "draft"
+    }
+  },
+  "demo": {
+    "label": {
+      "text": "டெமோ கணக்குகள்",
+      "review": "draft"
+    },
+    "signInAs": {
+      "text": "{{account}} ஆக உள்நுழைக",
+      "review": "draft"
+    }
+  }
+}

@@ -1,1 +1,103 @@
 @import "tailwindcss";
+
+@import "./theme/tokens.store.css";
+@import "./theme/tokens.dispatcher.css";
+@import "./theme/tokens.loader.css";
+@import "./theme/tokens.driver.css";
+
+/*
+ * Semantic names for Tailwind (spec/frontend/design-system.md). Each one points at a per-role token, so a class
+ * such as bg-surface or text-muted resolves from the nearest data-theme root and components stay theme-agnostic.
+ * Tailwind's default palette is removed on purpose: colours come from the tokens only (apps/web/AGENTS.md).
+ */
+@theme inline {
+  --color-*: initial;
+
+  --font-sans: var(--nd-font-sans);
+
+  --color-bg: var(--nd-bg);
+  --color-surface: var(--nd-surface);
+  --color-surface-2: var(--nd-surface-2);
+  --color-surface-3: var(--nd-surface-3);
+  --color-border: var(--nd-border);
+  --color-text: var(--nd-text);
+  --color-muted: var(--nd-muted);
+  --color-faint: var(--nd-faint);
+  --color-scrim: var(--nd-scrim);
+
+  --color-primary: var(--nd-primary);
+  --color-on-primary: var(--nd-on-primary);
+  --color-link: var(--nd-link);
+
+  --color-panel: var(--nd-panel);
+  --color-panel-2: var(--nd-panel-2);
+  --color-panel-line: var(--nd-panel-line);
+  --color-on-panel: var(--nd-on-panel);
+  --color-on-panel-muted: var(--nd-on-panel-muted);
+
+  --color-ok: var(--nd-ok);
+  --color-ok-fg: var(--nd-ok-fg);
+  --color-ok-bg: var(--nd-ok-bg);
+  --color-warn: var(--nd-warn);
+  --color-warn-fg: var(--nd-warn-fg);
+  --color-warn-bg: var(--nd-warn-bg);
+  --color-danger: var(--nd-danger);
+  --color-danger-fg: var(--nd-danger-fg);
+  --color-danger-bg: var(--nd-danger-bg);
+  --color-info: var(--nd-info);
+  --color-info-fg: var(--nd-info-fg);
+  --color-info-bg: var(--nd-info-bg);
+  --color-chilled: var(--nd-chilled);
+  --color-chilled-fg: var(--nd-chilled-fg);
+  --color-chilled-bg: var(--nd-chilled-bg);
+  --color-deferred: var(--nd-deferred);
+  --color-deferred-fg: var(--nd-deferred-fg);
+  --color-deferred-bg: var(--nd-deferred-bg);
+  --color-neutral: var(--nd-neutral);
+  --color-neutral-fg: var(--nd-neutral-fg);
+  --color-neutral-bg: var(--nd-neutral-bg);
+
+  /* Dispatcher-only extras: defined in tokens.dispatcher.css alone. */
+  --color-brand: var(--nd-brand);
+  --color-brand-bg: var(--nd-brand-bg);
+  --color-accent: var(--nd-accent);
+  --color-accent-bg: var(--nd-accent-bg);
+  --color-track: var(--nd-track);
+  --color-avatar: var(--nd-avatar);
+  --color-row-soft: var(--nd-row-soft);
+  --color-tab-muted: var(--nd-tab-muted);
+
+  --animate-shake: nd-shake 0.32s ease-in-out;
+}
+
+/*
+ * A short, phone-sized viewport: a small phone, or a phone held sideways. Screens use it to tighten spacing so the
+ * main action stays in reach. Wide layouts (from the `lg` breakpoint) are never affected.
+ */
+@custom-variant short (@media (max-height: 720px) and (max-width: 1023.98px));
+
+@keyframes nd-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+@layer base {
+  /* Outside a role root (first paint, route errors) the page uses the Store theme's type. */
+  :root {
+    --nd-font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+  }
+
+  [data-theme] {
+    background-color: var(--nd-bg);
+    color: var(--nd-text);
+    font-family: var(--nd-font-sans);
+  }
+}

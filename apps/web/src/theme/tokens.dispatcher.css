@@ -1,0 +1,63 @@
+/*
+ * Dispatcher theme. Neutrals and status tones are the Figma collection "Store Manager · Light"; the brand,
+ * navigation and chart colours are "Dispatcher · Light" (13 variables). Read from the live file (ADR 0015).
+ */
+[data-theme="dispatcher"] {
+  color-scheme: light;
+  --nd-font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+
+  --nd-bg: #ffffff; /* Store · color/bg */
+  --nd-surface: #ffffff; /* Store · color/surface */
+  --nd-surface-2: #f6f9fa; /* Store · color/surface-2 */
+  --nd-surface-3: #eef1f4; /* Store · color/surface-3 */
+  --nd-border: #dbe0e5; /* Store · color/border */
+  --nd-text: #131a26; /* Store · color/text */
+  --nd-muted: #6b7585; /* Store · color/text-muted */
+  --nd-faint: #9aa3b0; /* Store · color/text-faint */
+  --nd-scrim: rgb(19 26 38 / 0.5); /* Store · color/scrim */
+
+  /* The filled primary button is the green brand colour. */
+  --nd-primary: #087a52; /* color/brand */
+  --nd-on-primary: #ffffff;
+  --nd-link: #2778f8; /* color/link */
+
+  /* The navy sidebar and login panel. */
+  --nd-panel: #0e1724; /* color/nav-bg */
+  --nd-panel-2: #142b33; /* color/nav-active */
+  --nd-panel-line: #2e3d4a; /* color/nav-line */
+  --nd-on-panel: #ffffff;
+  --nd-on-panel-muted: #b2c2cf; /* color/nav-muted */
+
+  --nd-ok: #087a52; /* Store · color/ok */
+  --nd-ok-fg: #087a52;
+  --nd-ok-bg: #e0f7ed; /* Store · color/ok-bg */
+  --nd-warn: #b45f06; /* Store · color/warn */
+  --nd-warn-fg: #b45f06;
+  --nd-warn-bg: #fff5de; /* Store · color/warn-bg */
+  --nd-danger: #c4262c; /* Store · color/danger */
+  --nd-danger-fg: #c4262c;
+  --nd-danger-bg: #ffe8eb; /* Store · color/danger-bg */
+  --nd-info: #1f6bd6; /* Store · color/info */
+  --nd-info-fg: #1f6bd6;
+  --nd-info-bg: #e5f0ff; /* Store · color/info-bg */
+  --nd-deferred: #6b38cd; /* Store · color/purple */
+  --nd-deferred-fg: #6b38cd;
+  --nd-deferred-bg: #eee6fc; /* Store · color/purple-bg */
+  --nd-neutral: #465264; /* Store · color/neutral */
+  --nd-neutral-fg: #465264;
+  --nd-neutral-bg: #eef1f4; /* Store · color/neutral-bg */
+  /* The light collections have no chilled variable. Chilled borrows the info tone and is marked by its icon and label. */
+  --nd-chilled: #1f6bd6;
+  --nd-chilled-fg: #1f6bd6;
+  --nd-chilled-bg: #e5f0ff;
+
+  /* Dispatcher-only extras. */
+  --nd-brand: #087a52; /* color/brand */
+  --nd-brand-bg: #e0f7ed; /* color/brand-bg */
+  --nd-accent: #f2941f; /* color/accent */
+  --nd-accent-bg: #fff5de; /* color/accent-bg */
+  --nd-track: #ebedf2; /* color/track */
+  --nd-avatar: #6b7585; /* color/avatar */
+  --nd-row-soft: #f9fafb; /* color/row-soft */
+  --nd-tab-muted: #878e9c; /* color/tab-muted */
+}
