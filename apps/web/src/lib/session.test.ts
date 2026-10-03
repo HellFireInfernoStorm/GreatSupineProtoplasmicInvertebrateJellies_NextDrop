@@ -1,5 +1,5 @@
 import { apiFixtures, apiRouteFixtures, apiVariantFixtures, type HumanRole } from "@nextdrop/contracts";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { callApi, setTransport } from "./api";
 import type { RawResponse } from "./api/types";
 import { queryClient } from "./queryClient";
@@ -34,7 +34,10 @@ async function signedInAs(role: HumanRole) {
 }
 
 beforeEach(() => queryClient.clear());
-afterEach(() => setTransport(null));
+afterEach(() => {
+  setTransport(null);
+  vi.restoreAllMocks();
+});
 
 describe("a 401 from the server", () => {
   it("signs a Store manager out and drops what was cached for them", async () => {
@@ -141,7 +144,7 @@ describe("sign-in", () => {
 });
 
 describe("field session persistence across reload", () => {
-  it("restores the Driver shell offline and asks for PIN without losing queued work", async () => {
+  it("restores the Driver shell offline without requiring PIN until a server 401", async () => {
     await signedInAs("DRIVER");
     const { offlineDb } = await import("../sync/database");
     await offlineDb.set("testWork", "kept");
@@ -150,6 +153,9 @@ describe("field session persistence across reload", () => {
     const { sessionQuery } = await import("./session");
     const session = await queryClient.ensureQueryData(sessionQuery);
     expect(session?.user.role).toBe("DRIVER");
+    expect(isReauthNeeded()).toBe(false);
+    serve({ heartbeat: unauthenticated });
+    await callApi("heartbeat", { body: apiFixtures.heartbeatRequest }).catch(() => undefined);
     expect(isReauthNeeded()).toBe(true);
     expect(await offlineDb.value("testWork")).toBe("kept");
   });
@@ -183,4 +189,36 @@ describe("field session persistence across reload", () => {
     expect(await fieldRepository.db.value("localSession")).toBeUndefined();
     expect((await fieldRepository.db.outbox.get(entry.clientEventId))?.state).toBe("pending");
   });
+});
+
+it("online authentication works when optional IndexedDB reads and writes fail", async () => {
+  const { offlineDb } = await import("../sync/database");
+  vi.spyOn(offlineDb, "value").mockRejectedValue(new Error("IndexedDB unavailable"));
+  vi.spyOn(offlineDb, "transaction").mockRejectedValue(new Error("IndexedDB unavailable"));
+  const { sessionQuery } = await import("./session");
+  const { getDeviceId } = await import("./device");
+  for (const role of ["STORE", "DISPATCHER", "LOADER", "DRIVER"] as const) {
+    await signedInAs(role);
+    expect(currentSession()?.user.role).toBe(role);
+    queryClient.clear();
+    serve({ me: { status: 200, body: sessionOf(role) } });
+    expect((await queryClient.ensureQueryData(sessionQuery))?.user.role).toBe(role);
+  }
+  expect(getDeviceId()).toBe(getDeviceId());
+});
+
+it("a stale offline flag cannot block Dispatcher startup and sign-out clears it", async () => {
+  const { offlineDb } = await import("../sync/database");
+  await signedInAs("DRIVER");
+  await offlineDb.set("simulateOffline", true);
+  serve({ logout: { status: 200, body: apiRouteFixtures.logout.responses[200] } });
+  await signOut();
+  expect(await offlineDb.value("simulateOffline")).toBeUndefined();
+  await offlineDb.set("simulateOffline", true);
+  queryClient.clear();
+  const calls = serve({ me: { status: 200, body: sessionOf("DISPATCHER") } });
+  const { sessionQuery } = await import("./session");
+  expect((await queryClient.ensureQueryData(sessionQuery))?.user.role).toBe("DISPATCHER");
+  expect(calls).toContain("me");
+  expect(await offlineDb.value("simulateOffline")).toBeUndefined();
 });

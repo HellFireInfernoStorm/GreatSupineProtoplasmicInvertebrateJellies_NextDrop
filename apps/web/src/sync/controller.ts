@@ -1,4 +1,6 @@
-import { apiSchemas, type ClientEvent } from "@nextdrop/contracts";
+import { apiSchemas } from "@nextdrop/contracts";
+import Dexie from "dexie";
+import { eventBatch } from "./batch";
 import { create } from "zustand";
 import { uuidv7 } from "uuidv7";
 import { ApiRequestError, API_MOCK } from "../lib/api";
@@ -50,15 +52,30 @@ export class SyncController {
     return ownsLease && !offline && !this.paused() && this.identity() === userId;
   }
 
-  /** All foreground triggers share one flight. A write during it requests another pass. */
-  syncNow(): Promise<void> {
-    if (this.active) return this.active;
-    this.active = this.run().finally(() => {
-      this.active = null;
-      if (this.rerun) {
+  /** Foreground triggers coalesce into a pass after the current flight. */
+  syncNow(foreground = true): Promise<void> {
+    if (foreground) {
+      this.failures = 0;
+      if (this.timer) clearTimeout(this.timer);
+    }
+    if (this.active) {
+      if (foreground) this.rerun = true;
+      return this.active;
+    }
+    this.active = (async () => {
+      do {
         this.rerun = false;
-        void this.syncNow();
-      }
+        try {
+          await this.run();
+        } catch (error) {
+          this.failures++;
+          useSyncActivity.setState({ syncing: false, error: error instanceof Error ? error.message : "Sync failed" });
+        }
+        if (this.rerun) this.failures = 0;
+      } while (this.rerun);
+    })().finally(() => {
+      this.active = null;
+      this.schedule();
     });
     return this.active;
   }
@@ -68,7 +85,6 @@ export class SyncController {
       await navigator.locks.request(`nextdrop-sync:${this.repository.db.name}`, { ifAvailable: true }, async (lock) => {
         if (lock) await this.runOwned();
       });
-      this.schedule();
       return;
     }
     // IndexedDB lease fallback for browsers without Web Locks. Renew while owning the queue.
@@ -82,7 +98,6 @@ export class SyncController {
       return true;
     });
     if (!acquired) {
-      this.schedule();
       return;
     }
     this.leaseToken = token;
@@ -115,37 +130,23 @@ export class SyncController {
     try {
       // Recover sends interrupted by a tab close. Idempotent IDs make retries safe.
       await db.transaction("rw", db.outbox, db.blobQueue, async () => {
-        for (const entry of await db.outbox.where("state").equals("sending").toArray()) {
+        for (const entry of await db.outbox.where("[actor.userId+state]").equals([userId, "sending"]).toArray()) {
           if (entry.actor.userId === userId) await db.outbox.update(entry.clientEventId, { state: "pending" });
         }
-        for (const blob of await db.blobQueue.where("state").equals("sending").toArray()) {
+        for (const blob of await db.blobQueue.where("[userId+state]").equals([userId, "sending"]).toArray()) {
           if (blob.userId === userId) await db.blobQueue.update(blob.clientBlobId, { state: "pending" });
         }
       });
       // Pull epoch before replaying old facts; reset must not push a stale outbox.
       await this.pull(userId);
       while (await this.canSync(userId)) {
-        const candidates = (await db.outbox.orderBy("deviceSeq").toArray()).filter(
-          (e) => e.state === "pending" && e.actor.userId === userId,
-        );
+        const candidates = await db.outbox
+          .where("[actor.userId+state+deviceSeq]")
+          .between([userId, "pending", Dexie.minKey], [userId, "pending", Dexie.maxKey])
+          .limit(100)
+          .toArray();
         if (!candidates.length) break;
-        const batch = [] as typeof candidates;
-        const deviceId = candidates[0]!.deviceId;
-        let events: ClientEvent[] = [];
-        for (const entry of candidates.slice(0, 100)) {
-          const {
-            state: _state,
-            attempts: _attempts,
-            lastError: _error,
-            blobRefs: _refs,
-            confirmedAt: _confirmed,
-            ...event
-          } = entry;
-          const next = [...events, event as ClientEvent];
-          if (new TextEncoder().encode(JSON.stringify({ deviceId, events: next })).byteLength > 1000000) break;
-          batch.push(entry);
-          events = next;
-        }
+        const { rows: batch, events, deviceId } = eventBatch(candidates);
         if (!batch.length) {
           await db.outbox.update(candidates[0]!.clientEventId, { lastError: "PAYLOAD_TOO_LARGE" });
           throw new Error("An event exceeds the transport limit");
@@ -175,6 +176,8 @@ export class SyncController {
                 state: result.status === "REJECTED" ? "failed" : result.status === "HELD_CONFLICT" ? "held" : "acked",
                 lastError: result.code ?? null,
                 confirmedAt: result.receivedAt,
+                confirmationFeedHead:
+                  result.status === "ACCEPTED" || result.status === "DUPLICATE" ? response.feedHead : undefined,
               });
               if (result.status === "HELD_CONFLICT")
                 await db.conflictsLocal.put({ id: result.conflictId, clientEventId: match.clientEventId, userId });
@@ -199,7 +202,7 @@ export class SyncController {
       }
       if (!(await this.canSync(userId))) return;
       // Text queue completes before any evidence upload starts.
-      for (const blob of await db.blobQueue.where("state").equals("pending").toArray()) {
+      for (const blob of await db.blobQueue.where("[userId+state]").equals([userId, "pending"]).toArray()) {
         if (blob.userId !== userId || !(await this.canSync(userId))) continue;
         await db.blobQueue.update(blob.clientBlobId, { state: "sending", attempts: blob.attempts + 1 });
         try {
@@ -228,7 +231,6 @@ export class SyncController {
       useSyncActivity.setState({ error: error instanceof Error ? error.message : "Sync failed" });
     } finally {
       useSyncActivity.setState({ syncing: false });
-      this.schedule();
     }
   }
 
@@ -267,8 +269,8 @@ export class SyncController {
           for (const id of resolvedConflicts) {
             const conflict = await db.conflictsLocal.get(id);
             if (conflict?.userId !== userId) continue;
-            await db.outbox.update(conflict.clientEventId, { state: "acked" });
-            await db.conflictsLocal.delete(id);
+            // The field feed carries no accept/reject outcome. Keep the fact and notice.
+            await db.outbox.update(conflict.clientEventId, { lastError: "RESOLUTION_DETAILS_UNAVAILABLE" });
           }
         });
         return;
@@ -310,7 +312,7 @@ export class SyncController {
     const delay = this.failures
       ? Math.min(30000, 1000 * 2 ** Math.min(this.failures, 5)) * (0.75 + Math.random() * 0.5)
       : 20000 + Math.random() * 5000;
-    this.timer = setTimeout(() => void this.syncNow(), delay);
+    this.timer = setTimeout(() => void this.syncNow(false), delay);
   }
 
   start(): () => void {
@@ -323,14 +325,14 @@ export class SyncController {
     window.addEventListener("offline", online);
     document.addEventListener("visibilitychange", visible);
     this.repository.onWrite = () => {
-      if (this.active) this.rerun = true;
-      else online();
+      online();
     };
     this.stopListening = () => {
       window.removeEventListener("online", online);
       window.removeEventListener("offline", online);
       document.removeEventListener("visibilitychange", visible);
       this.repository.onWrite = null;
+      this.rerun = false;
       if (this.timer) clearTimeout(this.timer);
       this.stream?.close();
       this.stream = null;

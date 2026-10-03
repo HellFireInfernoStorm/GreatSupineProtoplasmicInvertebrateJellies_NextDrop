@@ -27,8 +27,20 @@ export function useSyncDiagnostics(): SyncDiagnostics {
   useEffect(() => {
     const db = fieldRepository.db;
     const subscription = liveQuery(async () => {
-      const events = (await db.outbox.toArray()).filter((e) => e.actor.userId === user.id);
-      const blobs = (await db.blobQueue.toArray()).filter((e) => e.userId === user.id);
+      const events = await db.outbox
+        .where("[actor.userId+state]")
+        .anyOf(
+          [user.id, "pending"],
+          [user.id, "sending"],
+          [user.id, "held"],
+          [user.id, "rejected"],
+          [user.id, "failed"],
+        )
+        .toArray();
+      const blobs = await db.blobQueue
+        .where("[userId+state]")
+        .anyOf([user.id, "pending"], [user.id, "sending"], [user.id, "failed"])
+        .toArray();
       return {
         pendingCount:
           events.filter(unconfirmed).length +

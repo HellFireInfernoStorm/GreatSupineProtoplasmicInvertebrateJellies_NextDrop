@@ -6,6 +6,7 @@ import { ApiRequestError, callApi, setCsrfToken, setUnauthenticatedHandler } fro
 import { getDeviceId, initializeDevice } from "./device";
 import { isFieldRole } from "./fieldRoles";
 import { queryClient } from "./queryClient";
+import { optionalMeta, persistOptional } from "./offline-meta";
 import { offlineDb } from "../sync/database";
 import { restoreClockOffset } from "./clock";
 import { setDemoNotice, type DemoNotice } from "./demo";
@@ -41,28 +42,36 @@ function dropCachedData(): void {
 
 /** The current session, or null when nobody is signed in. A network failure rejects instead of signing out. */
 async function persistSession(session: Session | null): Promise<void> {
-  if (session && isFieldRole(session.user.role)) await offlineDb.set("localSession", session);
-  else await offlineDb.meta.delete("localSession");
+  await persistOptional(() =>
+    offlineDb.transaction("rw", offlineDb.meta, async () => {
+      if (session && isFieldRole(session.user.role)) await offlineDb.set("localSession", session);
+      else {
+        await offlineDb.meta.delete("localSession");
+        await offlineDb.meta.delete("simulateOffline");
+      }
+    }),
+  );
 }
 
 async function fetchSession(): Promise<Session | null> {
   await initializeDevice();
-  const offset = await offlineDb.value<number>("serverOffset");
+  const offset = await optionalMeta<number>("serverOffset");
   if (offset !== undefined) restoreClockOffset(offset);
-  const notice = await offlineDb.value<DemoNotice>("resetNotice");
+  const notice = await optionalMeta<DemoNotice>("resetNotice");
   if (notice) setDemoNotice(notice);
-  const parsed = sessionResponseSchema.safeParse(await offlineDb.value("localSession"));
+  const parsed = sessionResponseSchema.safeParse(await optionalMeta("localSession"));
   const saved = parsed.success && isFieldRole(parsed.data.user.role) ? parsed.data : null;
   if (saved) remember(saved);
   try {
-    if (await offlineDb.value("simulateOffline")) throw new ApiRequestError("network", null, null, "Simulated offline");
+    if (saved && (await optionalMeta("simulateOffline")))
+      throw new ApiRequestError("network", null, null, "Simulated offline");
     const session = await callApi("me");
     await persistSession(session);
     remember(session);
     return session;
   } catch (error) {
     if (saved && error instanceof ApiRequestError && (error.status === 401 || error.kind === "network")) {
-      useReauthStore.setState({ needed: true });
+      useReauthStore.setState({ needed: error.status === 401 });
       return saved;
     }
     if (error instanceof ApiRequestError && error.status === 401) return null;
@@ -166,5 +175,6 @@ setUnauthenticatedHandler(() => {
   } else {
     dropCachedData();
     remember(null);
+    void persistSession(null);
   }
 });

@@ -113,7 +113,11 @@ export function mockRespond(name: ApiRouteName, body: unknown, nowMs: number = D
         return { status: 401, body: apiRouteFixtures.reauth.responses[401] };
       if (parsed.success && MOCK_LOCKED_SECRETS.includes(parsed.data.pin))
         return { status: 429, body: apiRouteFixtures.reauth.responses[429] };
-      return isRole(role) ? { status: 200, body: session(role, nowMs) } : unauthenticated();
+      if (!parsed.success) return unauthenticated();
+      const renewedRole = isRole(role) ? role : parsed.data.role;
+      if (renewedRole !== parsed.data.role) return unauthenticated();
+      writeStored(SESSION_KEY, renewedRole, "session");
+      return { status: 200, body: session(renewedRole, nowMs) };
     }
     case "me":
       return isRole(role) ? { status: 200, body: session(role, nowMs) } : unauthenticated();

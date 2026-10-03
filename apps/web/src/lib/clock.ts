@@ -24,7 +24,7 @@ export function observeServerTime(serverTimeIso: string, deviceNowMs: number = D
   const offsetMs = offsetFrom(serverTimeIso, deviceNowMs);
   if (offsetMs !== null) {
     useClockStore.setState({ offsetMs });
-    if (typeof indexedDB !== "undefined") void offlineDb.set("serverOffset", offsetMs);
+    if (typeof indexedDB !== "undefined") void offlineDb.set("serverOffset", offsetMs).catch(() => undefined);
   }
 }
 

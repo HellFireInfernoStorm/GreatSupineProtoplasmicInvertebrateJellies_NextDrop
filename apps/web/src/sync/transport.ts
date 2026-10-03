@@ -25,13 +25,15 @@ export const syncTransport: SyncTransport = {
       headers: { "content-type": blob.bytes.type, "x-nextdrop-csrf": currentSession()?.csrfToken ?? "1" },
     });
     if (response.status === 401) notifySessionExpired();
-    const body: unknown = await response.json();
+    const body: unknown = await response.json().catch(() => null);
     if (!response.ok) {
       const parsed = apiSchemas.apiError.safeParse(body);
 
       throw new ApiRequestError("http", response.status, parsed.success ? parsed.data : null, "Blob upload failed");
     }
-    const result = apiSchemas.blobResponse.parse(body);
+    const parsed = apiSchemas.blobResponse.safeParse(body);
+    if (!parsed.success) throw new ApiRequestError("invalid", response.status, null, "Invalid blob acknowledgement");
+    const result = parsed.data;
     if (result.clientBlobId !== blob.clientBlobId) throw new Error("Uncorrelated blob acknowledgement");
   },
 };

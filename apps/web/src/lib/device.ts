@@ -11,7 +11,7 @@ export function initializeDevice(): Promise<string> {
     .transaction("rw", offlineDb.meta, async () => {
       const stored = await offlineDb.value<string>("deviceId");
       const legacy = readStored("nextdrop.deviceId");
-      const id = stored ?? legacy ?? uuidv7();
+      const id = stored ?? deviceId ?? legacy ?? uuidv7();
       await offlineDb.set("deviceId", id);
       return id;
     })
@@ -20,14 +20,14 @@ export function initializeDevice(): Promise<string> {
       writeStored("nextdrop.deviceId", null);
       return id;
     })
-    .catch((error) => {
+    .catch(() => {
       initialized = null;
-      throw error;
+      return getDeviceId();
     });
   return initialized;
 }
 
 export function getDeviceId(): string {
-  if (!deviceId) throw new Error("Device identity has not been initialized");
+  deviceId ??= readStored("nextdrop.deviceId") ?? uuidv7();
   return deviceId;
 }

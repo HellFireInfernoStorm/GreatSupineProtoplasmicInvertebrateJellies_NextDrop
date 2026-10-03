@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { uuidv7 } from "uuidv7";
 import { OfflineDatabase } from "./database";
 import { FieldRepository } from "./repository";
+import { ApiRequestError } from "../lib/api";
 import { SyncController } from "./controller";
 import type { SyncTransport } from "./transport";
 
@@ -33,7 +34,7 @@ const accepted = (events: ClientEvent[]): ApiDto<"syncEventsResponse"> => ({
     receivedAt: e.capturedAt,
   })),
   serverTime: apiFixtures.clientEvent.capturedAt,
-  feedHead: "9007199254740993",
+  feedHead: String(BigInt(data.feedCursor) + 1n),
 });
 beforeEach(async () => {
   db = new OfflineDatabase(`controller-${uuidv7()}`);
@@ -237,7 +238,7 @@ it("a second controller cannot claim the same device while the first sends", asy
   expect((await db.outbox.toArray())[0]?.state).toBe("acked");
 });
 
-it("removes the local held notice only when the server feed confirms conflict resolution", async () => {
+it("retains held facts when the resolution hint omits the dispatcher decision", async () => {
   await repository.replaceSnapshot(data, "driver-1");
   const entry = await enqueue();
   const conflictId = uuidv7();
@@ -256,6 +257,91 @@ it("removes the local held notice only when the server feed confirms conflict re
     resetEpoch: data.resetEpoch,
   });
   await controller.syncNow();
-  expect(await db.conflictsLocal.count()).toBe(0);
+  expect(await db.conflictsLocal.count()).toBe(1);
+  expect(await db.outbox.get(entry.clientEventId)).toMatchObject({
+    state: "held",
+    lastError: "RESOLUTION_DETAILS_UNAVAILABLE",
+  });
+});
+
+it("keeps accepted work projected when the confirming snapshot fails, then prunes with a covering snapshot", async () => {
+  const order = data.scope.trips[0]!.stops[0]!.order;
+  order.status = "PLANNED";
+  await repository.replaceSnapshot(data, "driver-1");
+  const entry = await repository.enqueue({
+    type: "LOAD_CONFIRMED",
+    subject: { orderId: order.id },
+    actor: { role: "DRIVER", userId: "driver-1" },
+    payload: { lines: [{ lineId: "line-1", qtyLoaded: 1 }] },
+  });
+  transport.snapshot = async () => {
+    throw new Error("No signal after acceptance");
+  };
+  await controller.syncNow();
   expect((await db.outbox.get(entry.clientEventId))?.state).toBe("acked");
+  expect((await repository.projectOrder(order.id, "driver-1"))?.status).toBe("LOADED");
+  // An empty filtered feed advances the pull cursor, but cannot confirm a stale snapshot.
+  transport.changes = async () => ({
+    items: [],
+    head: String(BigInt(data.feedCursor) + 10n),
+    resetEpoch: data.resetEpoch,
+  });
+  await controller.syncNow();
+  expect(await db.outbox.get(entry.clientEventId)).toBeDefined();
+  data.feedCursor = String(BigInt(data.feedCursor) + 1n);
+  order.status = "LOADED";
+  await repository.replaceSnapshot(data, "driver-1");
+  expect(await db.outbox.get(entry.clientEventId)).toBeUndefined();
+  expect((await repository.projectOrder(order.id, "driver-1"))?.status).toBe("LOADED");
+});
+
+it("a foreground trigger during a failing flight retries immediately and is joined by the caller", async () => {
+  const entry = await enqueue();
+  let release!: () => void;
+  let entered!: () => void;
+  const started = new Promise<void>((resolve) => {
+    entered = resolve;
+  });
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let pushes = 0;
+  transport.push = async (_id, events) => {
+    pushes++;
+    if (pushes === 1) {
+      entered();
+      await gate;
+      throw new Error("offline");
+    }
+    return accepted(events);
+  };
+  const flight = controller.syncNow();
+  await started;
+  const retry = controller.syncNow();
+  expect(retry).toBe(flight);
+  release();
+  await retry;
+  expect(pushes).toBe(2);
+  expect(await db.outbox.get(entry.clientEventId)).toMatchObject({ state: "acked", attempts: 2 });
+});
+
+it.each([413, 502])("only retries transient blob failures (HTTP %s)", async (status) => {
+  const id = uuidv7();
+  await db.blobQueue.add({
+    clientBlobId: id,
+    userId: "driver-1",
+    bytes: new Blob(["image"]),
+    state: "pending",
+    attempts: 0,
+    lastError: null,
+  });
+  let uploads = 0;
+  transport.upload = async () => {
+    uploads++;
+    throw new ApiRequestError("http", status, null, "Blob upload failed");
+  };
+  await controller.syncNow();
+  expect((await db.blobQueue.get(id))?.state).toBe(status === 413 ? "failed" : "pending");
+  await controller.syncNow();
+  expect(uploads).toBe(status === 413 ? 1 : 2);
 });

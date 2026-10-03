@@ -43,3 +43,19 @@ it("never acknowledges an upload using another blob's returned identity", async 
   );
   await expect(syncTransport.upload(photo())).rejects.toThrow("Uncorrelated blob acknowledgement");
 });
+
+it.each([413, 502])("preserves HTTP %s when the upload error is HTML", async (status) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response("<html>proxy error</html>", { status })),
+  );
+  await expect(syncTransport.upload(photo())).rejects.toMatchObject({ kind: "http", status });
+});
+
+it("an empty 204 is not a valid upload confirmation", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(null, { status: 204 })),
+  );
+  await expect(syncTransport.upload(photo())).rejects.toMatchObject({ kind: "invalid", status: 204 });
+});

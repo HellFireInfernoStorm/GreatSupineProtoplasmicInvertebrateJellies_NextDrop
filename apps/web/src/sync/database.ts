@@ -8,6 +8,7 @@ export type OutboxEntry = ClientEvent & {
   lastError: string | null;
   blobRefs: string[];
   confirmedAt?: string;
+  confirmationFeedHead?: string;
 };
 export interface QueuedBlob {
   clientBlobId: string;
@@ -46,6 +47,10 @@ export class OfflineDatabase extends Dexie {
       contacts: "id",
       conflictsLocal: "id, userId",
       meta: "key",
+    });
+    this.version(2).stores({
+      outbox: "clientEventId, deviceSeq, state, actor.userId, [actor.userId+state], [actor.userId+state+deviceSeq]",
+      blobQueue: "clientBlobId, state, userId, [userId+state]",
     });
   }
 

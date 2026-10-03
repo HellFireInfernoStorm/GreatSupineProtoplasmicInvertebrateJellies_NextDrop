@@ -1,4 +1,10 @@
-import { clientEventSchema, SCHEMA_VERSION, type ClientEvent, type FieldSnapshot } from "@nextdrop/contracts";
+import {
+  apiRoutes,
+  clientEventSchema,
+  SCHEMA_VERSION,
+  type ClientEvent,
+  type FieldSnapshot,
+} from "@nextdrop/contracts";
 import { applyEvent, emptyOrderState, type OrderEvent, type OrderState } from "@nextdrop/rules";
 import { uuidv7 } from "uuidv7";
 import { clockOffsetMs } from "../lib/clock";
@@ -35,7 +41,10 @@ export class FieldRepository {
         clockOffsetMs: clockOffsetMs(),
         basedOnPlanVersion: (await this.db.value<number | null>("planVersion")) ?? undefined,
       });
-      if (new TextEncoder().encode(JSON.stringify({ deviceId, events: [event] })).byteLength > 1000000)
+      if (
+        new TextEncoder().encode(JSON.stringify({ deviceId, events: [event] })).byteLength >
+        apiRoutes.syncEvents.bodyLimit
+      )
         throw new Error("Event exceeds the transport limit");
       const row: OutboxEntry = {
         ...event,
@@ -95,6 +104,13 @@ export class FieldRepository {
       await this.db.set("snapshotOwner", userId);
       await this.db.set("planVersion", snapshot.planVersion);
       await this.db.set("feedCursor", snapshot.feedCursor);
+      // Install the authoritative snapshot and retire only the confirmations it covers together.
+      const acked = await this.db.outbox.where("[actor.userId+state]").equals([userId, "acked"]).toArray();
+      const covered = acked.filter(
+        (entry) =>
+          entry.confirmationFeedHead !== undefined && BigInt(entry.confirmationFeedHead) <= BigInt(snapshot.feedCursor),
+      );
+      await this.db.outbox.bulkDelete(covered.map((entry) => entry.clientEventId));
     });
   }
 
@@ -120,9 +136,11 @@ export class FieldRepository {
         damaged: order.flags.damaged,
         pendingReversal: order.pendingReversal ? { ...order.pendingReversal, next: null } : null,
       };
-      const events = await this.db.outbox.orderBy("deviceSeq").toArray();
+      const events = await this.db.outbox
+        .where("[actor.userId+state]")
+        .anyOf([userId, "pending"], [userId, "sending"], [userId, "acked"])
+        .sortBy("deviceSeq");
       for (const event of events) {
-        if (!unconfirmed(event) || event.actor.userId !== userId) continue;
         if (
           event.subject.orderId !== orderId &&
           !(

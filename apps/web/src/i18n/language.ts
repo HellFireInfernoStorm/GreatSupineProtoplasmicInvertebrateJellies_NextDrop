@@ -1,5 +1,6 @@
 import type { HumanRole } from "@nextdrop/contracts";
 import { create } from "zustand";
+import { optionalMeta, persistOptional } from "../lib/offline-meta";
 import { offlineDb } from "../sync/database";
 import { isFieldRole } from "../lib/fieldRoles";
 import { readStored, writeStored } from "../lib/storage";
@@ -33,10 +34,10 @@ export function languageForRole(role: HumanRole): Language {
 /** Make i18next render in the role's language. Route loaders await this before the role's screen shows. */
 export async function applyRoleLanguage(role: HumanRole): Promise<void> {
   if (isFieldRole(role)) {
-    const saved = await offlineDb.value<string>("locale");
+    const saved = await optionalMeta<string>("locale");
     const language = LANGUAGES.find((option) => option === saved);
     if (language) useFieldLanguageStore.setState({ language });
-    else await offlineDb.set("locale", useFieldLanguageStore.getState().language);
+    else await persistOptional(() => offlineDb.set("locale", useFieldLanguageStore.getState().language));
   }
   const language = languageForRole(role);
   if (i18n.language !== language) await i18n.changeLanguage(language);

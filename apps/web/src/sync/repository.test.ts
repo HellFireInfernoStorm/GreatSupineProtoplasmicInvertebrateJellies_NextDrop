@@ -98,3 +98,25 @@ it("records intent with no plan version rather than emitting an invalid null", a
   expect(entry.state).toBe("pending");
   await db.delete();
 });
+
+it("only prunes the current user's covered acknowledgements, preserving unresolved evidence", async () => {
+  const data = snapshot();
+  const rows = await Promise.all(Array.from({ length: 7 }, () => repository.enqueue(intent())));
+  await db.outbox.update(rows[0]!.clientEventId, { state: "acked", confirmationFeedHead: data.feedCursor });
+  await db.outbox.update(rows[1]!.clientEventId, {
+    state: "acked",
+    confirmationFeedHead: String(BigInt(data.feedCursor) + 1n),
+  });
+  await db.outbox.update(rows[2]!.clientEventId, { state: "acked" }); // no confirmation boundary: retain legacy data
+  await db.outbox.update(rows[3]!.clientEventId, { state: "held" });
+  await db.outbox.update(rows[4]!.clientEventId, { state: "failed" });
+  await db.outbox.update(rows[5]!.clientEventId, {
+    state: "acked",
+    confirmationFeedHead: data.feedCursor,
+    actor: { role: "DRIVER", userId: "other" },
+  });
+  await repository.replaceSnapshot(data, "driver-1");
+  expect(await db.outbox.get(rows[0]!.clientEventId)).toBeUndefined();
+  for (const row of rows.slice(1)) expect(await db.outbox.get(row.clientEventId)).toBeDefined();
+  await db.delete();
+});
