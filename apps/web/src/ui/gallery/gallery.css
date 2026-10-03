@@ -1,0 +1,70 @@
+.nd-gallery {
+  min-height: 100vh;
+  padding: var(--ui-size-24);
+  background: var(--nd-bg);
+  color: var(--nd-text);
+  font-family: var(--nd-font-sans);
+  overflow-wrap: anywhere;
+}
+.nd-gallery *,
+.nd-gallery *::before,
+.nd-gallery *::after {
+  box-sizing: border-box;
+}
+.nd-gallery-header,
+.nd-gallery-section {
+  max-width: var(--ui-size-720);
+  margin: 0 auto var(--ui-size-24);
+  min-width: 0;
+}
+.nd-gallery-section {
+  display: grid;
+  gap: var(--ui-size-16);
+  padding: var(--ui-size-20);
+  background: var(--nd-surface);
+  border: var(--ui-size-1) solid var(--nd-border);
+  border-radius: var(--ui-size-16);
+}
+.nd-gallery :is(h1, h2, p) {
+  margin: 0;
+}
+.nd-gallery-header {
+  display: grid;
+  gap: var(--ui-size-16);
+}
+.nd-gallery h1 {
+  font-size: var(--ui-size-28);
+}
+.nd-gallery h2 {
+  font-size: var(--ui-size-20);
+}
+.nd-gallery-row,
+.nd-gallery-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-size-12);
+}
+.nd-gallery-controls > * {
+  flex: 1 1 var(--ui-size-176);
+  min-width: 0;
+}
+.nd-gallery :is(button, input, select, textarea) {
+  max-width: 100%;
+  min-width: 0;
+}
+.nd-gallery-row > * {
+  max-width: 100%;
+}
+.nd-gallery-row label {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-size-8);
+}
+@media (max-width: 600px) {
+  .nd-gallery {
+    padding: var(--ui-size-12);
+  }
+  .nd-gallery-section {
+    padding: var(--ui-size-12);
+  }
+}

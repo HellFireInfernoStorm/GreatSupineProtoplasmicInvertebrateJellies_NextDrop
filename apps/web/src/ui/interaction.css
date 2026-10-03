@@ -212,5 +212,5 @@
   padding: var(--ui-size-28);
 }
 .nd-toast {
-  box-shadow: 0 var(--ui-size-8) var(--ui-size-24) rgb(0 0 0 / 0.5);
+  box-shadow: 0 var(--ui-size-8) var(--ui-size-24) var(--nd-scrim);
 }

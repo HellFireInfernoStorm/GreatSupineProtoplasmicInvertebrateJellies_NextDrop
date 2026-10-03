@@ -32,6 +32,7 @@
   --ui-size-15: 15px;
   --ui-weight-semibold: 600;
   --ui-weight-bold: 700;
+  --ui-font-mono: ui-monospace, monospace;
   --ui-size-64: 64px;
   --ui-size-6: 6px;
   --ui-size-720: 720px;
@@ -378,7 +379,7 @@
   min-width: 0;
 }
 .nd-id {
-  font-family: ui-monospace, monospace;
+  font-family: var(--ui-font-mono);
 }
 .nd-trip {
   display: flex;
@@ -556,11 +557,15 @@
 @media (max-width: 600px) {
   .nd-trip {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
     padding: var(--ui-size-16);
     gap: var(--ui-size-16);
   }
   .nd-trip-departure {
+    flex-basis: auto;
+  }
+  .nd-trip-changed {
     flex-basis: auto;
   }
   .nd-trip .nd-card-slot {
@@ -695,4 +700,7 @@
 }
 [data-theme="dispatcher"] .nd-pill-icon {
   display: none;
+}
+[data-theme="dispatcher"] .nd-pill[data-tone="chilled"] .nd-pill-icon {
+  display: inline-flex;
 }

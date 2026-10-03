@@ -1,0 +1,57 @@
+{
+  "status": {
+    "ORDERED": "Ordered",
+    "PLANNED": "Planned",
+    "DEFERRED": "Deferred",
+    "CANCELLED": "Cancelled",
+    "LOADED": "Loaded",
+    "OUT_FOR_DELIVERY": "Out for delivery",
+    "DELIVERED": "Delivered",
+    "FAILED": "Failed",
+    "RECEIVED": "Received",
+    "DISPUTED": "Disputed"
+  },
+  "tripStatus": {
+    "PLANNED": "Planned",
+    "READY": "Ready",
+    "DEPARTED": "Departed",
+    "COMPLETE": "Complete",
+    "CANCELLED": "Cancelled"
+  },
+  "flags": {
+    "short": "Short",
+    "damaged": "Damaged"
+  },
+  "chilled": "Chilled",
+  "sync": {
+    "offline": "Offline",
+    "saved": "Saved on this device",
+    "sending": "Sending",
+    "synced": "Synced",
+    "seen": "Seen"
+  },
+  "loading": "Loading",
+  "dismiss": "Dismiss",
+  "close": "Close",
+  "holdHint": "Hold for 1.2 seconds to confirm",
+  "quantityDecrease": "Decrease quantity",
+  "quantityIncrease": "Increase quantity",
+  "quantityInvalid": "Enter a whole number within the allowed range",
+  "timeline": {
+    "captured": "Captured",
+    "confirmed": "Confirmed",
+    "pending": "Confirmation pending sync"
+  },
+  "capacity": {
+    "value": "{{used}} / {{capacity}} {{unit}}",
+    "unavailable": "Capacity unavailable"
+  },
+  "trip": {
+    "departure": "Departure",
+    "changed": "Plan changed"
+  },
+  "stop": {
+    "sequence": "Stop {{sequence}}",
+    "eta": "ETA"
+  }
+}

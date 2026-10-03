@@ -1,0 +1,174 @@
+{
+  "status": {
+    "ORDERED": {
+      "text": "ஆர்டர் செய்யப்பட்டது",
+      "review": "draft"
+    },
+    "PLANNED": {
+      "text": "திட்டமிடப்பட்டது",
+      "review": "draft"
+    },
+    "DEFERRED": {
+      "text": "ஒத்திவைக்கப்பட்டது",
+      "review": "draft"
+    },
+    "CANCELLED": {
+      "text": "ரத்து செய்யப்பட்டது",
+      "review": "draft"
+    },
+    "LOADED": {
+      "text": "ஏற்றப்பட்டது",
+      "review": "draft"
+    },
+    "OUT_FOR_DELIVERY": {
+      "text": "விநியோகத்திற்கு புறப்பட்டது",
+      "review": "draft"
+    },
+    "DELIVERED": {
+      "text": "விநியோகிக்கப்பட்டது",
+      "review": "draft"
+    },
+    "FAILED": {
+      "text": "தோல்வியடைந்தது",
+      "review": "draft"
+    },
+    "RECEIVED": {
+      "text": "பெறப்பட்டது",
+      "review": "draft"
+    },
+    "DISPUTED": {
+      "text": "சர்ச்சைக்குரியது",
+      "review": "draft"
+    }
+  },
+  "tripStatus": {
+    "PLANNED": {
+      "text": "திட்டமிடப்பட்டது",
+      "review": "draft"
+    },
+    "READY": {
+      "text": "தயார்",
+      "review": "draft"
+    },
+    "DEPARTED": {
+      "text": "புறப்பட்டது",
+      "review": "draft"
+    },
+    "COMPLETE": {
+      "text": "நிறைவடைந்தது",
+      "review": "draft"
+    },
+    "CANCELLED": {
+      "text": "ரத்து செய்யப்பட்டது",
+      "review": "draft"
+    }
+  },
+  "flags": {
+    "short": {
+      "text": "அளவு குறைவு",
+      "review": "draft"
+    },
+    "damaged": {
+      "text": "சேதமடைந்தது",
+      "review": "draft"
+    }
+  },
+  "chilled": {
+    "text": "குளிரூட்டப்பட்டது",
+    "review": "draft"
+  },
+  "sync": {
+    "offline": {
+      "text": "இணைய இணைப்பு இல்லை",
+      "review": "draft"
+    },
+    "saved": {
+      "text": "இந்தச் சாதனத்தில் சேமிக்கப்பட்டது",
+      "review": "draft"
+    },
+    "sending": {
+      "text": "அனுப்பப்படுகிறது",
+      "review": "draft"
+    },
+    "synced": {
+      "text": "ஒத்திசைக்கப்பட்டது",
+      "review": "draft"
+    },
+    "seen": {
+      "text": "பார்க்கப்பட்டது",
+      "review": "draft"
+    }
+  },
+  "loading": {
+    "text": "ஏற்றப்படுகிறது",
+    "review": "draft"
+  },
+  "dismiss": {
+    "text": "நீக்கு",
+    "review": "draft"
+  },
+  "close": {
+    "text": "மூடு",
+    "review": "draft"
+  },
+  "holdHint": {
+    "text": "உறுதிப்படுத்த 1.2 வினாடிகள் அழுத்திப் பிடிக்கவும்",
+    "review": "draft"
+  },
+  "quantityDecrease": {
+    "text": "அளவைக் குறைக்கவும்",
+    "review": "draft"
+  },
+  "quantityIncrease": {
+    "text": "அளவை அதிகரிக்கவும்",
+    "review": "draft"
+  },
+  "quantityInvalid": {
+    "text": "அனுமதிக்கப்பட்ட வரம்பில் முழு எண்ணை உள்ளிடவும்",
+    "review": "draft"
+  },
+  "timeline": {
+    "captured": {
+      "text": "பதிவு செய்யப்பட்டது",
+      "review": "draft"
+    },
+    "confirmed": {
+      "text": "உறுதிப்படுத்தப்பட்டது",
+      "review": "draft"
+    },
+    "pending": {
+      "text": "ஒத்திசைவுக்குப் பின் உறுதிப்படுத்தல் நிலுவையில் உள்ளது",
+      "review": "draft"
+    }
+  },
+  "capacity": {
+    "value": {
+      "text": "{{used}} / {{capacity}} {{unit}}",
+      "review": "draft"
+    },
+    "unavailable": {
+      "text": "கொள்ளளவு கிடைக்கவில்லை",
+      "review": "draft"
+    }
+  },
+  "trip": {
+    "departure": {
+      "text": "புறப்பாடு",
+      "review": "draft"
+    },
+    "changed": {
+      "text": "திட்டம் மாற்றப்பட்டது",
+      "review": "draft"
+    }
+  },
+  "stop": {
+    "sequence": {
+      "text": "நிறுத்தம் {{sequence}}",
+      "review": "draft"
+    },
+    "eta": {
+      "text": "எதிர்பார்க்கப்படும் வருகை நேரம்",
+      "review": "draft"
+    }
+  }
+}
