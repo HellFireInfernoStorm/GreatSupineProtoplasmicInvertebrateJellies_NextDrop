@@ -7,7 +7,8 @@
   },
   "session": {
     "signedInAs": "Signed in as {{name}}",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "signOutFailed": "Couldn't sign out. Check the connection and try again."
   },
   "resetBanner": {
     "by": "Demo data was reset by the {{role}} at {{time}}.",

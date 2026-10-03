@@ -25,6 +25,10 @@
     "signOut": {
       "text": "ඉවත් වන්න",
       "review": "draft"
+    },
+    "signOutFailed": {
+      "text": "ඉවත් වීමට නොහැකි විය. සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
+      "review": "draft"
     }
   },
   "resetBanner": {

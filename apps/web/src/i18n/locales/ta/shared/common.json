@@ -25,6 +25,10 @@
     "signOut": {
       "text": "வெளியேறு",
       "review": "draft"
+    },
+    "signOutFailed": {
+      "text": "வெளியேற முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.",
+      "review": "draft"
     }
   },
   "resetBanner": {
