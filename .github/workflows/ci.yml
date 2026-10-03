@@ -1,4 +1,4 @@
-# Build and test gate for every PR and every push to main (issue #26). The agent-context and labels workflows are separate.
+# Build and test gate for every PR and every push to main (issues #26, #87). The agent-context and labels workflows are separate.
 name: ci
 
 on:
@@ -71,3 +71,36 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Integration tests
         run: pnpm test:int
+
+  compose-smoke:
+    name: Compose smoke (docker compose up)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      # The judge path: no .env, every Compose default (README "Setup and configuration").
+      - name: Start the stack
+        run: docker compose up -d --build
+      - name: Wait for /api/readyz
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/api/readyz; then echo; exit 0; fi
+            sleep 5
+          done
+          echo "::error::/api/readyz did not return 200 within 5 minutes"
+          exit 1
+      - name: The PWA is served from the same origin
+        run: |
+          headers=$(curl -fsS -D - -o /tmp/index.html http://localhost:8080/)
+          echo "$headers"
+          echo "$headers" | grep -qi '^content-type: text/html'
+          echo "$headers" | grep -qi '^cache-control: no-store'
+          grep -q '<div id="root">' /tmp/index.html
+      - name: Logs
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --no-color
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

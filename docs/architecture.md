@@ -80,7 +80,7 @@ As of 3 Oct 2026. **TODO (before submission):** refresh this table.
 | API: server, `/api/healthz`, `/api/readyz` | Built |
 | API: auth (login, sessions, CSRF, lockout) and policy (`can()`, `scoped()`) | Built (#35) |
 | Story fixture picker (`pnpm seed:pick-fixtures`) | Built |
-| CI: typecheck, lint, boundaries, unit and integration tests, build | Built (#26); Compose smoke job planned (#87) |
+| CI: typecheck, lint, boundaries, unit and integration tests, build, `docker compose up` smoke | Built (#26), with a Compose smoke job (#87) |
 | Web: routes, login and the four role shells | In progress (#36) |
 | API modules: orders, planning, sync, feed, notify, demo, monitor | Planned (#38, #41, #42, #45, #47, #48, #54, #59) |
 | Offline core, Loader and Driver apps | Planned (#40, #52, #53) |
