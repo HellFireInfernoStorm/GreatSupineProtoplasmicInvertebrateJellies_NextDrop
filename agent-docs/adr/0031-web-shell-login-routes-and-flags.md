@@ -40,6 +40,6 @@ Issue #36 builds the web shell and the login screens. Four things were open or n
 
 - Spec edited: `frontend/architecture.md`, `frontend/design-system.md`.
 - The Dockerfile (#31) must pass `VITE_DEMO_MODE` when it builds the web app.
-- The quick-login accounts are placeholders that mirror the contract fixtures until the story fixtures (#24) and the seed (#30) land. They live in one file, `apps/web/src/login/demoAccounts.ts`.
+- The quick-login chips sign in as the seed's four judge accounts. The web app may not import from the API, so `apps/web/src/login/demoAccounts.ts` repeats their login IDs and demo credentials from `apps/api/prisma/seed/accounts.ts`; the two files change together.
 - A first load with no signal has no session to use, and shows the retry screen. The offline core (#40) must keep the session on the device so a Loader or Driver can start the app without signal. It also builds the PIN prompt for the reauth-needed state and pauses sync while it is up.
 - If the login contract gains a "keep me signed in" field, the checkbox returns as drawn.

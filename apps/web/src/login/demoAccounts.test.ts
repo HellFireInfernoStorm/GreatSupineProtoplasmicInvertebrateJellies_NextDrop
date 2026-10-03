@@ -1,6 +1,7 @@
 import { apiVariantFixtures, HUMAN_ROLES, loginRequestSchema } from "@nextdrop/contracts";
 import { describe, expect, it } from "vitest";
 import { ApiRequestError } from "../lib/api";
+import { MOCK_LOCKED_SECRETS, MOCK_WRONG_SECRETS } from "../lib/api/mock";
 import { DEMO_ACCOUNTS } from "./demoAccounts";
 import { loginFailureOf } from "./useLogin";
 
@@ -13,11 +14,12 @@ describe("demo accounts", () => {
     }
   });
 
-  // Until the seed (#30) supplies real accounts, the chips must sign in with the logins the mock accepts.
-  it("matches the contract login fixtures", () => {
+  it("signs in through mock mode, so the chips work without an API", () => {
     const deviceId = apiVariantFixtures.loginRequest.LOADER.deviceId;
     for (const account of DEMO_ACCOUNTS) {
-      expect(account.request(deviceId)).toEqual(apiVariantFixtures.loginRequest[account.role]);
+      const secret = account.request(deviceId);
+      const value = "pin" in secret ? secret.pin : secret.password;
+      expect([...MOCK_WRONG_SECRETS, ...MOCK_LOCKED_SECRETS], account.role).not.toContain(value);
     }
   });
 });
