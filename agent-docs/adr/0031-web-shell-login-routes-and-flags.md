@@ -28,6 +28,7 @@ Issue #36 builds the web shell and the login screens. Four things were open or n
    - In demo mode the quick-login chips appear under each form. They are not drawn.
    - Below 1024 px the Loader login is one column with the keypad under the PIN (ADR 0002).
    - "Keep me signed in" is not shown. The login contract has no such field and session lifetime is fixed per role, so the checkbox could not do anything.
+   - The Store phone subtitle shows the date only once the server clock is known; before that it says "Store manager". No response carries `serverTime` before sign-in, and the device clock can differ from the demo clock by a day.
    - "Forgot password?" has no reset flow behind it. On the Store login it changes the help line to the "call dispatch" wording; on the Dispatcher login it points at the "ask your depot admin" line. This follows the rationale cards.
 
 ## Alternatives considered
