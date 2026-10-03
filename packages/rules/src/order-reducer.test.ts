@@ -9,6 +9,7 @@ import {
   PROGRESS_RANK,
   reduceOrder,
   TRANSITIONS,
+  shortLinesBlockingReady,
   unresolvedShortLines,
 } from "./order-reducer";
 
@@ -258,6 +259,12 @@ describe("flags: short and damaged are not statuses", () => {
     s = applyEvent(s, ev("SHORT_RESOLVED", { lineId: "L1", outcome: "SHIP_PARTIAL" })).state;
     expect(unresolvedShortLines(s).map((l) => l.lineId)).toEqual(["L2"]);
     expect(s.damaged).toEqual([{ lineId: "L3", qty: 1 }]);
+    // HOLD_TRIP resolves the line but still keeps the trip at the dock.
+    s = applyEvent(s, ev("SHORT_RESOLVED", { lineId: "L2", outcome: "HOLD_TRIP" })).state;
+    expect(unresolvedShortLines(s)).toEqual([]);
+    expect(shortLinesBlockingReady(s).map((l) => l.lineId)).toEqual(["L2"]);
+    s = applyEvent(s, ev("SHORT_RESOLVED", { lineId: "L2", outcome: "BACKORDER" })).state;
+    expect(shortLinesBlockingReady(s)).toEqual([]);
   });
 
   it("treats informational events as no-ops", () => {
