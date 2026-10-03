@@ -9,13 +9,13 @@ sources: guide §6.3
 ## 6.3 Prisma usage rules (known pitfalls)
 
 - **BigInt** (`ChangeFeed.seq`) does not JSON-serialize: convert to string at the API boundary.
-- **Decimal(10,3)** for reference capacities/demand; **Decimal(13,6)** for Product and OrderLine unit sizes. Aggregate exact saved unit sizes before ceiling final order totals once to integer grams/litres using aggregateOrderQuantities (ADR 0023). Reference converters remain unchanged.
+- **Decimal(10,3)** for reference capacities/demand; **Decimal(13,6)** for Product and OrderLine unit sizes. Aggregate exact saved unit sizes before ceiling final order totals once to integer grams/litres using `aggregateOrderQuantities` from `packages/rules` (ADR 0023). Reference converters remain unchanged.
 - **Locks**: use tagged `$queryRaw` for `SELECT ... FOR UPDATE` and `pg_advisory_xact_lock(hashtextextended(...))`. Never build SQL by string concatenation.
 - **A failed statement aborts a Postgres transaction** and Prisma does not add savepoints. Therefore: ingest each field event in its **own short transaction**; detect duplicates with a pre-check plus `createMany({ skipDuplicates: true })` (ON CONFLICT DO NOTHING) and re-read, never by catching a unique violation inside a larger transaction.
 - Set explicit `maxWait`/`timeout` on interactive transactions; keep them short; do JSON-heavy reads outside the transaction.
 - Container: Debian-slim base (not Alpine); Prisma/client/adapter pinned to 7.10.0, pg to 8.23.1. Prisma 7 uses `prisma.config.ts`, the `prisma-client` TypeScript generator and `PrismaPg`; no native client engine or `binaryTargets` is used. Run `prisma generate` explicitly at build and `prisma migrate deploy` at start (neither migration command generates the client). Ship the migration files with the API for readiness checks. Generate output is ignored and must not be committed.
 - Seed: `apps/api/prisma/seed/` TypeScript, idempotent (upserts keyed by natural IDs), safe to run on every start.
-- **Raw SQL drift check**: verified on 2026-10-03 with Prisma 7.10.0 and PostgreSQL 16.15 in issue #25 (ADR 0023). Two consecutive `migrate dev` runs on the finalized initial migration succeeded (first applied it, second reported already in sync). `migrate deploy` on a separate clean database succeeded. No drift workaround is required. The migration's hand-written triggers and CHECKs survive replay/comparison; its partial unique index is also represented in the schema with `partialIndexes`.
+- **Raw SQL drift check**: verified on 2026-10-03 with Prisma 7.10.0 and PostgreSQL 16.15 in issue #25 (ADR 0023). Re-run on the final initial migration as merged (fresh databases, same commands as below). Two consecutive `migrate dev` runs succeeded (first applied it, second reported already in sync). `migrate deploy` on a separate clean database succeeded. No drift workaround is required. The migration's hand-written triggers and CHECKs survive replay/comparison; its partial unique index is also represented in the schema with `partialIndexes`.
 
 ## Reproducing the first migration verification
 
@@ -55,4 +55,4 @@ Observed after the second migration run: 3 immutability triggers, 30 CHECK const
 
 Development/shadow/test URLs must identify separate databases. Do not point SHADOW_DATABASE_URL at the application database: Prisma owns and recreates shadow state. During initial development an earlier applied draft was left intact; final verification used a fresh database instead of bypassing Prisma's reset-consent guard.
 
-Review fixes regenerated the still-unmerged initial migration after merging main/contracts v1. Previously applied draft databases were preserved; the review_* databases above are fresh. Production startup runs only the already-generated client; tsx is a runtime dependency and prisma is a build/migration devDependency. API package files explicitly include generated source and migration artifacts.
+Any database that applied an earlier draft of the initial migration has a different checksum and must be recreated; readiness reports it as unavailable. Production startup runs only the already-generated client; tsx is a runtime dependency and prisma is a build/migration devDependency. API package files explicitly include generated source and migration artifacts.

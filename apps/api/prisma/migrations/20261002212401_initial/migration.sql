@@ -1,5 +1,3 @@
-
-
 -- CreateEnum
 CREATE TYPE "Brand" AS ENUM ('Fresh', 'Style', 'Tech');
 

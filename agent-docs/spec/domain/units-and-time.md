@@ -13,5 +13,4 @@ sources: guide §4.8
 - All instants stored as UTC `timestamptz`. Delivery dates are local dates.
 - UI shows two timestamps for field facts, never merged: "Delivered 06:12 · confirmed 07:40 after sync".
 - Capacity and forecast volumes are m³ (stored as litres, shown as m³). Tonnes may appear only as a secondary label (ADR 0010).
-
-Proposed precision exception (ADR 0023, pending owner approval): product and order-line unit snapshots use six decimal places in kg/m³. Aggregate quantity times those exact decimal snapshots first, then ceil the final totals once to integer grams/litres for order storage and rules inputs. This keeps a positive small-item order positive and prevents capacity undercounting. Reject totals outside PostgreSQL's positive Int range (1 through 2147483647). Existing reference-data rounding helpers are unchanged.
+- Order totals (ADR 0023): product and order-line unit snapshots use six decimal places in kg/m³. `aggregateOrderQuantities` multiplies quantity by those exact snapshots, sums them, then ceils the final totals once to integer grams/litres for order storage and rules inputs. This keeps a positive small-item order positive and prevents capacity undercounting. Totals outside 1 through 2147483647 (the stored 32-bit integer range) are rejected. Existing reference-data rounding helpers are unchanged.

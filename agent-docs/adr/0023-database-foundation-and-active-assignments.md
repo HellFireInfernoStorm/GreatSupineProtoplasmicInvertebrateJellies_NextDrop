@@ -21,15 +21,14 @@ Prisma's `partialIndexes` preview feature represents this index in the schema so
 
 The existing public `/api/readyz` returns 200 only when the database is reachable and every checked-in migration has a completed, matching-checksum record. Failed or pending attempts return 503, and rolled-back attempts do not count as applied. Prisma is owned by the server lifecycle and disconnects on shutdown. The application Prisma client is exposed as `app.prisma` with no probe-sized query timeout. A separate bounded probe client uses 2s connection/query/statement limits; both clients disconnect on server shutdown. Missing migration directories or SQL files keep health live and readiness unavailable. With no DATABASE_URL the API remains live but unready. Public responses contain check statuses, never connection details.
 
-## Precision proposal and approval gate
+## Order total precision
 
-Owner review on PR #76 requests finer unit sizes and a decision about integer order totals. The proposal is to sum `qtyOrdered * unit snapshot` with decimal arithmetic, then ceil the final kg * 1000 and m3 * 1000 totals once to positive integer grams/litres. `aggregateOrderQuantities` implements this storage conversion. Do not round each unit before multiplication. One 0.0004 m3 item becomes 1 litre for capacity accounting; three such items become 2 litres, not 3. The exact sizes remain on saved line snapshots for display/audit. This is a proposed exception for fine product-derived order totals to ADR 0018's nearest-thousandth reference-data conversions, which remain unchanged. Owner approval of this ADR is required before merge.
+Order totals sum `qtyOrdered * unit snapshot` exactly, then ceil the final kg * 1000 and m3 * 1000 totals once to positive integer grams/litres. Units are never rounded before multiplication. `aggregateOrderQuantities` in `packages/rules` implements this conversion. One 0.0004 m3 item becomes 1 litre for capacity accounting; three such items become 2 litres, not 3. The exact sizes remain on saved line snapshots for display/audit. This is an exception to ADR 0018's nearest-thousandth conversion for product-derived order totals only; reference-data conversions are unchanged.
 
-The owner must also confirm these existing-spec choices before accepting this ADR:
+## Accepted consequences
 
-- Cancelled trips retain their unique `(planningDayId, vehicleId, tripNo)` slot. Reactivating/updating that existing trip row is the only slot-reuse path; a new replacement trip row is rejected. Immutable events and version snapshots preserve the prior publication. A partial slot index is an alternative requiring an explicit schema/spec change.
-- COMPLETE trips remain non-cancelled. A failed order's current stop must be moved/removed before replanning; the completed trip's relational stop list changes, while immutable plan snapshots/events retain history. Preserving every completed relational stop would require a separate active-assignment model or predicate change. Neither alternative is silently selected in this PR.
-
+- Cancelled trips retain their unique `(planningDayId, vehicleId, tripNo)` slot. Reactivating/updating that existing trip row is the only slot-reuse path; a new replacement trip row is rejected. Immutable events and version snapshots preserve the prior publication.
+- COMPLETE trips remain non-cancelled. A failed order's current stop is moved/removed before replanning; the completed trip's relational stop list changes, while immutable plan snapshots/events retain history.
 
 Merged contracts v1 (PR #75) already defines `subject.vehicleId`; no contract edit or contract-change label is needed here. Storage also permits its SYSTEM actor role and zero-based device sequences. SYSTEM events retain a UUID `actorUserId` FK to an existing audit/automation user (with one of the four login roles); the event role SYSTEM grants no extra login role or authorization. Bare synthetic actor IDs such as "system" are not persisted as user IDs; system producers use that configured audit user's UUID.
 
@@ -42,6 +41,8 @@ Runtime startup uses `tsx` as a production dependency and never generates the cl
 - Status synchronization triggers with parent row locks: possible, but the cascading composite foreign key provides the same invariant using declarative database constraints.
 - Prisma 8 release candidate: no need to take a prerelease major for the foundation.
 - Hand-written partial index absent from the Prisma schema: weakens visibility and drift coverage in a version that can represent it.
+- Partial `(planningDayId, vehicleId, tripNo)` index excluding CANCELLED: allows replacement trip rows, but splits one slot's history across rows. Not chosen.
+- A separate active-assignment model, or excluding failed stops from the order index, to keep every COMPLETE trip's relational stop list intact: more moving parts for history the snapshots already keep. Not chosen.
 
 ## Consequences
 

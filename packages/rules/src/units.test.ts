@@ -45,7 +45,7 @@ describe("clock times", () => {
 });
 
 describe("exact order snapshot aggregation", () => {
-  it.each(["3000000", "2147483.648"])("rejects a %s kg/m3 total beyond PostgreSQL Int storage", (size) => {
+  it.each(["3000000", "2147483.648"])("rejects a %s kg/m3 total beyond 32-bit integer storage", (size) => {
     expect(() => aggregateOrderQuantities([{ qtyOrdered: 1, unitWeightKg: size, unitVolumeM3: size }])).toThrow(
       RangeError,
     );
@@ -83,6 +83,20 @@ describe("exact order snapshot aggregation", () => {
       volumeL: 1,
     });
   });
+  it("reads stored decimals exactly, ignoring trailing zeros and accepting Decimal-like values", () => {
+    const decimal = { toString: () => "0.000400" };
+    expect(
+      aggregateOrderQuantities([{ qtyOrdered: 2500, unitWeightKg: decimal, unitVolumeM3: "0.0004000000" }]),
+    ).toEqual({ weightG: 1000, volumeL: 1000 });
+  });
+  it.each(["0.0000004", "1e-7", "-0.5", "0", "abc"])(
+    "rejects the unit size %s instead of counting it as zero",
+    (size) => {
+      expect(() => aggregateOrderQuantities([{ qtyOrdered: 1, unitWeightKg: size, unitVolumeM3: "1" }])).toThrow(
+        RangeError,
+      );
+    },
+  );
   it("rejects empty or invalid totals instead of inventing an order", () => {
     expect(() => aggregateOrderQuantities([])).toThrow(RangeError);
     expect(() => aggregateOrderQuantities([{ qtyOrdered: 0, unitWeightKg: 1, unitVolumeM3: 1 }])).toThrow(RangeError);

@@ -68,14 +68,18 @@ export function intersectWindows(a: TimeWindow, b: TimeWindow): TimeWindow | nul
 }
 
 type UnitSize = string | number | { toString(): string };
-const POSTGRES_INT_MAX = 2147483647;
+/** Order quantities and totals are stored as 32-bit integers. */
+const MAX_INT32 = 2147483647;
+const UNIT_DECIMAL = /^(\d+)(?:\.(\d*?)0*)?$/;
 
-function parseMicroUnits(val: UnitSize): bigint {
-  const num = Number(val.toString());
-  if (!Number.isFinite(num) || num <= 0) {
-    throw new RangeError("Invalid unit size");
-  }
-  return BigInt(Math.round(num * 1_000_000));
+/** Exact kg or m³ unit size (at most 6 decimals, as stored) to millionths, without floating point. */
+function parseMicroUnits(value: UnitSize): bigint {
+  const match = UNIT_DECIMAL.exec(String(value).trim());
+  const fraction = match?.[2] ?? "";
+  if (!match || fraction.length > 6) throw new RangeError(`not a unit size with at most 6 decimals: ${String(value)}`);
+  const micro = BigInt(match[1] + fraction.padEnd(6, "0"));
+  if (micro === 0n) throw new RangeError(`unit size must be positive: ${String(value)}`);
+  return micro;
 }
 
 /** Storage conversion: aggregate exact line snapshots before rounding the final order totals. */
@@ -85,7 +89,7 @@ export function aggregateOrderQuantities(
   let kgMicro = 0n;
   let m3Micro = 0n;
   for (const line of lines) {
-    if (!Number.isSafeInteger(line.qtyOrdered) || line.qtyOrdered < 0 || line.qtyOrdered > POSTGRES_INT_MAX) {
+    if (!Number.isSafeInteger(line.qtyOrdered) || line.qtyOrdered < 0 || line.qtyOrdered > MAX_INT32) {
       throw new RangeError("Invalid quantity");
     }
     const weightMicro = parseMicroUnits(line.unitWeightKg);
@@ -103,8 +107,8 @@ export function aggregateOrderQuantities(
     !Number.isSafeInteger(volumeL) ||
     weightG <= 0 ||
     volumeL <= 0 ||
-    weightG > POSTGRES_INT_MAX ||
-    volumeL > POSTGRES_INT_MAX
+    weightG > MAX_INT32 ||
+    volumeL > MAX_INT32
   ) {
     throw new RangeError("Invalid order totals");
   }
