@@ -10,7 +10,10 @@ import { ACCOUNTS, DEMO_PASSWORD, DEMO_PIN } from "../prisma/seed/accounts";
 import { runSeed, type SeedSummary } from "../prisma/seed/index";
 import { PEAK_DAY_WORKSHOP } from "../prisma/seed/peak-day";
 import { STORY_CHILLED_ORDER_ID } from "../prisma/seed/story";
+import { uuidv7 } from "uuidv7";
 import { createDatabase, type Database } from "../src/lib/database";
+import { CSRF_HEADER } from "../src/modules/auth";
+import { buildServer } from "../src/server";
 
 const url = process.env.TEST_DATABASE_URL;
 if (url && !new URL(url).pathname.endsWith("_test")) {
@@ -99,6 +102,38 @@ describe.skipIf(!url)("seed (PostgreSQL)", () => {
       const secret = account.role === "LOADER" || account.role === "DRIVER" ? DEMO_PIN : DEMO_PASSWORD;
       expect(user.passwordHash).toMatch(/^\$argon2id\$/);
       expect(await verify(user.passwordHash, secret)).toBe(true);
+    }
+  });
+
+  it("lets every seeded account sign in through /auth/login with the demo credentials", async () => {
+    const app = await buildServer(
+      {},
+      {
+        database: { ...database, close: async () => {} },
+        auth: {
+          sessionSecret: "seed-integration-secret-seed-integration",
+          loginRateLimit: { max: 1000, timeWindowMs: 60_000 },
+        },
+      },
+    );
+    try {
+      for (const account of ACCOUNTS) {
+        const payload =
+          account.role === "DISPATCHER"
+            ? { role: account.role, email: account.loginId, password: account.secret, depot: "Kandy" }
+            : account.role === "STORE"
+              ? { role: account.role, loginId: account.loginId, password: account.secret }
+              : { role: account.role, loginId: account.loginId, pin: account.secret, deviceId: uuidv7() };
+        const res = await app.inject({
+          method: "POST",
+          url: "/api/auth/login",
+          payload,
+          headers: { [CSRF_HEADER]: "1" },
+        });
+        expect(res.statusCode, `${account.loginId}: ${res.body}`).toBe(200);
+      }
+    } finally {
+      await app.close();
     }
   });
 
