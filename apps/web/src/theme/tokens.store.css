@@ -1,0 +1,53 @@
+/*
+ * Store Manager theme. Values are the Figma variable collection "Store Manager · Light" (26 variables),
+ * read from the live file (ADR 0015). The names on the right of each comment are the Figma variable names.
+ */
+[data-theme="store"] {
+  color-scheme: light;
+  --nd-font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+
+  --nd-bg: #ffffff; /* color/bg */
+  --nd-surface: #ffffff; /* color/surface */
+  --nd-surface-2: #f6f9fa; /* color/surface-2 */
+  --nd-surface-3: #eef1f4; /* color/surface-3 */
+  --nd-border: #dbe0e5; /* color/border */
+  --nd-text: #131a26; /* color/text */
+  --nd-muted: #6b7585; /* color/text-muted */
+  --nd-faint: #9aa3b0; /* color/text-faint */
+  --nd-scrim: rgb(19 26 38 / 0.5); /* color/scrim */
+
+  /* The filled primary button is the dark navy panel colour. */
+  --nd-primary: #131a26; /* color/panel */
+  --nd-on-primary: #ffffff; /* color/on-panel */
+  --nd-link: #1f6bd6; /* color/info */
+
+  --nd-panel: #131a26; /* color/panel */
+  --nd-panel-2: #1f2c3d; /* color/panel-2 */
+  --nd-panel-line: #2e3d4a; /* color/panel-line */
+  --nd-on-panel: #ffffff; /* color/on-panel */
+  --nd-on-panel-muted: #b2c2cf; /* color/on-panel-muted */
+
+  /* Status tones. The light collections have one foreground per tone, so -fg repeats it. */
+  --nd-ok: #087a52; /* color/ok */
+  --nd-ok-fg: #087a52;
+  --nd-ok-bg: #e0f7ed; /* color/ok-bg */
+  --nd-warn: #b45f06; /* color/warn */
+  --nd-warn-fg: #b45f06;
+  --nd-warn-bg: #fff5de; /* color/warn-bg */
+  --nd-danger: #c4262c; /* color/danger */
+  --nd-danger-fg: #c4262c;
+  --nd-danger-bg: #ffe8eb; /* color/danger-bg */
+  --nd-info: #1f6bd6; /* color/info */
+  --nd-info-fg: #1f6bd6;
+  --nd-info-bg: #e5f0ff; /* color/info-bg */
+  --nd-deferred: #6b38cd; /* color/purple */
+  --nd-deferred-fg: #6b38cd;
+  --nd-deferred-bg: #eee6fc; /* color/purple-bg */
+  --nd-neutral: #465264; /* color/neutral */
+  --nd-neutral-fg: #465264;
+  --nd-neutral-bg: #eef1f4; /* color/neutral-bg */
+  /* The light collections have no chilled variable. Chilled borrows the info tone and is marked by its icon and label. */
+  --nd-chilled: #1f6bd6;
+  --nd-chilled-fg: #1f6bd6;
+  --nd-chilled-bg: #e5f0ff;
+}

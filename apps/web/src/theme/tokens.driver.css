@@ -1,0 +1,54 @@
+/*
+ * Driver theme. The Driver frames are bound to the Figma "Loader" variable collection, so the values match
+ * tokens.loader.css. It is a separate file so the Driver can diverge without touching the Loader.
+ */
+[data-theme="driver"] {
+  color-scheme: dark;
+  --nd-font-sans:
+    "Noto Sans Variable", "Noto Sans Sinhala Variable", "Noto Sans Tamil Variable", "Noto Sans", system-ui, sans-serif;
+
+  --nd-bg: #0f1216; /* color/bg */
+  --nd-surface: #1a1f26; /* color/surface */
+  --nd-surface-2: #252c36; /* color/surface-2 */
+  --nd-surface-3: #252c36; /* no third surface in the collection: repeats surface-2 */
+  --nd-border: #3a4350; /* color/border */
+  --nd-text: #f2f4f7; /* color/text */
+  --nd-muted: #a7b0bc; /* color/text-muted */
+  --nd-faint: #6b7480; /* color/text-disabled */
+  --nd-scrim: rgb(0 0 0 / 0.6); /* color/scrim */
+
+  /* The filled primary button is light on the dark background. */
+  --nd-primary: #f2f4f7; /* color/text */
+  --nd-on-primary: #0f1216; /* color/on-accent */
+  --nd-link: #c2cbff; /* color/info-fg */
+
+  /* No separate panel colours in the dark collection: the panel is the page and its raised surface. */
+  --nd-panel: #0f1216; /* color/bg */
+  --nd-panel-2: #1a1f26; /* color/surface */
+  --nd-panel-line: #3a4350; /* color/border */
+  --nd-on-panel: #f2f4f7; /* color/text */
+  --nd-on-panel-muted: #a7b0bc; /* color/text-muted */
+
+  --nd-ok: #2fbf71; /* color/ok */
+  --nd-ok-fg: #74e0a6; /* color/ok-fg */
+  --nd-ok-bg: #1e3f35; /* color/ok-bg */
+  --nd-warn: #f5a524; /* color/warn */
+  --nd-warn-fg: #ffc766; /* color/warn-fg */
+  --nd-warn-bg: #463a26; /* color/warn-bg */
+  --nd-danger: #f04438; /* color/danger */
+  --nd-danger-fg: #ffa8a0; /* color/danger-fg */
+  --nd-danger-bg: #45262a; /* color/danger-bg */
+  --nd-info: #8b9dff; /* color/info */
+  --nd-info-fg: #c2cbff; /* color/info-fg */
+  --nd-info-bg: #313851; /* color/info-bg */
+  --nd-chilled: #3ba3ff; /* color/chilled */
+  --nd-chilled-fg: #9bd1ff; /* color/chilled-fg */
+  --nd-chilled-bg: #213951; /* color/chilled-bg */
+  /* The dark collection has no deferred or neutral variables. Deferred borrows info; neutral uses the muted text on a raised surface. */
+  --nd-deferred: #8b9dff;
+  --nd-deferred-fg: #c2cbff;
+  --nd-deferred-bg: #313851;
+  --nd-neutral: #a7b0bc;
+  --nd-neutral-fg: #a7b0bc;
+  --nd-neutral-bg: #252c36;
+}
