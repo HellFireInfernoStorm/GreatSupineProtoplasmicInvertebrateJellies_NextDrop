@@ -13,6 +13,11 @@ export { CSRF_HEADER, csrfToken } from "./csrf";
 export { assertRoutePolicy, SESSION_COOKIE } from "./guard";
 export { hashSecret } from "./secrets";
 
+/** For long-lived responses (SSE): the session still exists and has not expired. */
+export async function isSessionActive(prisma: PrismaClient, sessionId: string, now: Date): Promise<boolean> {
+  return (await prisma.session.count({ where: { id: sessionId, expiresAt: { gt: now } } })) > 0;
+}
+
 export interface AuthDependencies {
   prisma: PrismaClient | null;
   config: AuthConfig;

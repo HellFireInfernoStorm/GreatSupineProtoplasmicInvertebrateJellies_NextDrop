@@ -14,7 +14,7 @@ export type AccountRecord = SessionRecord["user"];
 export function createSessions(prisma: PrismaClient, config: AuthConfig, now: () => Date) {
   let allDepots: Promise<string[]> | undefined;
 
-  /** ADR 0026: a dispatcher with `depot` set covers that depot; null covers every reference depot. */
+  /** ADR 0028: a dispatcher with `depot` set covers that depot; null covers every reference depot. */
   async function dispatcherDepots(user: Pick<AccountRecord, "depot">): Promise<string[]> {
     if (user.depot) return [user.depot];
     allDepots ??= prisma.district

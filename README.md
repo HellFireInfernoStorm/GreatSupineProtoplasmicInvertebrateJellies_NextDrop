@@ -240,7 +240,7 @@ agent-docs/       Booklet copy, spec, ADRs, design notes and process docs
 
 - **Rules core tests.** The rules core has unit tests for the validator codes. They include the Booklet's worked trip-time examples (101 and 112 minutes, and 213 of 270), the trip time, ETA, fuel and priority rules, and the order reducer. Property tests (fast-check) check that every proposed plan passes the validator and that the allocator is deterministic.
 - **Contracts.** One zod schema registry and a typed route table, shared by web and API (ADR 0024).
-- **Authorization.** Every API route declares a policy action from the contracts route table; a route without one cannot be registered. `can()` and `scoped()` deny by default (ADR 0026, auth).
+- **Authorization.** Every API route declares a policy action from the contracts route table; a route without one cannot be registered. `can()` and `scoped()` deny by default (ADR 0028).
 - **Database.** Hand-written SQL migrations add immutability triggers, CHECK constraints and a partial unique index. Integration tests run against real PostgreSQL in an isolated schema per run (ADR 0023).
 - **Boundaries.** `apps/web` and `apps/api` never import each other, `apps/web` never imports Prisma, and API modules talk only through each module's `index.ts`. Rules live only in `packages/rules`. dependency-cruiser enforces this in CI and in the pre-push hook.
 - **CI.** Every PR and push to `main` runs typecheck, lint, boundaries, unit and property tests, integration tests against PostgreSQL 16, and the build.
@@ -278,8 +278,8 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0024 | API wire contracts and client sync envelopes |
 | 0025 | Store the full planning-day lifecycle |
 | 0026 | Short-resolution and load-reversal routes |
-| 0026 | Auth sessions and policy details (numbered 0026 in parallel; renumbering tracked in **TODO (#88)**) |
 | 0027 D | Story fixture picks from the reference CSVs (under ADR 0008) |
+| 0028 | Auth session, lockout and policy details |
 
 ## Submission documents
 
