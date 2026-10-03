@@ -1,4 +1,4 @@
-# ADR 0027: Feed audience, catch-up protocol and notification delivery
+# ADR 0029: Feed audience, catch-up protocol and notification delivery
 
 - Status: proposed
 - Date: 2026-10-03

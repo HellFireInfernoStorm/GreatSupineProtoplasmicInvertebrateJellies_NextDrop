@@ -1,7 +1,7 @@
 import type { FeedKind } from "@nextdrop/contracts";
 import type { Prisma, Role } from "../../generated/prisma/client";
 
-/** Who may see a feed row (ADR 0027). Fill every scope column that applies to the entity. */
+/** Who may see a feed row (ADR 0029). Fill every scope column that applies to the entity. */
 export interface FeedAudience {
   roles: readonly Role[];
   depot?: string | null;
