@@ -12,6 +12,7 @@
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "seed:pick-fixtures": "tsx prisma/seed/pick-fixtures.ts",
     "test:int": "vitest run --config vitest.integration.config.ts",
     "predev": "prisma generate",
     "pretypecheck": "prisma generate",
