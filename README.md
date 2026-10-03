@@ -153,7 +153,7 @@ Compose also reads `APP_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_D
 | `pnpm agent:check` | Repository conventions: instruction files, spec headers, banned files |
 | `pnpm docs:erd` | Regenerates the ERD in `docs/data-model.md` from the Prisma schema |
 
-CI (`.github/workflows/ci.yml`) runs typecheck, lint, `deps:check`, unit tests, build, and the integration tests against a PostgreSQL 16 service on every PR and push to `main`. **TODO (#87):** add the Compose smoke job. **TODO (#62):** add `pnpm e2e`.
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, `deps:check`, unit tests, build, and the integration tests against a PostgreSQL 16 service on every PR and push to `main`. A Compose smoke job also runs `docker compose up` with every default and checks `/api/readyz` and the PWA. **TODO (#62):** add `pnpm e2e`.
 
 ## Significant departures from the Designathon design
 
