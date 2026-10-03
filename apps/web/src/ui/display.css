@@ -50,7 +50,7 @@
   padding: var(--ui-size-8) var(--ui-size-18);
   border: var(--ui-size-1) solid transparent;
   border-radius: var(--ui-size-10);
-  font: 600 var(--ui-size-14)/1.2 var(--nd-font-sans);
+  font: var(--ui-weight-semibold) var(--ui-size-14)/1.2 var(--nd-font-sans);
   background: var(--nd-primary);
   color: var(--nd-on-primary);
   cursor: pointer;
@@ -190,7 +190,7 @@
   padding: var(--ui-size-14) var(--ui-size-24);
   border-radius: var(--ui-size-14);
   font-size: var(--ui-size-17);
-  font-weight: 700;
+  font-weight: var(--ui-weight-bold);
 }
 .nd-pill,
 .nd-banner,
@@ -239,7 +239,7 @@
   color: var(--nd-tone-fg);
   font-size: var(--ui-size-12);
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: var(--ui-weight-semibold);
   overflow-wrap: anywhere;
 }
 .nd-pill-icon {
@@ -298,6 +298,9 @@
   width: var(--ui-size-14);
   height: var(--ui-size-14);
   border-radius: var(--ui-size-999);
+  background: var(--nd-text);
+}
+.nd-timeline-event:last-child .nd-timeline-marker::before {
   background: var(--nd-info);
 }
 .nd-timeline-body {
@@ -309,7 +312,7 @@
 }
 .nd-timeline-title {
   font-size: var(--ui-size-11);
-  font-weight: 600;
+  font-weight: var(--ui-weight-semibold);
 }
 .nd-timeline-detail {
   font-size: var(--ui-size-14);
@@ -336,7 +339,7 @@
 }
 .nd-capacity-header strong {
   font-size: var(--ui-size-20);
-  font-weight: 600;
+  font-weight: var(--ui-weight-semibold);
   color: var(--nd-text);
 }
 .nd-capacity-track {
@@ -362,7 +365,7 @@
   margin: 0;
   font-size: var(--ui-size-18);
   line-height: 1.3;
-  font-weight: 600;
+  font-weight: var(--ui-weight-semibold);
 }
 .nd-card-body {
   min-width: 0;
@@ -391,9 +394,31 @@
   gap: var(--ui-size-8);
   flex-basis: var(--ui-size-176);
 }
-.nd-trip-departure time {
+.nd-trip-time {
   font-size: var(--ui-size-24);
-  font-weight: 700;
+  font-weight: var(--ui-weight-bold);
+}
+.nd-trip-departure time {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-size-8);
+}
+.nd-trip-day {
+  color: var(--nd-muted);
+}
+[data-theme="loader"] .nd-trip-time {
+  font-size: var(--ui-size-56);
+  font-weight: var(--ui-weight-bold);
+  line-height: 1.15;
+}
+[data-theme="loader"] :is(.nd-trip-caption, .nd-trip-day) {
+  font-size: var(--ui-size-20);
+  font-weight: var(--ui-weight-semibold);
+  line-height: 1.4;
+}
+[data-theme="loader"] .nd-trip-detail {
+  font-size: var(--ui-size-20);
+  line-height: 1.4;
 }
 .nd-trip .nd-card-body {
   flex: 1;
@@ -427,7 +452,7 @@
   height: var(--ui-size-32);
   border: var(--ui-size-1-5) solid var(--nd-border);
   border-radius: var(--ui-size-999);
-  font-weight: 600;
+  font-weight: var(--ui-weight-semibold);
 }
 .nd-stop .nd-card-body {
   flex: 1;
@@ -464,7 +489,7 @@
   overflow-wrap: anywhere;
 }
 .nd-field label {
-  font-weight: 600;
+  font-weight: var(--ui-weight-semibold);
 }
 .nd-field :is(input, select, textarea) {
   width: 100%;
@@ -494,7 +519,7 @@
 }
 .nd-empty h2 {
   font-size: var(--ui-size-20);
-  font-weight: 600;
+  font-weight: var(--ui-weight-semibold);
 }
 .nd-empty p {
   color: var(--nd-muted);
@@ -612,7 +637,7 @@
 [data-theme="loader"] .nd-empty h2 {
   max-width: var(--ui-size-720);
   font-size: var(--ui-size-32);
-  font-weight: 700;
+  font-weight: var(--ui-weight-bold);
   line-height: 1.25;
 }
 [data-theme="loader"] .nd-empty p {

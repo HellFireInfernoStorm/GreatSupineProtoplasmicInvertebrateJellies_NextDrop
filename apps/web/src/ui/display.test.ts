@@ -9,9 +9,21 @@ import { Timeline } from "./Timeline";
 import { FormField } from "./FormField";
 import { Button } from "./Button";
 import { SyncPill } from "./StatusPill";
+import { TripCard } from "./Cards";
 import "../i18n";
 
 describe("shared display kit", () => {
+  it("keeps the trip departure day separate from its primary 24-hour time", () => {
+    const html = render(
+      h(TripCard, { id: "TRIP-1", vehicle: "Truck", departure: "2026-10-03T18:00:00Z", status: "PLANNED" }),
+    );
+    expect(html).toContain('dateTime="2026-10-03T18:00:00Z"');
+    expect(html).toContain('<span class="nd-trip-day">Sat 3 Oct</span>');
+    expect(html).toContain('<span class="nd-trip-time">23:30</span>');
+    expect(() =>
+      render(h(TripCard, { id: "TRIP-1", vehicle: "Truck", departure: "2026-10-03T18:00:00", status: "PLANNED" })),
+    ).toThrow();
+  });
   it("covers contract statuses and rejects flags as statuses", () => {
     const expected = {
       ORDERED: "neutral",

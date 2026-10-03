@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { Pill, StatusPill } from "./StatusPill";
 import { Instant } from "./Timeline";
 import { TRIP_TONES, type OrderStatus } from "./status";
+import { assertInstant } from "./instant";
+import { formatDay, formatTime } from "../lib/time";
 import "./display.css";
 
 export interface TripCardProps {
@@ -16,17 +18,21 @@ export interface TripCardProps {
 }
 export function TripCard({ id, vehicle, departure, status, changed, children }: TripCardProps) {
   const { t } = useTranslation("shared/ui");
+  assertInstant(departure);
   return (
     <article className="nd-card nd-trip" data-changed={changed ? "true" : undefined}>
       <div className="nd-trip-departure">
-        <span>{t("trip.departure")}</span>
-        <Instant instant={departure} />
+        <span className="nd-trip-caption">{t("trip.departure")}</span>
+        <time dateTime={departure}>
+          <span className="nd-trip-day">{formatDay(departure)}</span>
+          <span className="nd-trip-time">{formatTime(departure)}</span>
+        </time>
       </div>
       <div className="nd-card-body">
         <h2 className="nd-card-title">
           <span className="nd-id">{id}</span>
         </h2>
-        <div>{vehicle}</div>
+        <div className="nd-trip-detail">{vehicle}</div>
       </div>
       <div className="nd-trip-state">
         <Pill tone={TRIP_TONES[status]}>{t(`tripStatus.${status}`)}</Pill>
