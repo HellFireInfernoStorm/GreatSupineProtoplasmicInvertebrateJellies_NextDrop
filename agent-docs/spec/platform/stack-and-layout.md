@@ -50,7 +50,7 @@ sources: guide §3
 ## 3.3 Dependency rules (enforced in CI with dependency-cruiser)
 
 - `packages/rules` imports nothing from the repo and has zero runtime dependencies.
-- `packages/contracts` may import types from `rules`.
+- `packages/contracts` may import from `rules` (types, and shared constants such as `PRIORITY_CLASSES` that its zod schemas reuse), and from nothing else in the repo.
 - `apps/web` and `apps/api` may import `rules` and `contracts`; they MUST NOT import each other.
 - `apps/web` MUST NOT import Prisma or anything under `apps/api`.
 - Inside `apps/api`, modules talk through each module's `index.ts` only (no deep imports). Prisma models never cross the HTTP boundary; DTOs from `contracts` do.
