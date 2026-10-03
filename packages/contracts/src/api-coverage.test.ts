@@ -91,7 +91,7 @@ describe("complete API DTO coverage", () => {
       sessionUser: ["STORE", "DISPATCHER", "LOADER", "DRIVER"],
       fieldSnapshot: ["LOADER", "DRIVER"],
       syncEventResult: ["ACCEPTED", "DUPLICATE", "HELD_CONFLICT", "REJECTED"],
-      exception: ["CONFLICT", "ISSUE", "SHORT", "DAMAGED", "FAILED", "PROBLEM"],
+      exception: ["ACK", "CONFLICT", "ISSUE", "SHORT", "DAMAGED", "FAILED", "PROBLEM"],
     };
     for (const name of Object.keys(groups) as (keyof typeof groups)[]) {
       expect(Object.keys(apiVariantFixtures[name]).sort()).toEqual([...groups[name]].sort());

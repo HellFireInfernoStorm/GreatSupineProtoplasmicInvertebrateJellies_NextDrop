@@ -57,6 +57,7 @@ const conflict = {
   heldEventId: MOCK_ID,
   openedAt: MOCK_TIME,
   resolvedAt: null,
+  resolution: null,
   note: null,
 } satisfies ApiDtoInput<"conflict">;
 const issue = {

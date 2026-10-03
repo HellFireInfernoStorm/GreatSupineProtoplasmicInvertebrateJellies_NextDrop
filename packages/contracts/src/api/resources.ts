@@ -14,7 +14,7 @@ import { orderFlagSchema, orderStatusSchema, tripStatusSchema } from "../vocab";
 import { count, minute, nonempty } from "./common";
 
 export const windowSchema = z.strictObject({ open: minute, close: minute });
-export const contactSchema = z.strictObject({ name: nonempty, phone: nonempty });
+export const contactSchema = z.strictObject({ name: nonempty, phone: nonempty.nullable() });
 export const outletSchema = z.strictObject({
   id: uuidV7,
   displayId: nonempty,
@@ -26,8 +26,8 @@ export const outletSchema = z.strictObject({
   parking: z.enum(PARKING_CONSTRAINTS),
   mallWindow: windowSchema.nullable(),
   window: windowSchema,
-  address: nonempty,
-  contact: contactSchema,
+  address: nonempty.nullable(),
+  contact: contactSchema.nullable(),
 });
 export const vehicleSchema = z.strictObject({
   id: uuidV7,
@@ -40,7 +40,7 @@ export const vehicleSchema = z.strictObject({
   metresPerLitre: z.number().positive(),
   weeklyFuelQuotaMl: count,
   depot: nonempty,
-  driver: contactSchema,
+  driver: contactSchema.extend({ phone: nonempty }),
 });
 export const productSchema = z.strictObject({
   id: uuidV7,

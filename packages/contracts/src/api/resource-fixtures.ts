@@ -11,7 +11,7 @@ const window = { open: 210, close: 480 };
 const outlet = {
   id: MOCK_ID,
   displayId: "OUT015",
-  name: "Mock Fresh outlet",
+  name: "Waypoint Fresh, Colombo",
   brand: "Fresh",
   district: "Colombo",
   depot: "Peliyagoda",
@@ -19,8 +19,8 @@ const outlet = {
   parking: "normal",
   mallWindow: null,
   window,
-  address: "Mock outlet address",
-  contact,
+  address: null,
+  contact: null,
 } satisfies ApiDtoInput<"outlet">;
 const vehicle = {
   id: MOCK_VEHICLE_ID,

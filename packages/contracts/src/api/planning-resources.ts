@@ -58,7 +58,7 @@ export const draftDataSchema = z.strictObject({
   ),
 });
 export const draftSchema = z.strictObject({
-  revision: count,
+  revision: z.number().int().positive(),
   baseVersion: count.nullable(),
   data: draftDataSchema,
   updatedAt: isoDateTime,

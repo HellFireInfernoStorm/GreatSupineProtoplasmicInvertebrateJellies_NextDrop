@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isoDateTime, localDate, uuidV7 } from "../primitives";
+import { actorSchema, isoDateTime, localDate, uuidV7 } from "../primitives";
 import {
   conflictKindSchema,
   issueKindSchema,
@@ -8,11 +8,13 @@ import {
   shortOutcomeSchema,
   vehicleAvailabilityStatusSchema,
   vehicleAvailabilityReasonSchema,
+  conflictResolutionSchema,
 } from "../vocab";
 import {
   conflictResolvedPayloadSchema,
   issueResolvedPayloadSchema,
   vehicleAvailabilityChangedPayloadSchema,
+  planAcknowledgedPayloadSchema,
 } from "../payloads/order-lifecycle";
 import { apiErrorSchema, count, nonempty, validationResultSchema } from "./common";
 import { allocationStatsSchema, draftDataSchema, draftSchema, planVersionSchema } from "./planning-resources";
@@ -58,11 +60,12 @@ export const conflictSchema = z.strictObject({
   id: uuidV7,
   kind: conflictKindSchema,
   state: z.enum(["OPEN", "RESOLVED"]),
-  orderId: uuidV7,
+  orderId: uuidV7.nullable(),
   tripId: uuidV7.nullable(),
   heldEventId: uuidV7,
   openedAt: isoDateTime,
   resolvedAt: isoDateTime.nullable(),
+  resolution: conflictResolutionSchema.nullable(),
   note: z.string().nullable(),
 });
 export const issueSchema = z.strictObject({
@@ -74,6 +77,13 @@ export const issueSchema = z.strictObject({
   note: z.string().nullable(),
 });
 export const exceptionSchema = z.discriminatedUnion("type", [
+  z.strictObject({
+    type: z.literal("ACK"),
+    tripId: uuidV7,
+    planVersion: planAcknowledgedPayloadSchema.shape.planVersion,
+    actor: actorSchema.strict(),
+    at: isoDateTime,
+  }),
   z.strictObject({ type: z.literal("CONFLICT"), conflict: conflictSchema }),
   z.strictObject({ type: z.literal("ISSUE"), issue: issueSchema }),
   z.strictObject({

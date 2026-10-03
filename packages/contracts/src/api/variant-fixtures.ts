@@ -46,6 +46,7 @@ export const apiVariantFixtures = {
     REJECTED: { ...result, status: "REJECTED", index: 0, code: "NOT_ASSIGNED" },
   },
   exception: {
+    ACK: { type: "ACK", tripId: f.trip.id, planVersion: 1, actor: f.clientEvent.actor, at: f.clientEvent.capturedAt },
     CONFLICT: f.exception,
     ISSUE: { type: "ISSUE", issue: f.issue },
     SHORT: { type: "SHORT", orderId: f.order.id, lineId: f.orderLine.id, qtyShort: 1, resolution: null },
@@ -61,3 +62,10 @@ export const apiVariantFixtures = {
     },
   },
 } satisfies VariantFixtures;
+
+/** Order- and trip-scoped conflicts, including the resolution projection. */
+export const apiConflictFixtures = {
+  orderLevel: f.conflict,
+  tripLevel: { ...f.conflict, kind: "ILLEGAL_TRANSITION", orderId: null, tripId: f.trip.id },
+  resolved: { ...f.conflict, state: "RESOLVED", resolution: "ACCEPT_FACT", resolvedAt: f.clientEvent.capturedAt },
+} satisfies Record<"orderLevel" | "tripLevel" | "resolved", ApiDtoInput<"conflict">>;

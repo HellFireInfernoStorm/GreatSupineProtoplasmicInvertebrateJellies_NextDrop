@@ -1,12 +1,12 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §12; issue 29; proposed ADR 0023
+sources: guide §12; issue 29; accepted ADR 0024
 ---
 
 # API wire DTOs
 
-This draft supplies the previously unspecified wire conventions for [API endpoints](api.md). These additions are proposed for owner review in [ADR 0023](../../adr/0023-api-wire-contracts.md); they are not accepted architecture yet. Schemas, inferred types, and synthetic web fixtures are exported by `@nextdrop/contracts`. Prisma records stay inside the API.
+This draft documents the wire conventions for [API endpoints](api.md) accepted in [ADR 0024](../../adr/0024-api-wire-contracts.md). Schemas, inferred types, and synthetic web fixtures are exported by `@nextdrop/contracts`. Prisma records stay inside the API.
 
 ## Registration and access
 
@@ -16,8 +16,8 @@ This draft supplies the previously unspecified wire conventions for [API endpoin
 
 - `access: public` covers login, liveness, and readiness. Empty roles mean an unauthenticated ops endpoint, not a deny-all route. Login declares the four possible target roles.
 - `access: session` requires session identity; list and resource ownership still use the API's central policy layer. The route table is the role ceiling, not the complete ownership policy.
-- `access: expired-session` is used only by field reauth. The API accepts a retained session row identified by its cookie, even after expiry, but rejects revoked/missing sessions. It verifies the field role, device binding, PIN and CSRF header, applies rate limits (429), and renews credentials without changing the outbox. It never permits normal expired-session business mutations.
-- `access: demo` requires `DEMO_MODE=true` and a dispatcher session or `x-nextdrop-script-key`. The API checks the key separately; the session path uses the declared CSRF headers. Never expose the script key in client mocks.
+- `access: expired-session` is used only by field reauth. Cookie identity must resolve to a retained Session row with kind FIELD and request.deviceId equal to Session.deviceId. Renewal is accepted only before expiresAt + FIELD_REAUTH_GRACE_DAYS (default 30 days); at/beyond that boundary delete the row and require full login. Revocation deletes the row immediately; there is no revoked flag. Session sweepers retain expired FIELD rows until the window ends. Wrong PINs lock reauth for that session using the login lockout/backoff policy in [auth](auth.md), returning 429 while locked. Role/PIN/CSRF checks still apply; the outbox remains intact and normal expired-session business mutations are denied.
+- `access: demo` requires `DEMO_MODE=true` and a dispatcher session or `x-nextdrop-script-key`, whose secret is DEMO_SCRIPT_KEY. If the key is unset/empty, the script-key path is disabled even when demo mode is enabled. The API checks the key separately; the session path uses the declared CSRF headers. Never expose the script key in client mocks.
 - Common JSON errors are exported as `apiCommonErrorResponses` (400, 401, 403, 429, 500); merge them with route-specific responses during registration. A transport-limit failure uses 413 and `PAYLOAD_TOO_LARGE`.
 - Mutations carry `x-nextdrop-csrf`, a nonempty custom header checked by the API. Login uses the custom header for CSRF defence before a session exists. Session responses supply `csrfToken` for later mutations. Order creation also carries `idempotency-key`; it is not an order body property.
 - Request schemas are split into path params, query, headers, and body. GET routes have no body. Missing request parts mean no DTO is expected for that part. Header schemas permit unrelated HTTP headers.
@@ -30,7 +30,7 @@ Resource primary IDs are UUIDs, with separate string `displayId` values. Line ID
 
 Reference DTOs use rules-owned brand, vehicle, dock, parking and temperature vocabularies. Vehicle capacity is grams/litres, fuel quota is millilitres, and economy is metres per litre. Products and order-line unit snapshots retain numeric `unitVolumeM3` and `unitWeightG`; aggregate order sizes are integer `weightG` and `volumeL`. These DTOs do not implement storage rounding or rules conversion policy.
 
-- Outlet: identity, name, brand, district/depot, dock/parking, nullable mall window, delivery window, address, contact.
+- Outlet: identity, name derived by the server as `Waypoint {brand}, {district}`, brand, district/depot, dock/parking, nullable mall window, delivery window, required nullable address and contact. The current reference/model has no address, so return null. With no linked store user contact is null; a linked User.displayName may supply contact.name, with phone null because the model has no user/outlet phone. Never invent either value. Driver contacts retain required name and phone.
 - Vehicle: identity, type/temperature, capacities, fuel type/economy/quota, depot, driver contact.
 - Product: UUID, sku/name, brand/temperature, unit label and unit weight/volume.
 - Calendar: local date, day/week/year, payday/festival/ramp, holiday/monsoon/operating flags.
@@ -63,11 +63,13 @@ Reference lists wrap `{ items }`. Optional depot query selection never overrides
 - Create body is `{ requestedDate, lines: [{ productId, qty }], replacesOrderId? }`; positive integer quantities. API derives totals and event line IDs. Success is 201 with the order.
 - Order list accepts optional date/status/after/limit and returns `{ items, nextCursor }` (null at end).
 - Cancel, receipt, issue-report, and issue-resolution bodies reuse existing payload shapes. Path IDs supply the subject, so conflict resolution does not repeat conflict ID or held-event ID in its body.
-- Cancel and receipt return the order. Issue report returns 201 `{ issueId, order }`.
+- Cancel and receipt return the order. Issue report returns 201 `{ issueId, order }`. There is no Issue table: issueId, issue.id and the dispatch issue-resolution path ID are the ISSUE_REPORTED event's id. The issue projection's openedAt is that event's receivedAt; resolvedAt is the matching ISSUE_RESOLVED receivedAt, or null before resolution.
 
 ## Dispatch
 
 Day paths require a local `date`; day operations take `depot` in query. Day detail includes state, nullable close time/version, queue, demand/capacity stats, and server time. Propose takes `{ revision }`, where revision zero represents no saved draft, and returns `{ draft, stats, trace }`.
+
+The API maps stored zero to null for PlanningDay.currentVersion, PlanDraft.baseVersion and fieldSnapshot.planVersion. The first draft save atomically creates revision one; a persisted draft never has revision zero even though the database default is zero. The pre-existing planning-day state enum mismatch is tracked in [#79](https://github.com/HellFireInfernoStorm/GreatSupineProtoplasmicInvertebrateJellies_NextDrop/issues/79).
 
 Draft data is `{ trips: [{ ref, vehicleId, tripNo, orderIds }], unassignedOrderIds, deferrals: [{ orderId, reasonCode?, note? }] }`. Order ID order is stop sequence. Rule inputs are assembled by the API from canonical scoped orders/reference data; a client does not send trusted order weights. A draft has revision, nullable base version, data and updated time. GET returns `{ draft }`, with null before creation. PUT takes `{ revision, data }`; the API performs optimistic concurrency and semantic validation.
 
@@ -75,7 +77,7 @@ Validate takes `{ data }` and returns `ValidationResult`. Publish takes `{ revis
 
 Hard validation fails with 422 `{ code: VALIDATION_FAILED, message_key, params, requestId, validation: ValidationResult }`. Missing deferral reasons use the same 422 structure with `MISSING_DEFERRAL_REASON`; the API must include the associated validation information. Locked stops use 409 `STOP_LOCKED`; stale revisions use 409 `REVISION_CONFLICT`. Warnings alone remain successful. Rules perform the checks; Zod does not reproduce them.
 
-Runs wraps vehicle, trips, progress counts, separate last-heard/last-sync times, pending count, late risk and the documented state vocabulary, plus server time. Exceptions are discriminated CONFLICT, ISSUE, SHORT, DAMAGED, FAILED or PROBLEM rows. Fleet wraps date and vehicle/availability pairs. Read availability is `{ status, reason, note, changedAt }`, with required nullable reason/note/changedAt; a never-changed available vehicle has all three null. PUT takes `{ changes: [availability payloads without sourceEventId] }`. Outlook takes depot/from/weeks and returns weekly brand demand/chilled/capacity in litres. Outlet history returns `{ items, total, nextCursor }`; pass non-null nextCursor as the next after query, and null means completion.
+Runs wraps vehicle, trips, progress counts, separate last-heard/last-sync times, pending count, late risk and the documented state vocabulary, plus server time. Exceptions are discriminated ACK, CONFLICT, ISSUE, SHORT, DAMAGED, FAILED or PROBLEM rows. ACK is `{ type: ACK, tripId, planVersion, actor, at }`, projected from PLAN_ACKNOWLEDGED subject.tripId, payload.planVersion, actor and capturedAt to match the design's Ack inbox row. Conflict.orderId is required nullable for trip-level conflicts; tripId and resolution are also required nullable. `apiConflictFixtures` exports order-level, trip-level and resolved examples. Fleet wraps date and vehicle/availability pairs. Read availability is `{ status, reason, note, changedAt }`, with required nullable reason/note/changedAt; a never-changed available vehicle has all three null. PUT takes `{ changes: [availability payloads without sourceEventId] }`. Outlook takes depot/from/weeks and returns weekly brand demand/chilled/capacity in litres. Outlet history returns `{ items, total, nextCursor }`; pass non-null nextCursor as the next after query, and null means completion.
 
 ## Field, feed and transport
 
@@ -87,7 +89,7 @@ Heartbeat body is `{ deviceId, appVersion, pendingCount, lastSyncAt, lastKnownSt
 
 Changes query is `{ after, limit? }`, with decimal-string after and limit 1..1000. Rows are `{ seq, kind, entity: { type, id }, version?, at }`. Response is `{ items, head, resetEpoch }`. Sequence/head/cursor fields accept canonical nonnegative decimal strings, preserving values above Number.MAX_SAFE_INTEGER. Stream takes an after cursor and sends SSE hints whose JSON data is `{ head, resetEpoch }`; this is a hint contract, not a JSON HTTP response serializer.
 
-Blob upload has UUID path ID (= clientBlobId), an image content-type and CSRF header, and raw bytes. The proposed hard upload limit is 512 KiB (524288 bytes), leaving margin above the approximately 200 KB client compression target. `MAX_BLOB_BYTES` controls request bytes, response size and route transport cap. MIME is JPEG, PNG or WebP (photos and rasterized signatures). Zod checks bytes/metadata, while the API validates the actual content and transport size. Success is `{ clientBlobId, mime, size }`. No JSON/base64 blob body is introduced.
+Blob upload has UUID path ID (= clientBlobId), an image content-type and CSRF header, and raw bytes. The hard upload limit is 512 KiB (524288 bytes), leaving margin above the approximately 200 KB client compression target. `MAX_BLOB_BYTES` controls request bytes, response size and route transport cap. MIME is JPEG, PNG or WebP (photos and rasterized signatures). Zod checks bytes/metadata, while the API validates the actual content and transport size. Success is `{ clientBlobId, mime, size }`. No JSON/base64 blob body is introduced.
 
 ## Notifications, demo and ops
 
