@@ -33,7 +33,7 @@ The public deployment is shared by every judge. A demo reset by one judge is vis
 
 ## Seeded accounts
 
-One account per role, as the Booklet requires, created by the seed (`agent-docs/spec/data/seed-and-demo.md` §15.3, ADR 0008, ADR 0027, ADR 0028). The credentials are demo values, not secrets.
+One account per role, as the Booklet requires, created by the seed (`agent-docs/spec/data/seed-and-demo.md` §15.3, ADR 0008, ADR 0027, ADR 0030). The credentials are demo values, not secrets.
 
 | Role | Login | Credential | Who and where |
 | --- | --- | --- | --- |
@@ -109,7 +109,7 @@ To load the reference data, accounts and the story day into it:
 pnpm --filter @nextdrop/api db:seed
 ```
 
-The seed is idempotent: a second run writes nothing, and it never rewrites orders the demo has changed (ADR 0028). Set `SEED_ON_START=true` to run it every time the API starts.
+The seed is idempotent: a second run writes nothing, and it never rewrites orders the demo has changed (ADR 0030). Set `SEED_ON_START=true` to run it every time the API starts.
 
 Environment variables read by the code today:
 

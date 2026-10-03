@@ -24,7 +24,7 @@ sources: guide §15
 
 Every seeded order has an `ORDER_PLACED` event (by the outlet's store account where one exists, otherwise by the dispatcher) and an `ORDER_DEFERRED` event, by the dispatcher, for each earlier deferral. Event payloads pass the contracts schemas. Workshop vehicles carry a `VEHICLE_AVAILABILITY_CHANGED` event.
 
-Seeding is idempotent and runs on every start when `SEED_ON_START=true` (`pnpm db:seed` runs it by hand). Each run is one of two kinds (ADR 0028):
+Seeding is idempotent and runs on every start when `SEED_ON_START=true` (`pnpm db:seed` runs it by hand). Each run is one of two kinds (ADR 0030):
 - **Compare and update:** reference data, products, accounts, drivers and weekly history are compared with the seed by natural key and updated where they differ.
 - **Create only when missing:** orders, vehicle availability, outlet service state and `DemoState`. A restart therefore never reverts demo progress.
 
@@ -34,7 +34,7 @@ A second run on a seeded database writes nothing. Historic/Training/Test Datatho
 
 - **Demo clock**: server `Clock` service (`now = realNow + offset`); all cutoff, state-transition and ETA logic reads it. `POST /demo/clock` sets the time; a `tick` job (and `POST /demo/tick`) applies time-driven transitions idempotently.
 - **Reset and presets**: `POST /demo/reset { preset }` restores operational tables to a known checkpoint: `before-cutoff`, `orders-closed`, `plan-published`, `loading`, `mid-run`, `clash-ready`. A judge can jump to any role's step.
-- **Reset epoch and visibility** (ADR 0007, ADR 0028): every reset increments `DemoState.resetEpoch`. The seed creates `DemoState` with epoch 1, and increments the epoch only when a run wrote something, so a restart that finds everything in place keeps field outboxes. Reset and clock changes need a confirm step, are rate-limited, and the actor and time are shown in a persistent banner in every shell ('Reset by dispatcher at 14:02'). The README advises judges who need isolation to run `docker compose up` locally.
+- **Reset epoch and visibility** (ADR 0007, ADR 0030): every reset increments `DemoState.resetEpoch`. The seed creates `DemoState` with epoch 1, and increments the epoch only when a run wrote something, so a restart that finds everything in place keeps field outboxes. Reset and clock changes need a confirm step, are rate-limited, and the actor and time are shown in a persistent banner in every shell ('Reset by dispatcher at 14:02'). The README advises judges who need isolation to run `docker compose up` locally.
 - **Quick-login chips** on the login screens for the four seeded accounts.
 - **Force-offline switch** in Loader/Driver (section 10).
 - Demo controls are reachable from a small panel in each shell footer; clock/reset are dispatcher-only (or script key).
@@ -82,7 +82,7 @@ The picker reads only the approved reference CSVs and takes candidates in ID ord
 
 - "Talawakele area" is Nuwara Eliya district, a `hill` district served from Kandy.
 - No outlet can be identified as Wellawatte, and every Colombo outlet is the same distance from Peliyagoda. The peak-day store is therefore the first Colombo Fresh outlet, by ID, that a Peliyagoda reefer truck can serve. This skips the `van_only` street outlets.
-- The walkthrough vehicle is the first Kandy reefer truck whose Fresh trip 1 to Nuwara Eliya takes 4 of that district's Fresh outlets, added in ID order while the trip stays clean. The trip carries a chilled order at every stop and a dry order at the store stop, since step 13 needs two orders at one store. The Booklet counts trip time per order, so that is 5 orders (ADR 0028). The 4 stops serve steps 8 to 11: stop 1 is delivered online, stops 2 and 3 offline (the dispatcher then cancels stop 3), and stop 4 is edited.
+- The walkthrough vehicle is the first Kandy reefer truck whose Fresh trip 1 to Nuwara Eliya takes 4 of that district's Fresh outlets, added in ID order while the trip stays clean. The trip carries a chilled order at every stop and a dry order at the store stop, since step 13 needs two orders at one store. The Booklet counts trip time per order, so that is 5 orders (ADR 0030). The 4 stops serve steps 8 to 11: stop 1 is delivered online, stops 2 and 3 offline (the dispatcher then cancels stop 3), and stop 4 is edited.
 - The hill store is stop 2, the first stop delivered offline.
 - Driver display IDs follow the vehicle number (`DRV001` drives `VEH001`). The Kandy loader is `LDR002`. The trip's display ID is assigned by the plan, so the fixtures pin the trip as vehicle, trip number, brand, district and stops.
 

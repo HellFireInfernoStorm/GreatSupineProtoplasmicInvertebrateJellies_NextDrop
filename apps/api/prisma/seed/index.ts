@@ -1,7 +1,7 @@
 // The seed (seed-and-demo.md §15.1). Idempotent: reference data, products, accounts, drivers and weekly history are
 // written only where they differ from the seed; operational rows (orders, vehicle availability, service state, demo
 // state) are created only when missing, so a restart never reverts demo progress. `DemoState.resetEpoch` is
-// incremented only when this run wrote something (ADR 0028). Run with `pnpm db:seed`, or on start with SEED_ON_START.
+// incremented only when this run wrote something (ADR 0030). Run with `pnpm db:seed`, or on start with SEED_ON_START.
 import { pathToFileURL } from "node:url";
 import { parseEventPayload } from "@nextdrop/contracts";
 import type { PrismaClient } from "../../src/generated/prisma/client";

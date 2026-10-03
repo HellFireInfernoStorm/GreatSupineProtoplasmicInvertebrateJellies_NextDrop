@@ -1,4 +1,4 @@
-# ADR 0028: Seed idempotency, the reset epoch and seeded story state
+# ADR 0030: Seed idempotency, the reset epoch and seeded story state
 
 - Status: accepted
 - Date: 2026-10-03
