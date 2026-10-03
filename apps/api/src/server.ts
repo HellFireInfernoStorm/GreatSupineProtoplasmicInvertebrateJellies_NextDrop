@@ -71,13 +71,16 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
     pollMs: dependencies.feed?.pollMs ?? 1_000,
   });
   await app.register(notificationRoutes, { prisma, now: clock.now });
-  await app.register(demoRoutes, {
-    prisma,
-    schema: database?.schema ?? "public",
-    clock,
-    notifier: createNotifier(),
-    ...(dependencies.demoRateLimit ? { rateLimit: dependencies.demoRateLimit } : {}),
-  });
+  // Demo tooling needs the database: the clock offset, the tick and the reset all live there.
+  if (prisma) {
+    await app.register(demoRoutes, {
+      prisma,
+      schema: database?.schema ?? "public",
+      clock,
+      notifier: createNotifier(),
+      ...(dependencies.demoRateLimit ? { rateLimit: dependencies.demoRateLimit } : {}),
+    });
+  }
 
   return app;
 }
