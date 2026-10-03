@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { Navigate } from "react-router";
 import { useRoleLanguage } from "../i18n/language";
 import { SessionContext, sessionQuery } from "../lib/session";
+import { isFieldRole } from "../lib/fieldRoles";
+import { FieldSync } from "../sync/FieldSync";
 import { ResetBanner } from "./ResetBanner";
 import { guardRole, ROLE_PATHS } from "./roles";
 
@@ -26,6 +28,7 @@ export function RoleShell({ role, children }: RoleShellProps) {
     <SessionContext value={session}>
       <div data-theme={ROLE_PATHS[role].theme} lang={language} className="flex min-h-dvh flex-col">
         <ResetBanner />
+        {isFieldRole(role) && <FieldSync />}
         {children}
       </div>
     </SessionContext>

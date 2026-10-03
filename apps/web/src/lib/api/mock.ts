@@ -2,6 +2,8 @@ import {
   apiRouteFixtures,
   apiVariantFixtures,
   HUMAN_ROLES,
+  syncEventsRequestSchema,
+  reauthRequestSchema,
   loginRequestSchema,
   type ApiDtoInput,
   type ApiRouteName,
@@ -80,8 +82,40 @@ export function mockRespond(name: ApiRouteName, body: unknown, nowMs: number = D
   switch (name) {
     case "login":
       return login(body, nowMs);
+    case "snapshot":
+      if (role === "LOADER" || role === "DRIVER")
+        return {
+          status: 200,
+          body: { ...apiVariantFixtures.fieldSnapshot[role], serverTime: new Date(nowMs).toISOString() },
+        };
+      return fixture(name, nowMs);
+    case "syncEvents": {
+      const parsed = syncEventsRequestSchema.safeParse(body);
+      if (!parsed.success) return fixture(name, nowMs);
+      const template = apiRouteFixtures.syncEvents.responses[200];
+      return {
+        status: 200,
+        body: {
+          ...template,
+          serverTime: new Date(nowMs).toISOString(),
+          results: parsed.data.events.map((event) => ({
+            clientEventId: event.clientEventId,
+            status: "ACCEPTED",
+            serverEventId: event.clientEventId,
+            receivedAt: new Date(nowMs).toISOString(),
+          })),
+        },
+      };
+    }
+    case "reauth": {
+      const parsed = reauthRequestSchema.safeParse(body);
+      if (parsed.success && MOCK_WRONG_SECRETS.includes(parsed.data.pin))
+        return { status: 401, body: apiRouteFixtures.reauth.responses[401] };
+      if (parsed.success && MOCK_LOCKED_SECRETS.includes(parsed.data.pin))
+        return { status: 429, body: apiRouteFixtures.reauth.responses[429] };
+      return isRole(role) ? { status: 200, body: session(role, nowMs) } : unauthenticated();
+    }
     case "me":
-    case "reauth":
       return isRole(role) ? { status: 200, body: session(role, nowMs) } : unauthenticated();
     case "logout":
       writeStored(SESSION_KEY, null, "session");

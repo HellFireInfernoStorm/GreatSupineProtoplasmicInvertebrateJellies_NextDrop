@@ -139,3 +139,48 @@ describe("sign-in", () => {
     expect(currentSession()?.user.role).toBe("DRIVER");
   });
 });
+
+describe("field session persistence across reload", () => {
+  it("restores the Driver shell offline and asks for PIN without losing queued work", async () => {
+    await signedInAs("DRIVER");
+    const { offlineDb } = await import("../sync/database");
+    await offlineDb.set("testWork", "kept");
+    queryClient.clear();
+    serve({});
+    const { sessionQuery } = await import("./session");
+    const session = await queryClient.ensureQueryData(sessionQuery);
+    expect(session?.user.role).toBe("DRIVER");
+    expect(isReauthNeeded()).toBe(true);
+    expect(await offlineDb.value("testWork")).toBe("kept");
+  });
+
+  it("restores a saved Loader on a cold /me 401 rather than showing full login", async () => {
+    await signedInAs("LOADER");
+    queryClient.clear();
+    serve({ me: unauthenticated });
+    const { sessionQuery } = await import("./session");
+    expect((await queryClient.ensureQueryData(sessionQuery))?.user.role).toBe("LOADER");
+    expect(isReauthNeeded()).toBe(true);
+  });
+
+  it("does not restore online-role sessions offline", async () => {
+    await signedInAs("STORE");
+    queryClient.clear();
+    serve({});
+    const { sessionQuery } = await import("./session");
+    await expect(queryClient.ensureQueryData(sessionQuery)).rejects.toMatchObject({ kind: "network" });
+  });
+
+  it("nonrenewable auth removes only the saved session, preserving the outbox", async () => {
+    await signedInAs("DRIVER");
+    const { fieldRepository } = await import("../sync/repository");
+    const entry = await fieldRepository.enqueue({
+      ...apiFixtures.clientEvent,
+      actor: { userId: currentSession()!.user.id, role: "DRIVER" },
+    });
+    serve({ reauth: unauthenticated });
+    await expect(reauth("1234")).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+    expect(await fieldRepository.db.value("localSession")).toBeUndefined();
+    expect((await fieldRepository.db.outbox.get(entry.clientEventId))?.state).toBe("pending");
+  });
+});

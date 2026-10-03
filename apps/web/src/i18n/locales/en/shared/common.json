@@ -28,5 +28,38 @@
   "demo": {
     "label": "Demo accounts",
     "signInAs": "Sign in as {{account}}"
+  },
+  "sync": {
+    "synced": "Synced",
+    "syncing": "Syncing",
+    "offline": "Offline",
+    "pending": "{{count}} pending",
+    "last": "Last synced {{time}}",
+    "failed": "{{count}} failed — open sync diagnostics",
+    "held": "{{count}} awaiting dispatcher review",
+    "now": "Sync now",
+    "forceOffline": "Force offline",
+    "reauth": "Enter your PIN to reconnect",
+    "pin": "PIN",
+    "kept": "Your saved work stays on this device.",
+    "unlock": "Reconnect",
+    "update": "An app update is ready.",
+    "safe": "I am idle or between stops.",
+    "apply": "Update app",
+    "errors": {
+      "invalid": "That PIN was not accepted. Try again.",
+      "locked": "Too many attempts. Wait and try again.",
+      "network": "No connection. Your work is kept; try again when connected.",
+      "unknown": "Could not reconnect. Try again."
+    },
+    "details": "Sync diagnostics",
+    "failedAction": "Action for {{reference}} was not applied.",
+    "reason": "Server reason: {{code}}. Your record is kept for review.",
+    "heldAction": "Fact for {{reference}} is saved on the server and awaiting dispatcher review.",
+    "captured": "Captured {{time}}",
+    "confirmed": "Confirmed {{time}} after sync",
+    "paused": "Reconnect needed",
+    "retrying": "Sync will retry",
+    "waiting": "Waiting to sync"
   }
 }

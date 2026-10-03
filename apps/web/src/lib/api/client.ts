@@ -27,6 +27,11 @@ export function setUnauthenticatedHandler(handler: (() => void) | null): void {
   onUnauthenticated = handler;
 }
 
+/** Binary transports share the same session-expiry behavior as JSON routes. */
+export function notifySessionExpired(): void {
+  onUnauthenticated?.();
+}
+
 /** Tests replace the transport. Pass null to restore the default. */
 export function setTransport(transport: Transport | null): void {
   transportOverride = transport;
@@ -143,7 +148,7 @@ export async function callApi<K extends JsonRouteName>(name: K, ...args: Request
 
   const error = apiSchemas.apiError.safeParse(raw.body);
   // A 401 from login is a wrong password and from reauth a wrong PIN: neither says the session is gone.
-  if (raw.status === 401 && (definition.access === "session" || definition.access === "demo")) onUnauthenticated?.();
+  if (raw.status === 401 && (definition.access === "session" || definition.access === "demo")) notifySessionExpired();
   throw new ApiRequestError(
     "http",
     raw.status,

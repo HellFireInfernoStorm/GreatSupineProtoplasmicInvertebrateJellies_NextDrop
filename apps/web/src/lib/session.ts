@@ -1,11 +1,14 @@
-import type { ApiDto, LoginRequest } from "@nextdrop/contracts";
+import { sessionResponseSchema, type ApiDto, type LoginRequest } from "@nextdrop/contracts";
 import { queryOptions, type QueryKey } from "@tanstack/react-query";
 import { createContext, use } from "react";
 import { create } from "zustand";
 import { ApiRequestError, callApi, setCsrfToken, setUnauthenticatedHandler } from "./api";
-import { getDeviceId } from "./device";
+import { getDeviceId, initializeDevice } from "./device";
 import { isFieldRole } from "./fieldRoles";
 import { queryClient } from "./queryClient";
+import { offlineDb } from "../sync/database";
+import { restoreClockOffset } from "./clock";
+import { setDemoNotice, type DemoNotice } from "./demo";
 
 // The signed-in session, held in the query cache under one key. GET /auth/me is asked once, when the app loads.
 // After that the session changes only through sign-in, sign-out, reauth, or a 401 from the server, so a role shell
@@ -37,12 +40,31 @@ function dropCachedData(): void {
 }
 
 /** The current session, or null when nobody is signed in. A network failure rejects instead of signing out. */
+async function persistSession(session: Session | null): Promise<void> {
+  if (session && isFieldRole(session.user.role)) await offlineDb.set("localSession", session);
+  else await offlineDb.meta.delete("localSession");
+}
+
 async function fetchSession(): Promise<Session | null> {
+  await initializeDevice();
+  const offset = await offlineDb.value<number>("serverOffset");
+  if (offset !== undefined) restoreClockOffset(offset);
+  const notice = await offlineDb.value<DemoNotice>("resetNotice");
+  if (notice) setDemoNotice(notice);
+  const parsed = sessionResponseSchema.safeParse(await offlineDb.value("localSession"));
+  const saved = parsed.success && isFieldRole(parsed.data.user.role) ? parsed.data : null;
+  if (saved) remember(saved);
   try {
+    if (await offlineDb.value("simulateOffline")) throw new ApiRequestError("network", null, null, "Simulated offline");
     const session = await callApi("me");
-    setCsrfToken(session.csrfToken);
+    await persistSession(session);
+    remember(session);
     return session;
   } catch (error) {
+    if (saved && error instanceof ApiRequestError && (error.status === 401 || error.kind === "network")) {
+      useReauthStore.setState({ needed: true });
+      return saved;
+    }
     if (error instanceof ApiRequestError && error.status === 401) return null;
     throw error;
   }
@@ -61,7 +83,9 @@ export const sessionQuery = queryOptions({
 });
 
 export async function signIn(request: LoginRequest): Promise<Session> {
+  await initializeDevice();
   const session = await callApi("login", { body: request });
+  await persistSession(session);
   dropCachedData();
   remember(session);
   return session;
@@ -78,6 +102,7 @@ export async function signOut(): Promise<void> {
     // 401: the server has already dropped the session, which is what sign-out wants.
     if (!(error instanceof ApiRequestError && error.status === 401)) throw error;
   }
+  await persistSession(null);
   dropCachedData();
   remember(null);
 }
@@ -107,10 +132,12 @@ export async function reauth(pin: string): Promise<Session> {
   if (!role || !isFieldRole(role)) throw new Error("reauth needs a Loader or Driver session");
   try {
     const session = await callApi("reauth", { body: { role, pin, deviceId: getDeviceId() } });
+    await persistSession(session);
     remember(session);
     return session;
   } catch (error) {
     if (error instanceof ApiRequestError && error.code === "UNAUTHENTICATED") {
+      await persistSession(null);
       dropCachedData();
       remember(null);
     }

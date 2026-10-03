@@ -76,5 +76,125 @@
       "text": "{{account}} ஆக உள்நுழைக",
       "review": "draft"
     }
+  },
+  "sync": {
+    "synced": {
+      "text": "ஒத்திசைக்கப்பட்டது",
+      "review": "draft"
+    },
+    "syncing": {
+      "text": "ஒத்திசைக்கப்படுகிறது",
+      "review": "draft"
+    },
+    "offline": {
+      "text": "இணைப்பு இல்லை",
+      "review": "draft"
+    },
+    "pending": {
+      "text": "{{count}} நிலுவையில்",
+      "review": "draft"
+    },
+    "last": {
+      "text": "கடைசி ஒத்திசைவு {{time}}",
+      "review": "draft"
+    },
+    "failed": {
+      "text": "{{count}} தோல்விகள் — ஒத்திசைவு விவரங்களைப் பார்க்கவும்",
+      "review": "draft"
+    },
+    "held": {
+      "text": "{{count}} அனுப்புநர் ஆய்வுக்காக",
+      "review": "draft"
+    },
+    "now": {
+      "text": "இப்போது ஒத்திசைக்கவும்",
+      "review": "draft"
+    },
+    "forceOffline": {
+      "text": "இணைப்பை நிறுத்தவும்",
+      "review": "draft"
+    },
+    "reauth": {
+      "text": "மீண்டும் இணைக்க PIN உள்ளிடவும்",
+      "review": "draft"
+    },
+    "pin": {
+      "text": "PIN",
+      "review": "draft"
+    },
+    "kept": {
+      "text": "சேமித்த வேலை இந்த சாதனத்தில் இருக்கும்.",
+      "review": "draft"
+    },
+    "unlock": {
+      "text": "மீண்டும் இணைக்கவும்",
+      "review": "draft"
+    },
+    "update": {
+      "text": "செயலி புதுப்பிப்பு தயாராக உள்ளது.",
+      "review": "draft"
+    },
+    "safe": {
+      "text": "நான் ஓய்வில் அல்லது நிறுத்தங்களுக்கு இடையே உள்ளேன்.",
+      "review": "draft"
+    },
+    "apply": {
+      "text": "செயலியைப் புதுப்பிக்கவும்",
+      "review": "draft"
+    },
+    "errors": {
+      "invalid": {
+        "text": "PIN ஏற்கப்படவில்லை. மீண்டும் முயலவும்.",
+        "review": "draft"
+      },
+      "locked": {
+        "text": "அதிக முயற்சிகள். காத்திருந்து மீண்டும் முயலவும்.",
+        "review": "draft"
+      },
+      "network": {
+        "text": "இணைப்பு இல்லை. வேலை சேமிக்கப்பட்டுள்ளது; இணைந்ததும் மீண்டும் முயலவும்.",
+        "review": "draft"
+      },
+      "unknown": {
+        "text": "மீண்டும் இணைக்க முடியவில்லை. மீண்டும் முயலவும்.",
+        "review": "draft"
+      }
+    },
+    "details": {
+      "text": "ஒத்திசைவு விவரங்கள்",
+      "review": "draft"
+    },
+    "failedAction": {
+      "text": "{{reference}}க்கான செயல் பயன்படுத்தப்படவில்லை.",
+      "review": "draft"
+    },
+    "reason": {
+      "text": "சேவையகக் காரணம்: {{code}}. பதிவு ஆய்வுக்காக சேமிக்கப்பட்டுள்ளது.",
+      "review": "draft"
+    },
+    "heldAction": {
+      "text": "{{reference}}க்கான தகவல் சேவையகத்தில் சேமிக்கப்பட்டு அனுப்புநர் ஆய்வுக்காக உள்ளது.",
+      "review": "draft"
+    },
+    "captured": {
+      "text": "பதிவு {{time}}",
+      "review": "draft"
+    },
+    "confirmed": {
+      "text": "ஒத்திசைவுக்குப் பின் உறுதி {{time}}",
+      "review": "draft"
+    },
+    "paused": {
+      "text": "மீண்டும் இணைக்க வேண்டும்",
+      "review": "draft"
+    },
+    "retrying": {
+      "text": "ஒத்திசைவு மீண்டும் முயலும்",
+      "review": "draft"
+    },
+    "waiting": {
+      "text": "ஒத்திசைவுக்குக் காத்திருக்கிறது",
+      "review": "draft"
+    }
   }
 }
