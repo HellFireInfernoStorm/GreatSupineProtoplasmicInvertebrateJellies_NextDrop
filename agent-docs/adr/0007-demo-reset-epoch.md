@@ -21,3 +21,5 @@
 ## Consequences
 
 Spec edited: `data/seed-and-demo.md`, `data/model.md`, `sync/change-feed.md`, `sync/offline-client.md`.
+
+Amended 2026-10-03 by [ADR 0028](0028-seed-idempotency-and-reset-epoch.md): the seed increments the epoch only when a run wrote something; a reset always increments it.

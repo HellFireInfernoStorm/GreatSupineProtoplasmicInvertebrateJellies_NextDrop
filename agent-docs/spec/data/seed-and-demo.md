@@ -11,18 +11,30 @@ sources: guide §15
 1. Reference tables from `data/reference/*.csv` (outlets, vehicles, calendar, district travel, service allowance, traffic speed, road conditions).
 2. A synthetic `Product` catalogue per brand with unit weights/volumes (order weight and volume are computed from lines so capacity maths is consistent with receipt steppers).
 3. Users and accounts (15.3); a `Driver` record for every vehicle.
-4. One realistic **peak day**: orders for the story delivery date at Peliyagoda, Fresh-heavy with a festival ramp, exceeding available capacity (about 86 orders), with several vehicles in the workshop, a mix of dry and chilled orders (including outlets with two orders), `van_only` and mall outlets, and prior-day deferral state (`deferred_yesterday`, `days_since_last_served`).
-5. **Story fixtures** from the design (named orders such as ORD10412, a loader shortfall, a deferred order, a dispute, an offline clash scenario) layered over generated bulk, generated deterministically from a fixed seed.
-6. Aggregated `WeeklyDemandHistory` (about 12 weeks) for the capacity outlook.
-7. Outlet service state and a handful of Kandy depot orders so both depots are visible.
+4. One realistic **peak day**: 86 Fresh-heavy orders for the story delivery date at Peliyagoda, generated from a fixed PRNG seed. They include:
+   - 13 vehicles in the workshop, one of them a breakdown. Demand exceeds capacity: `proposePlan` serves 80 orders and defers 6;
+   - a mix of dry and chilled orders, including outlets with both;
+   - `van_only` and mall outlets;
+   - prior-day deferral state (`deferred_yesterday`, `days_since_last_served`).
 
-Seeding is idempotent and runs on every start when `SEED_ON_START=true`. Historic/Training/Test Datathon files are never seeded (section 20).
+   `calendar.csv` ends in June 2026, so the story date carries no festival ramp. Dilini's outlet has no bulk order: Dilini places it live in step 1.
+5. **Story fixtures** (`story.ts`, a separate file from the bulk generator): the Kandy orders for the hill trip, among them the design's ORD10412 (chilled, carried over from the previous run) and ORD10468 (dry), both at the hill store. The seed stops at the start of the story. The loader shortfall, offline deliveries, clash and dispute need published plans, so the demo presets reach them.
+6. Aggregated `WeeklyDemandHistory`: 12 ISO weeks before the story week, per depot and brand, for the capacity outlook.
+7. Outlet service state for every outlet, and a handful of other Kandy depot orders so both depots are visible.
+
+Every seeded order has an `ORDER_PLACED` event (by the outlet's store account where one exists, otherwise by the dispatcher) and an `ORDER_DEFERRED` event, by the dispatcher, for each earlier deferral. Event payloads pass the contracts schemas. Workshop vehicles carry a `VEHICLE_AVAILABILITY_CHANGED` event.
+
+Seeding is idempotent and runs on every start when `SEED_ON_START=true` (`pnpm db:seed` runs it by hand). Each run is one of two kinds (ADR 0028):
+- **Compare and update:** reference data, products, accounts, drivers and weekly history are compared with the seed by natural key and updated where they differ.
+- **Create only when missing:** orders, vehicle availability, outlet service state and `DemoState`. A restart therefore never reverts demo progress.
+
+A second run on a seeded database writes nothing. Historic/Training/Test Datathon files are never seeded (section 20).
 
 ## 15.2 Demo tooling (`DEMO_MODE=true`)
 
 - **Demo clock**: server `Clock` service (`now = realNow + offset`); all cutoff, state-transition and ETA logic reads it. `POST /demo/clock` sets the time; a `tick` job (and `POST /demo/tick`) applies time-driven transitions idempotently.
 - **Reset and presets**: `POST /demo/reset { preset }` restores operational tables to a known checkpoint: `before-cutoff`, `orders-closed`, `plan-published`, `loading`, `mid-run`, `clash-ready`. A judge can jump to any role's step.
-- **Reset epoch and visibility** (ADR 0007): every reset or seed increments `DemoState.resetEpoch`. Reset and clock changes need a confirm step, are rate-limited, and the actor and time are shown in a persistent banner in every shell ('Reset by dispatcher at 14:02'). The README advises judges who need isolation to run `docker compose up` locally.
+- **Reset epoch and visibility** (ADR 0007, ADR 0028): every reset increments `DemoState.resetEpoch`. The seed creates `DemoState` with epoch 1, and increments the epoch only when a run wrote something, so a restart that finds everything in place keeps field outboxes. Reset and clock changes need a confirm step, are rate-limited, and the actor and time are shown in a persistent banner in every shell ('Reset by dispatcher at 14:02'). The README advises judges who need isolation to run `docker compose up` locally.
 - **Quick-login chips** on the login screens for the four seeded accounts.
 - **Force-offline switch** in Loader/Driver (section 10).
 - Demo controls are reachable from a small panel in each shell footer; clock/reset are dispatcher-only (or script key).
@@ -32,10 +44,12 @@ Seeding is idempotent and runs on every start when `SEED_ON_START=true`. Histori
 | Role | Login | Notes |
 | --- | --- | --- |
 | Store manager | outlet `OUT004` / Dilini | Waypoint Fresh, Colombo (Peliyagoda-served); the design's Wellawatte `OUT015` (15.5) |
-| Dispatcher | Nimal, Peliyagoda | Depot selector available |
-| Loader | `LDR001`, Peliyagoda dock | PIN login |
-| Driver | Sampath, `DRV039` on `VEH039`, Kandy depot (IDs from `story-fixtures`) | The walkthrough driver on the Kandy hill run; PIN login |
-| Extras | `DRV001` Ruwan S. (Peliyagoda), Kandy loader `LDR002`, a second store manager at `OUT108` (hill store) | Second driver; Kandy and multi-outlet scenarios |
+| Dispatcher | `nimal@waypoint.test` / Nimal | All depots (`User.depot` null); Peliyagoda by default, depot selector available |
+| Loader | `LDR001` / Kasun, Peliyagoda dock | PIN login |
+| Driver | `DRV039` / Sampath on `VEH039`, Kandy depot (IDs from `story-fixtures`) | The walkthrough driver on the Kandy hill run; PIN login |
+| Extras | `DRV001` Ruwan S. on `VEH001` (Peliyagoda); Kandy loader `LDR002` / Pradeep; hill-store manager `OUT104` / Ishara | Second driver; Kandy and multi-outlet scenarios |
+
+Store and dispatcher accounts share one demo password, and loaders and drivers one demo PIN (`apps/api/prisma/seed/accounts.ts`, listed in the README). Secrets are stored as argon2 hashes. Every vehicle has a `Driver` whose display ID follows the vehicle number.
 
 ## 15.4 Reference judge walkthrough (basis for the README and the Playwright test)
 
@@ -68,18 +82,19 @@ The picker reads only the approved reference CSVs and takes candidates in ID ord
 
 - "Talawakele area" is Nuwara Eliya district, a `hill` district served from Kandy.
 - No outlet can be identified as Wellawatte, and every Colombo outlet is the same distance from Peliyagoda. The peak-day store is therefore the first Colombo Fresh outlet, by ID, that a Peliyagoda reefer truck can serve. This skips the `van_only` street outlets.
-- The walkthrough vehicle is the first Kandy reefer truck whose Fresh trip 1 to Nuwara Eliya takes 4 to 5 of that district's Fresh outlets, added in ID order while the trip stays clean. The hill store is stop 2, the first stop delivered offline (stop 1 is delivered online in step 8).
+- The walkthrough vehicle is the first Kandy reefer truck whose Fresh trip 1 to Nuwara Eliya takes 4 of that district's Fresh outlets, added in ID order while the trip stays clean. The trip carries a chilled order at every stop and a dry order at the store stop, since step 13 needs two orders at one store. The Booklet counts trip time per order, so that is 5 orders (ADR 0028). The 4 stops serve steps 8 to 11: stop 1 is delivered online, stops 2 and 3 offline (the dispatcher then cancels stop 3), and stop 4 is edited.
+- The hill store is stop 2, the first stop delivered offline.
 - Driver display IDs follow the vehicle number (`DRV001` drives `VEH001`). The Kandy loader is `LDR002`. The trip's display ID is assigned by the plan, so the fixtures pin the trip as vehicle, trip number, brand, district and stops.
 
-Picks on the committed CSVs (#24):
+Picks on the committed CSVs (#24, re-picked in #30):
 
 | Fixture | Pick | Replaces |
 | --- | --- | --- |
 | Peak-day store (Dilini) | `OUT004`: Fresh, Colombo, Peliyagoda, street dock, normal parking, window 05:30–08:00 | `OUT015` (Wellawatte) |
 | Walkthrough vehicle | `VEH039`: Kandy reefer truck, 6,180 kg / 29.9 m³ | `VEH001` |
 | Walkthrough driver | `DRV039` Sampath | |
-| Walkthrough trip | `VEH039` Fresh trip 1, Nuwara Eliya: `OUT105` 05:21 → `OUT108` 05:56 → `OUT104` 06:31 → `OUT106` 07:06 → `OUT107` 07:41 (validation ETAs, departure 03:30, 266 of 270 Fresh minutes) | `T001` |
-| Hill store (delayed confirmation) | `OUT108`: Fresh, Nuwara Eliya, rear dock, window 04:00–07:45 | |
+| Walkthrough trip | `VEH039` Fresh trip 1, Nuwara Eliya: `OUT105` 05:21 → `OUT104` 05:56 and 06:31 (two orders) → `OUT106` 07:06 → `OUT107` 07:41 (validation ETAs, departure 03:30, 5 orders, 266 of 270 Fresh minutes) | `T001` |
+| Hill store (delayed confirmation) | `OUT104`: Fresh, Nuwara Eliya, rear dock, window 03:00–08:00; ORD10412 (chilled) and ORD10468 (dry) | |
 | Kandy loader | `LDR002`, Kandy depot | |
 | Depots and districts | Peliyagoda / Colombo; Kandy / Nuwara Eliya | |
 

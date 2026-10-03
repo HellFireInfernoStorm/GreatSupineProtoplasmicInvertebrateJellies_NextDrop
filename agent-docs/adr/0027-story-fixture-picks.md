@@ -39,3 +39,5 @@ Picks on the committed CSVs: `OUT004` (peak-day store), `VEH039` and `DRV039` (S
 ## Consequences
 
 The seed (#30), e2e tests and docs import IDs from `story-fixtures.ts` and never write them by hand. A test fails if the committed module and a fresh run differ, or if `outlets.csv` gains columns (a locality column would reopen the Wellawatte choice). Changing the criteria means editing the picker and running it again. Spec edited: `data/seed-and-demo.md` (§15.3, §15.5), `overview.md`, `open-questions.md`. Design docs edited: `design/mock-story.md`, `design/product-and-roles.md`.
+
+Amended 2026-10-03 by [ADR 0028](0028-seed-idempotency-and-reset-epoch.md) (#30). The hill store needs two orders on the trip (walkthrough step 13), and the Booklet counts trip time per order. The trip is therefore 4 outlets with 5 orders: `OUT105 → OUT104 → OUT106 → OUT107`, and the hill store is `OUT104`.
