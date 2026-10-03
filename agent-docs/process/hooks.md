@@ -18,6 +18,7 @@ Enforcement is by git hooks (lefthook), not by harness-specific hooks, so every 
 - Every file under `spec/`, `design/` and `brief/` (except `README.md`) has a valid header.
 - `.claude/skills/` is an exact copy of `.agents/skills/`.
 - The status table in `agent-docs/README.md` is current.
+- Every ADR number in `agent-docs/adr/` is used once. When parallel branches pick the same number, the second to merge renumbers.
 - No banned files are tracked: organiser datasets, CSVs outside `data/reference/` (allow-list), `.env`, keys.
 - Size: instruction files, spec, design and process docs over 300 lines produce a warning (soft limit, never a failure).
 

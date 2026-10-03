@@ -80,6 +80,16 @@ try {
   r.error(e.message);
 }
 
+// 8. ADR numbers are unique. Parallel branches can pick the same next number; the second to merge renumbers.
+const adrByNumber = new Map();
+for (const f of files.filter((x) => /^agent-docs\/adr\/\d{4}-.+\.md$/.test(x))) {
+  const n = pp.basename(f).slice(0, 4);
+  adrByNumber.set(n, [...(adrByNumber.get(n) ?? []), f]);
+}
+for (const [n, fs] of adrByNumber) {
+  if (fs.length > 1) r.error(`ADR number ${n} is used by ${fs.length} files (${fs.join(", ")}); renumber the newer one to the next free number`);
+}
+
 // 7. Banned files: organiser datasets and scripts, CSVs outside the approved reference set, env files, keys.
 const banned = config.bannedPathPatterns.map((p) => new RegExp(p));
 for (const f of files) {

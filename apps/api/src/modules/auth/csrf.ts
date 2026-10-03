@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const CSRF_HEADER = "x-nextdrop-csrf";
 
-/** The session's CSRF token: an HMAC of its id, so no extra column is needed (ADR 0026). */
+/** The session's CSRF token: an HMAC of its id, so no extra column is needed (ADR 0028). */
 export function csrfToken(secret: string, sessionId: string): string {
   return createHmac("sha256", secret).update(`csrf:${sessionId}`).digest("base64url");
 }

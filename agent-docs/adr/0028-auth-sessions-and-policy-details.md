@@ -1,4 +1,4 @@
-# ADR 0026: Auth session, lockout and policy details
+# ADR 0028: Auth session, lockout and policy details
 
 - Status: proposed
 - Date: 2026-10-03
