@@ -22,7 +22,7 @@ export function setCsrfToken(token: string | null): void {
   csrfToken = token;
 }
 
-/** Called when a session route answers 401, so the app can drop its cached session. */
+/** Called when a route that needs a live session answers 401. The session module decides what that means per role. */
 export function setUnauthenticatedHandler(handler: (() => void) | null): void {
   onUnauthenticated = handler;
 }
@@ -104,10 +104,14 @@ export async function callApi<K extends JsonRouteName>(name: K, ...args: Request
   };
 
   const body = parsePart(definition.request.body, request.body, "body");
+  parsePart(definition.request.params, request.params, "params");
+  parsePart(definition.request.query, request.query, "query");
   const headers: Record<string, string> = { accept: "application/json", ...request.headers };
   if (body !== undefined) headers["content-type"] = "application/json";
   // A route that declares request headers is a mutation and carries the CSRF header.
   if (definition.request.headers) headers[CSRF_HEADER] = csrfToken ?? CSRF_BEFORE_SESSION;
+  // Catches a missing required header, such as the idempotency-key of an order, before the request leaves.
+  parsePart(definition.request.headers, headers, "headers");
 
   const transportRequest: TransportRequest = {
     name,
@@ -138,7 +142,8 @@ export async function callApi<K extends JsonRouteName>(name: K, ...args: Request
   }
 
   const error = apiSchemas.apiError.safeParse(raw.body);
-  if (raw.status === 401 && definition.access !== "public") onUnauthenticated?.();
+  // A 401 from login is a wrong password and from reauth a wrong PIN: neither says the session is gone.
+  if (raw.status === 401 && (definition.access === "session" || definition.access === "demo")) onUnauthenticated?.();
   throw new ApiRequestError(
     "http",
     raw.status,

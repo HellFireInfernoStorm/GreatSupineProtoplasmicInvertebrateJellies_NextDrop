@@ -74,6 +74,23 @@ describe("callApi", () => {
     expect(lost).toHaveBeenCalledOnce();
   });
 
+  it("does not report a lost session when reauth answers 401: that is a wrong PIN", async () => {
+    const lost = vi.fn();
+    setUnauthenticatedHandler(lost);
+    record({ status: 401, body: apiRouteFixtures.reauth.responses[401] });
+    await callApi("reauth", { body: apiFixtures.reauthRequest }).catch(() => undefined);
+    expect(lost).not.toHaveBeenCalled();
+  });
+
+  it("rejects an order with no idempotency-key before sending it", async () => {
+    const sent = record({ status: 201, body: apiRouteFixtures.createOrder.responses[201] });
+    const body = apiFixtures.createOrderRequest;
+    await expect(callApi("createOrder", { body })).rejects.toMatchObject({ kind: "invalid" });
+    expect(sent).toHaveLength(0);
+    await callApi("createOrder", { body, headers: { "idempotency-key": "order-1" } });
+    expect(sent[0]?.headers["idempotency-key"]).toBe("order-1");
+  });
+
   it("rejects a request body that breaks the contract before sending it", async () => {
     const sent = record({ status: 200, body: apiRouteFixtures.login.responses[200] });
     const body = { role: "LOADER", loginId: "not-a-loader-id", pin: "1234", deviceId: "x" };

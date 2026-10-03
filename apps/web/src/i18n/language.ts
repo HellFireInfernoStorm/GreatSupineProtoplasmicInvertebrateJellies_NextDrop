@@ -1,12 +1,16 @@
 import type { HumanRole } from "@nextdrop/contracts";
-import { useEffect } from "react";
 import { create } from "zustand";
+import { isFieldRole } from "../lib/fieldRoles";
 import { readStored, writeStored } from "../lib/storage";
 import { i18n } from "./index";
 import { LANGUAGES, type Language } from "./resources";
 
 // Loader and Driver ship en, si and ta and remember the choice on the device. Store and Dispatcher are English
 // (spec/frontend/design-system.md, Localization).
+//
+// i18next has one current language for the whole app, so it is set by the route loaders before a screen renders
+// (applyRoleLanguage). A Loader's Tamil therefore never shows on the Store login, and nothing paints in the
+// previous screen's language first.
 
 const LANGUAGE_KEY = "nextdrop.language";
 
@@ -20,24 +24,26 @@ function storedLanguage(): Language {
 
 const useFieldLanguageStore = create<{ language: Language }>(() => ({ language: storedLanguage() }));
 
-export function isFieldRole(role: HumanRole): boolean {
-  return role === "LOADER" || role === "DRIVER";
+/** The language a role's screens render in. */
+export function languageForRole(role: HumanRole): Language {
+  return isFieldRole(role) ? useFieldLanguageStore.getState().language : "en";
 }
 
+/** Make i18next render in the role's language. Route loaders await this before the role's screen shows. */
+export async function applyRoleLanguage(role: HumanRole): Promise<void> {
+  const language = languageForRole(role);
+  if (i18n.language !== language) await i18n.changeLanguage(language);
+}
+
+/** The Loader or Driver picked a language on a chip. The chips exist on field screens only. */
 export function setFieldLanguage(language: Language): void {
   writeStored(LANGUAGE_KEY, language);
   useFieldLanguageStore.setState({ language });
+  void i18n.changeLanguage(language);
 }
 
-/**
- * The language a role's screens render in, applied to i18next while they are mounted.
- * Put the returned value on the screen root's `lang` attribute.
- */
+/** The role's language, for the `lang` attribute of the screen root and the pressed language chip. */
 export function useRoleLanguage(role: HumanRole): Language {
   const fieldLanguage = useFieldLanguageStore((s) => s.language);
-  const language = isFieldRole(role) ? fieldLanguage : "en";
-  useEffect(() => {
-    if (i18n.language !== language) void i18n.changeLanguage(language);
-  }, [language]);
-  return language;
+  return isFieldRole(role) ? fieldLanguage : "en";
 }
