@@ -39,19 +39,11 @@ export default {
     },
     {
       name: "contracts-imports-only-rules",
-      comment: "packages/contracts may import from packages/rules and nothing else in the repo (§3.3).",
+      comment:
+        "packages/contracts may import types and shared constants from packages/rules, nothing else in the repo (§3.3).",
       severity: "error",
       from: { path: "^packages/contracts/" },
       to: { path: "^(apps/|e2e/|packages/(?!(contracts|rules)/)|@nextdrop/(?!(contracts|rules)$))" },
-    },
-    {
-      name: "contracts-imports-only-types-from-rules",
-      comment:
-        "§3.3 says contracts 'may import types from rules'. Merged code also imports values; " +
-        "a warning until the reading is settled on #26.",
-      severity: "warn",
-      from: { path: "^packages/contracts/src/", pathNot: TESTS },
-      to: { path: "^packages/rules/", dependencyTypesNot: ["type-only"] },
     },
     {
       name: "web-must-not-import-api",
