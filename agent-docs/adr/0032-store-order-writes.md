@@ -1,4 +1,4 @@
-# ADR 0031: Store order writes, idempotency and the store's trip view
+# ADR 0032: Store order writes, idempotency and the store's trip view
 
 - Status: proposed
 - Date: 2026-10-03

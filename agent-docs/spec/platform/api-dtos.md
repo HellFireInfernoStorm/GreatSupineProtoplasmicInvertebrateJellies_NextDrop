@@ -61,7 +61,7 @@ Reference lists wrap `{ items }`. Optional depot query selection never overrides
 - Cutoff and deliveries take a local `date` query. Cutoff returns requested/delivery dates, cutoff instant, ordering flag, nullable guidance key, and server time.
 - Deliveries wraps order/trip, ONLINE or NO_SIGNAL, and nullable last-heard timestamp; the response includes server time.
 - Create body is `{ requestedDate, lines: [{ productId, qty }], replacesOrderId? }`; positive integer quantities. API derives totals and event line IDs. Success is 201 with the order.
-- Store order writes (ADR 0031):
+- Store order writes (ADR 0032):
   - **Order shape.** One order holds one temperature and the outlet's brand. Mixed, foreign-brand, unknown or repeated products return 422 `VALIDATION_FAILED`.
   - **Idempotency.** `idempotency-key` is unique per outlet; a retry returns the original order with 201.
   - **Delivery date.** `currentDate` is `rules.deliveryDateFor` on the server clock. Display IDs are `ORD#####`.
