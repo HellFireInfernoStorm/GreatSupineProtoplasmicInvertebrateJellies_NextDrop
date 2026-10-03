@@ -13,7 +13,7 @@ export interface FeedHub {
 
 /**
  * One poller per process, running only while a stream is open, so every SSE connection shares a single
- * `head`/`resetEpoch` read per interval. Any writer and any demo reset is seen without a LISTEN connection (ADR 0027).
+ * `head`/`resetEpoch` read per interval. Any writer and any demo reset is seen without a LISTEN connection (ADR 0029).
  */
 export function createFeedHub(
   read: () => Promise<FeedHint>,
