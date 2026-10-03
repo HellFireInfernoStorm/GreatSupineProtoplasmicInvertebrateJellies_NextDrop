@@ -91,6 +91,8 @@ async function seedFixtures(prisma: PrismaClient) {
         interStopFreeflowMin: 3,
       },
     });
+  // The real day route (#45) runs the allocator, which needs the service allowance of every brand and dock in use.
+  await prisma.serviceAllowance.create({ data: { brand: "Fresh", dockType: "rear_dock", minutes: 15 } });
   const colombo = await district("Colombo", "Peliyagoda");
   const kandy = await district("Kandy", "Kandy");
   const outlet = (displayId: string, districtId: string, depot: string) =>
@@ -214,22 +216,6 @@ async function seedFixtures(prisma: PrismaClient) {
   });
 }
 
-/** Stand-in for the #45 day route, using the real guard at the contract path. Store order routes are real (#42). */
-function registerScopeProbes(app: App) {
-  app.get(
-    "/api/dispatch/days/:date",
-    {
-      config: {
-        policy: {
-          action: "dispatchDay",
-          resourceResolver: (request) => ({ kind: "depot", depot: (request.query as { depot: string }).depot }),
-        },
-      },
-    },
-    async () => ({ ok: true }),
-  );
-}
-
 function sessionCookie(res: LightMyRequestResponse) {
   const cookie = res.cookies.find((c) => c.name === SESSION_COOKIE);
   if (!cookie) throw new Error("no session cookie");
@@ -261,7 +247,6 @@ describe.skipIf(!testDatabaseUrl)("auth and policy against PostgreSQL", () => {
     database = suite.appDatabase;
     await seedFixtures(prisma);
     app = await buildServer({}, { database, auth, now: () => clock });
-    registerScopeProbes(app);
     await app.ready();
   });
   beforeEach(() => {

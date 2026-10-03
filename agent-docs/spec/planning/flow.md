@@ -9,9 +9,9 @@ sources: guide §8, §8.1
 ## 8.1 Flow
 
 1. At cutoff, the `tick` job moves the planning day `OPEN -> CLOSED` (`ordersClosedAt` = the cutoff) and notifies the depot's dispatchers (`orders_closed`). The tick also creates the OPEN planning day for the date orders currently target (ADR 0033).
-2. Dispatcher opens the **queue** (confirmed orders with flags: chilled, van only, mall window, dock type, skipped yesterday; demand vs capacity summary).
+2. Dispatcher opens the **queue** (confirmed orders with flags: chilled, van only, mall window, dock type, skipped yesterday; demand vs capacity summary). The queue is the depot's orders for the date in a plannable status (ORDERED, PLANNED, DEFERRED, FAILED, LOADED). Demand vs capacity is the `proposePlan` stats for that queue and the available fleet (ADR 0035).
 3. **Propose**: `POST .../propose` runs `proposePlan` (or the solver, if enabled) and stores the result as the `PlanDraft`.
-4. **Edit**: the dispatcher reassigns orders, adds a trip (vehicle + trip no), or moves orders to "unassigned". The UI runs `validateTrip`/`validatePlan` locally on every edit. A hard violation blocks the action with the violation's reason and disables the create/confirm button. The draft is saved with `revision` for optimistic concurrency; the server re-validates on save.
+4. **Edit**: the dispatcher reassigns orders, adds a trip (vehicle + trip no), or moves orders to "unassigned". The UI runs `validateTrip`/`validatePlan` locally on every edit. A hard violation blocks the action with the violation's reason and disables the create/confirm button. The draft is saved with `revision` for optimistic concurrency; the server re-validates on save and refuses a draft with a HARD violation (422 with the `ValidationResult`; warnings save). Drafts can be written once orders are closed (CLOSED, PLANNING, PUBLISHED, IN_PROGRESS); the first write moves CLOSED to PLANNING (ADR 0035).
 5. **Defer review**: every unassigned order needs a reason code (pre-filled from the allocator's explanation, editable, `OTHER` needs a note). Outlets skipped last run are pinned at the top.
 6. **Publish** (atomic, below). Publishing notifies the loader, driver and store managers.
 
