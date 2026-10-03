@@ -17,7 +17,7 @@ export interface FeedRouteDependencies {
 
 const DEFAULT_LIMIT = 500;
 
-/** `GET /changes` (cursor pull) and `GET /stream` (SSE head hints). spec/sync/change-feed.md, ADR 0027. */
+/** `GET /changes` (cursor pull) and `GET /stream` (SSE head hints). spec/sync/change-feed.md, ADR 0029. */
 export const feedRoutes: FastifyPluginAsyncZod<FeedRouteDependencies> = async (app, deps) => {
   const database = () => {
     if (!deps.prisma) throw new Error("The change feed needs a database");

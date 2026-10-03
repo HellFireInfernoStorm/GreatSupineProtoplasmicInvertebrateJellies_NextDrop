@@ -6,7 +6,7 @@ export interface Scope {
   trips: Prisma.TripWhereInput;
   outlets: Prisma.OutletWhereInput;
   vehicles: Prisma.VehicleWhereInput;
-  /** Audience filter (ADR 0027): the role is listed and the row matches the role's scope column, or is unscoped. */
+  /** Audience filter (ADR 0029): the role is listed and the row matches the role's scope column, or is unscoped. */
   changeFeed: Prisma.ChangeFeedWhereInput;
   /** Notifications are fanned out per user, so a user reads only their own rows. */
   notifications: Prisma.NotificationWhereInput;

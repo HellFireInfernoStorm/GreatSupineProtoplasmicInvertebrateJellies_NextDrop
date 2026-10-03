@@ -6,7 +6,7 @@ export type NotificationGroup = "DELIVERIES" | "PLANNING" | "NEEDS_ACTION";
 
 /**
  * Notification kinds and their popover group (spec/platform/notifications-and-monitoring.md, design D0 popover).
- * The group is derived from the kind, so there is no group column (ADR 0027). Add new kinds here.
+ * The group is derived from the kind, so there is no group column (ADR 0029). Add new kinds here.
  */
 export const NOTIFICATION_GROUPS = {
   // Store manager
