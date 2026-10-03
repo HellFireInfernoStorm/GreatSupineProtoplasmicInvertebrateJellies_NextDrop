@@ -1,4 +1,4 @@
-# ADR 0027: Web shell login routes, build flags and login-screen departures
+# ADR 0028: Web shell login routes, session handling, build flags and login-screen departures
 
 - Status: proposed
 - Date: 2026-10-03
@@ -20,12 +20,14 @@ Issue #36 builds the web shell and the login screens. Four things were open or n
 2. **Build flags.** `VITE_DEMO_MODE=true` shows the quick-login chips. `VITE_API_MOCK=true` answers every API call from the contract fixtures. Both are read at build time. The image build sets `VITE_DEMO_MODE` to match the server's `DEMO_MODE`.
 3. **Role routes live with the role.** Each role shell declares the routes below its group in its own folder, so roles do not edit the shared router.
 4. **Token aliases.** Tailwind's default colour palette is removed, so colours come from the tokens only. Where a Figma collection has no variable for a tone, the token borrows one: chilled uses info in the light themes, deferred uses info in the dark themes, and neutral in the dark themes is the muted text on the raised surface.
-5. **Departures on the login screens:**
+5. **Session.** `GET /auth/me` is asked once, when the app loads. After that the guards use the session the app holds, so moving between screens never waits on the server and works with no signal. The session changes only through sign-in, sign-out, PIN reauth, or a 401 from a session route. That 401 signs a Store manager or Dispatcher out. For a Loader or Driver it keeps the session and raises a reauth-needed state, as [offline-client.md](../spec/sync/offline-client.md) requires; a 401 from `/auth/reauth` itself is a wrong PIN and changes nothing. Sign-out that cannot reach the server leaves the user signed in and says so, because the session cookie would still be valid.
+6. **Departures on the login screens:**
    - The Driver login has the language chips. The frame `525:7860` has none; the spec requires them on Loader and Driver.
    - The Loader and Driver subtitles show the role only. The frames show "Loader · Peliyagoda DC · Dock 3" and "Driver · Kandy hub", which are not known before sign-in.
    - The Dispatcher panel shows the NextDrop wordmark in place of the "Waypoint" mark, and panel footers say NextDrop (ADR 0012).
    - In demo mode the quick-login chips appear under each form. They are not drawn.
    - Below 1024 px the Loader login is one column with the keypad under the PIN (ADR 0002).
+   - "Keep me signed in" is not shown. The login contract has no such field and session lifetime is fixed per role, so the checkbox could not do anything.
    - "Forgot password?" has no reset flow behind it. On the Store login it changes the help line to the "call dispatch" wording; on the Dispatcher login it points at the "ask your depot admin" line. This follows the rationale cards.
 
 ## Alternatives considered
@@ -39,5 +41,5 @@ Issue #36 builds the web shell and the login screens. Four things were open or n
 - Spec edited: `frontend/architecture.md`, `frontend/design-system.md`.
 - The Dockerfile (#31) must pass `VITE_DEMO_MODE` when it builds the web app.
 - The quick-login accounts are placeholders that mirror the contract fixtures until the story fixtures (#24) and the seed (#30) land. They live in one file, `apps/web/src/login/demoAccounts.ts`.
-- The guards need `/auth/me`. The offline core (#40) must keep the session on the device so a Loader or Driver can start the app without signal.
-- **Open: "Keep me signed in".** The checkbox is drawn on the Store and Dispatcher logins, but the login contract has no such field and session lifetime is fixed per role. It is rendered and has no effect. The owner decides whether the contract gains the field or the checkbox is removed (a further departure).
+- A first load with no signal has no session to use, and shows the retry screen. The offline core (#40) must keep the session on the device so a Loader or Driver can start the app without signal. It also builds the PIN prompt for the reauth-needed state and pauses sync while it is up.
+- If the login contract gains a "keep me signed in" field, the checkbox returns as drawn.
