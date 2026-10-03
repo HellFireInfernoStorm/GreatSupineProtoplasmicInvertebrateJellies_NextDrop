@@ -8,7 +8,7 @@ sources: guide §8, §8.1
 
 ## 8.1 Flow
 
-1. At cutoff, the `tick` job moves the planning day `OPEN -> CLOSED` and notifies the dispatcher.
+1. At cutoff, the `tick` job moves the planning day `OPEN -> CLOSED` (`ordersClosedAt` = the cutoff) and notifies the depot's dispatchers (`orders_closed`). The tick also creates the OPEN planning day for the date orders currently target (ADR 0033).
 2. Dispatcher opens the **queue** (confirmed orders with flags: chilled, van only, mall window, dock type, skipped yesterday; demand vs capacity summary).
 3. **Propose**: `POST .../propose` runs `proposePlan` (or the solver, if enabled) and stores the result as the `PlanDraft`.
 4. **Edit**: the dispatcher reassigns orders, adds a trip (vehicle + trip no), or moves orders to "unassigned". The UI runs `validateTrip`/`validatePlan` locally on every edit. A hard violation blocks the action with the violation's reason and disables the create/confirm button. The draft is saved with `revision` for optimistic concurrency; the server re-validates on save.

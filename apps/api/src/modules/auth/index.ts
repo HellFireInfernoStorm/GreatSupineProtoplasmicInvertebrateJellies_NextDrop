@@ -21,14 +21,20 @@ export async function isSessionActive(prisma: PrismaClient, sessionId: string, n
 export interface AuthDependencies {
   prisma: PrismaClient | null;
   config: AuthConfig;
+  /** Real time: session expiry and lockout never follow the demo clock. */
   now: () => Date;
+  /** The server clock reported as `serverTime` (the demo clock, ADR 0033). Defaults to `now`. */
+  serverTime?: () => Date;
 }
 
 /**
  * Register before any route: the guard's hooks apply to routes registered after it, and its onRoute hook
  * rejects a route that declares no policy.
  */
-export async function registerAuth(app: FastifyInstance, { prisma, config, now }: AuthDependencies): Promise<void> {
+export async function registerAuth(
+  app: FastifyInstance,
+  { prisma, config, now, serverTime = now }: AuthDependencies,
+): Promise<void> {
   await app.register(cookie, { secret: config.sessionSecret });
   const sessions = prisma ? createSessions(prisma, config, now) : null;
   const lockout = createLockout(config.lockout, () => now().getTime());
@@ -46,5 +52,14 @@ export async function registerAuth(app: FastifyInstance, { prisma, config, now }
     reply.clearCookie(SESSION_COOKIE, { path: "/api", httpOnly: true, sameSite: "lax", secure: config.secureCookie });
   };
   installGuard(app, { sessions, config, now, setSessionCookie, clearSessionCookie });
-  await app.register(authRoutes, { prisma, sessions, config, now, lockout, setSessionCookie, clearSessionCookie });
+  await app.register(authRoutes, {
+    prisma,
+    sessions,
+    config,
+    now,
+    serverTime,
+    lockout,
+    setSessionCookie,
+    clearSessionCookie,
+  });
 }

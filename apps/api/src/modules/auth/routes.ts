@@ -25,6 +25,8 @@ export interface AuthRouteDependencies {
   sessions: Sessions | null;
   config: AuthConfig;
   now: () => Date;
+  /** Reported as `serverTime`; the demo clock (ADR 0033). */
+  serverTime: () => Date;
   lockout: Lockout;
   setSessionCookie: GuardDependencies["setSessionCookie"];
   clearSessionCookie: GuardDependencies["clearSessionCookie"];
@@ -71,7 +73,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRouteDependencies> = async (a
     return {
       user: deps.sessions!.sessionUser(session.user, actor),
       expiresAt: session.expiresAt.toISOString(),
-      serverTime: now().toISOString(),
+      serverTime: deps.serverTime().toISOString(),
       csrfToken: csrfToken(config.sessionSecret, session.id),
     };
   }
@@ -137,7 +139,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRouteDependencies> = async (a
     async (request, reply) => {
       await deps.sessions!.remove(request.authSession!.id);
       deps.clearSessionCookie(reply);
-      return { ok: true as const, serverTime: now().toISOString() };
+      return { ok: true as const, serverTime: deps.serverTime().toISOString() };
     },
   );
 
