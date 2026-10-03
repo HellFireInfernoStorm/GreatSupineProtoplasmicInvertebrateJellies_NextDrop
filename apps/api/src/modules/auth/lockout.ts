@@ -15,7 +15,7 @@ export interface Lockout {
 
 /**
  * Exponential lockout backoff. After `threshold` failures each further failure locks the key for
- * `baseMs * 2^n`, capped at `maxMs`. Kept in process memory: the API runs as one container (ADR 0026).
+ * `baseMs * 2^n`, capped at `maxMs`. Kept in process memory: the API runs as one container (ADR 0028).
  */
 export function createLockout(config: LockoutConfig, now: () => number): Lockout {
   const entries = new Map<string, Entry>();
