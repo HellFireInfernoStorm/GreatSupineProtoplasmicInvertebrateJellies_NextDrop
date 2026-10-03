@@ -44,7 +44,7 @@ describe("PR 77 protocol regressions", () => {
         status: "REJECTED",
         clientEventId: event.clientEventId,
         index: 2,
-        code: "SCHEMA_INVALID",
+        code: "FORBIDDEN",
         receivedAt,
       },
     });

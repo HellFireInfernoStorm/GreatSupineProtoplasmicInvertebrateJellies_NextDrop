@@ -19,6 +19,8 @@ Model binary uploads and SSE hints explicitly. Propose an image upload cap of 51
 
 After PR #77 review, use a batch-aware parseClientEvent helper on server ingress and correlate REJECTED results by required original batch index, permitting a null clientEventId only when the input ID is invalid. Reauth uses explicit expired-session access: a retained cookie session may be expired but must not be revoked, with device/role/PIN/CSRF verification and rate limiting; normal mutations still require a live session. Fleet read projections permit absent history as null rather than requiring event reasons. Cursor-based history returns nextCursor. Request wrappers are strict and omit server-owned sourceEventId without changing event payloads.
 
+The server helper reads loose field type/version framing before upcasting unknown payloads, then validates current schemas. Accepted events normalize schemaVersion to SCHEMA_VERSION to match the upgraded payload; persistence uses that normalized version, while capturedAt and submitted input remain unchanged. The shared upcaster registry is the default and tests may inject another registry. Throwing upcasters and invalid converted payloads return per-event SCHEMA_INVALID; a valid event with mismatched batch device identity returns FORBIDDEN. Production payload schemas and SCHEMA_VERSION remain v1 in this change.
+
 These are proposed contract decisions, not owner-approved policy. Dinura must review the new wire conventions, credential/session-renewal boundary, error/status extensions, snapshot projection/config, and upload MIME/limit before merge. No code here grants authorization or enforces business constraints.
 
 ## Alternatives considered

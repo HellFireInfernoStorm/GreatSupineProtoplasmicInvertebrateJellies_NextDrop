@@ -3,6 +3,8 @@ import { eventEnvelopeBase } from "../envelope";
 import { eventPayloadSchemas, type EventPayloadMap } from "../event-payload";
 import { errorCodeSchema } from "../errors";
 import { syncResultStatusSchema } from "../sync";
+import { SCHEMA_VERSION, schemaVersion } from "../schema-version";
+import { upcastPayload, upcasterRegistry, type UpcasterRegistry } from "../upcasters";
 import { isoDateTime, localDate, uuidV7 } from "../primitives";
 import { count, cursorSchema, nonempty } from "./common";
 import { rulesConfigSchema } from "./planning-resources";
@@ -85,17 +87,24 @@ export type RejectedSyncEventResult = Extract<SyncEventResult, { status: "REJECT
 export type ClientEventParseResult =
   { success: true; data: ClientEvent } | { success: false; rejection: RejectedSyncEventResult };
 
-/** Server per-event entry point: preserve batch correlation and enforce batch device identity. */
+const clientEventFrameSchema = z
+  .object({
+    type: z.enum(FIELD_EVENT_TYPES),
+    schemaVersion,
+    payload: z.unknown(),
+  })
+  .passthrough();
+
+/** Upcast payloads before current-schema validation; return normalized version and preserve correlation. */
 export function parseClientEvent(
   raw: unknown,
   batchDeviceId: string,
   index: number,
   receivedAt: string,
+  registry: UpcasterRegistry = upcasterRegistry,
 ): ClientEventParseResult {
-  const parsed = clientEventSchema.safeParse(raw);
-  if (parsed.success && parsed.data.deviceId === batchDeviceId) return { success: true, data: parsed.data };
   const identity = z.object({ clientEventId: uuidV7 }).safeParse(raw);
-  return {
+  const rejected: ClientEventParseResult = {
     success: false,
     rejection: {
       status: "REJECTED",
@@ -105,6 +114,20 @@ export function parseClientEvent(
       receivedAt,
     },
   };
+  const frame = clientEventFrameSchema.safeParse(raw);
+  if (!frame.success) return rejected;
+  try {
+    const payload = upcastPayload(frame.data.type, frame.data.schemaVersion, frame.data.payload, registry);
+    const parsed = clientEventSchema.safeParse({ ...frame.data, payload, schemaVersion: SCHEMA_VERSION });
+    if (!parsed.success) return rejected;
+    if (parsed.data.deviceId !== batchDeviceId) {
+      return { success: false, rejection: { ...rejected.rejection, code: "FORBIDDEN" } };
+    }
+    return { success: true, data: parsed.data };
+  } catch {
+    // A malformed legacy payload must not let a throwing upcaster abort the batch.
+    return rejected;
+  }
 }
 export const syncEventsResponseSchema = z.strictObject({
   results: z.array(syncEventResultSchema),
