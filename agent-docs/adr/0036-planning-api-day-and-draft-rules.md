@@ -1,4 +1,4 @@
-# ADR 0035: Planning API: when drafts can be written, and what the day reports
+# ADR 0036: Planning API: when drafts can be written, and what the day reports
 
 - Status: accepted
 - Date: 2026-10-04
