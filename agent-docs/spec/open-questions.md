@@ -18,5 +18,4 @@ The Booklet needs a live URL through the review, semifinal and Grand Finale peri
 
 ## To verify
 
-- **Story fixtures**: run the fixture picker once the reference CSVs are committed and record the picks ([seed-and-demo.md](data/seed-and-demo.md) 15.5).
 - **Native review**: Sinhala and Tamil core vocabulary reviewed by a native speaker ([design-system.md](frontend/design-system.md)).
