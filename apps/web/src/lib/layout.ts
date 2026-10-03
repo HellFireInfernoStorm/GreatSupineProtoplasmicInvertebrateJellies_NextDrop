@@ -7,12 +7,18 @@ import { useSyncExternalStore } from "react";
  */
 export const DESKTOP_MIN_WIDTH = 1024;
 
-const QUERY = `(min-width: ${DESKTOP_MIN_WIDTH}px)`;
+let media: MediaQueryList | null = null;
+
+/** One shared query, created on first use. */
+function desktopMedia(): MediaQueryList {
+  media ??= window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`);
+  return media;
+}
 
 function subscribe(onChange: () => void) {
-  const media = window.matchMedia(QUERY);
-  media.addEventListener("change", onChange);
-  return () => media.removeEventListener("change", onChange);
+  const query = desktopMedia();
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
 }
 
 /**
@@ -20,5 +26,5 @@ function subscribe(onChange: () => void) {
  * tab bar, a dialog or a page); where they differ only in layout, prefer `lg:` classes.
  */
 export function useIsDesktop(): boolean {
-  return useSyncExternalStore(subscribe, () => window.matchMedia(QUERY).matches);
+  return useSyncExternalStore(subscribe, () => desktopMedia().matches);
 }
