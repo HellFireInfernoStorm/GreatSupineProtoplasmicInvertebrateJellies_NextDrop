@@ -3,9 +3,8 @@ import type { LightMyRequestResponse } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PrismaClient } from "../src/generated/prisma/client";
 import type { Database } from "../src/lib/database";
-import { notFound } from "../src/lib/errors";
 import { CSRF_HEADER, hashSecret, SESSION_COOKIE, type AuthConfig } from "../src/modules/auth";
-import { collectionResource, scoped } from "../src/modules/policy";
+import { scoped } from "../src/modules/policy";
 import { buildServer, type App } from "../src/server";
 import { createSuiteDatabase, testDatabaseUrl, type SuiteDatabase } from "./support/suite-database";
 
@@ -155,9 +154,23 @@ async function seedFixtures(prisma: PrismaClient) {
     ],
   });
 
+  const product = await prisma.product.create({
+    data: {
+      sku: "FR-MILK-1L",
+      name: "Milk 1L",
+      brand: "Fresh",
+      tempRequirement: "chilled",
+      unitLabel: "crate",
+      unitWeightKg: 12,
+      unitVolumeM3: 0.02,
+    },
+  });
   const order = (displayId: string, outletId: string) =>
     prisma.order.create({
       data: {
+        orderLine_orderId: {
+          create: [{ productId: product.id, qtyOrdered: 1, unitWeightKg: 12, unitVolumeM3: 0.02 }],
+        },
         displayId,
         brand: "Fresh",
         tempRequirement: "chilled",
@@ -201,45 +214,8 @@ async function seedFixtures(prisma: PrismaClient) {
   });
 }
 
-/** Stand-ins for #42/#45 routes, using the real guard, resolvers and scoped() at the contract paths. */
+/** Stand-in for the #45 day route, using the real guard at the contract path. Store order routes are real (#42). */
 function registerScopeProbes(app: App) {
-  app.get(
-    "/api/store/orders/:id",
-    {
-      config: {
-        policy: {
-          action: "storeOrder",
-          resourceResolver: async (request) => {
-            const { id } = request.params as { id: string };
-            const order = await app.prisma!.order.findUnique({
-              where: { id },
-              select: {
-                outletId: true,
-                outlet: { select: { depot: true } },
-                tripStop_orderId: { select: { trip: { select: { vehicleId: true } } } },
-              },
-            });
-            if (!order) throw notFound();
-            return {
-              kind: "order",
-              outletId: order.outletId,
-              depot: order.outlet.depot,
-              vehicleIds: order.tripStop_orderId.map((stop) => stop.trip.vehicleId),
-            };
-          },
-        },
-      },
-    },
-    async (request) => ({ id: (request.params as { id: string }).id }),
-  );
-  app.get(
-    "/api/store/orders",
-    { config: { policy: { action: "storeOrders", resourceResolver: collectionResource } } },
-    async (request) => {
-      const rows = await app.prisma!.order.findMany({ where: scoped(request.actor!).orders, select: { id: true } });
-      return { items: rows.map((row) => row.id) };
-    },
-  );
   app.get(
     "/api/dispatch/days/:date",
     {
@@ -529,7 +505,7 @@ describe.skipIf(!testDatabaseUrl)("auth and policy against PostgreSQL", () => {
     it("keeps list queries inside the store's outlet", async () => {
       const store = await signIn(accounts[2]!.login);
       const res = await app.inject({ method: "GET", url: "/api/store/orders", cookies: store.cookies });
-      expect(res.json()).toEqual({ items: [ids.orderB] });
+      expect(res.json().items.map((o: { id: string }) => o.id)).toEqual([ids.orderB]);
     });
 
     it("refuses another role's routes and a dispatcher's foreign depot", async () => {

@@ -9,6 +9,7 @@ import type { Readiness } from "./lib/readiness";
 import { authConfigFromEnv, registerAuth, type AuthConfig } from "./modules/auth";
 import { feedRoutes } from "./modules/feed";
 import { notificationRoutes } from "./modules/notifications";
+import { registerOrders } from "./modules/orders";
 
 export interface ServerDependencies {
   ready?: Readiness;
@@ -62,6 +63,7 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
     pollMs: dependencies.feed?.pollMs ?? 1_000,
   });
   await app.register(notificationRoutes, { prisma, now });
+  await registerOrders(app, { prisma, now });
 
   return app;
 }
