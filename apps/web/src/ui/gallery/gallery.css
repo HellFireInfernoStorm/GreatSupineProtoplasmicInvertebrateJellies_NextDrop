@@ -60,6 +60,9 @@
   align-items: center;
   gap: var(--ui-size-8);
 }
+.nd-gallery[data-theme="loader"] .nd-gallery-row {
+  gap: var(--ui-size-16);
+}
 @media (max-width: 600px) {
   .nd-gallery {
     padding: var(--ui-size-12);
