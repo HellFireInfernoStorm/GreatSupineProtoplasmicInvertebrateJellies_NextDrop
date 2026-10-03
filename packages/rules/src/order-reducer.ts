@@ -87,9 +87,14 @@ export interface DamagedLine {
   readonly lineId: string;
   readonly qty: number;
 }
-export type ShortOutcome = "SHIP_PARTIAL" | "HOLD_TRIP" | "BACKORDER";
-export type StopOutcome = "FULL" | "PARTIAL" | "REFUSED" | "FAILED";
-export type ConflictResolution = "ACCEPT_FACT" | "REJECT_FACT";
+export const SHORT_OUTCOMES = ["SHIP_PARTIAL", "HOLD_TRIP", "BACKORDER"] as const;
+export type ShortOutcome = (typeof SHORT_OUTCOMES)[number];
+export const STOP_OUTCOMES = ["FULL", "PARTIAL", "REFUSED", "FAILED"] as const;
+export type StopOutcome = (typeof STOP_OUTCOMES)[number];
+export const CONFLICT_RESOLUTIONS = ["ACCEPT_FACT", "REJECT_FACT"] as const;
+export type ConflictResolution = (typeof CONFLICT_RESOLUTIONS)[number];
+export const REVERSAL_TARGETS = ["PLANNED", "DEFERRED"] as const;
+export type ReversalTarget = (typeof REVERSAL_TARGETS)[number];
 
 export type OrderEvent =
   | EventOf<"ORDER_PLACED", { readonly requestedDate?: string; readonly replacesOrderId?: string }>
@@ -103,7 +108,7 @@ export type OrderEvent =
   | EventOf<"LOAD_DAMAGED", { readonly lines: readonly DamagedLine[] }>
   | EventOf<"LOAD_CONFIRMED", { readonly lines?: readonly { lineId: string; qtyLoaded: number }[] }>
   | EventOf<"SHORT_RESOLVED", { readonly lineId: string; readonly outcome: ShortOutcome; readonly note?: string }>
-  | EventOf<"LOAD_REVERSAL_REQUESTED", { readonly to: "PLANNED" | "DEFERRED"; readonly planVersion: number }>
+  | EventOf<"LOAD_REVERSAL_REQUESTED", { readonly to: ReversalTarget; readonly planVersion: number }>
   | EventOf<"LOAD_REVERSED", { readonly lines?: readonly unknown[] }>
   | EventOf<"TRIP_DEPARTED", { readonly tripId?: string }>
   | EventOf<"ORDER_OUT_FOR_DELIVERY", { readonly tripId?: string }>
@@ -135,7 +140,7 @@ export type OrderEventType = OrderEvent["type"];
 // ---- State ----------------------------------------------------------------------------------------------------------
 
 export interface PendingReversal {
-  readonly to: "PLANNED" | "DEFERRED";
+  readonly to: ReversalTarget;
   readonly planVersion: number;
   /** The plan decision for this order published while it was still on the truck; applied when the loader confirms. */
   readonly next: Assignment | { readonly deferred: true } | null;
@@ -250,7 +255,7 @@ function targetOf(state: OrderState, event: OrderEvent): OrderStatus | null {
   }
 }
 
-function reversalTarget(r: PendingReversal): "PLANNED" | "DEFERRED" {
+function reversalTarget(r: PendingReversal): ReversalTarget {
   if (r.next === null) return r.to;
   return "deferred" in r.next ? "DEFERRED" : "PLANNED";
 }

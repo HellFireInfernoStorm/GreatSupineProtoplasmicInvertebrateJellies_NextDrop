@@ -26,4 +26,6 @@ EventEnvelope {
 }
 ```
 
+`subject.vehicleId` is for vehicle-level facts such as `VEHICLE_AVAILABILITY_CHANGED` (catalogue footnote, ADR 0017).
+
 Two kinds of events: **server-authored** (from REST commands by store and dispatcher) and **field-authored** (driver and loader, via the outbox). Both land in the same table.

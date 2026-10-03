@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@nextdrop/rules": "workspace:*",
     "zod": "^4.6.5"
   },
   "devDependencies": {
