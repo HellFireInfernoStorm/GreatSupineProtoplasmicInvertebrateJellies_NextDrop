@@ -60,6 +60,7 @@ describe("locale files", () => {
         "shared/ui",
         "store/deliveries",
         "store/login",
+        "store/notifications",
         "store/order",
         "store/receipt",
         "store/shell",

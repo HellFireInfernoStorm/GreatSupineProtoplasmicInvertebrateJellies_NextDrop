@@ -11,7 +11,6 @@
     "historyShort": "History"
   },
   "outletLine": "{{id}} · {{district}} district",
-  "notifications": "Notifications",
   "cutoffPill": {
     "open": "{{day}} order closes in",
     "closed": "{{day}} orders are closed"

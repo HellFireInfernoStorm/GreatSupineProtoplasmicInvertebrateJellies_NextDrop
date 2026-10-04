@@ -328,6 +328,34 @@ function timelineOf(delivery: Delivery): TimelineEvent[] {
   return events;
 }
 
+type Notification = ApiDtoInput<"notification">;
+/** Notifications the manager has opened or marked read in this tab. */
+const readAt = new Map<string, string>();
+
+/** What the server would have told the store by now: the dock's shortfall, deferrals, and the delivery. */
+function notificationsOf(deliveries: readonly Delivery[], nowMs: number): Notification[] {
+  const items: Notification[] = [];
+  const add = (kind: string, order: Order, agoMin: number, group: Notification["group"] = "DELIVERIES") => {
+    const id = `018f1234-5678-7890-abcd-ef123451${order.id.slice(-2)}${String(items.length).padStart(2, "0")}`;
+    items.push({
+      id,
+      kind,
+      titleKey: `notifications.${kind}`,
+      params: { order: order.displayId },
+      entityRef: { type: "order", id: order.id },
+      createdAt: iso(nowMs - agoMin * MIN),
+      readAt: readAt.get(id) ?? null,
+      group,
+    });
+  };
+  for (const { order } of deliveries) {
+    if (order.deferral) add("deferral_notice", order, order.status === "DEFERRED" ? 12 : 18 * 60, "PLANNING");
+    if (order.flags.short.length > 0) add("short_reported", order, 190);
+    if (["DELIVERED", "RECEIVED", "DISPUTED"].includes(order.status)) add("delivered", order, 4);
+  }
+  return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 const notFound = (): RawResponse => ({
   status: 404,
   body: { ...apiFixtures.apiError, code: "NOT_FOUND", message_key: "errors.not_found", params: {} },
@@ -383,6 +411,20 @@ export function mockDeliveriesRespond(
       if (!order) return notFound();
       remember(order.id, { ...changed.get(order.id), status: "DISPUTED" });
       return { status: 201, body: { issueId: mockId(90), order: { ...order, status: "DISPUTED" } } };
+    }
+    case "storeNotifications": {
+      const items = notificationsOf(all, nowMs);
+      return {
+        status: 200,
+        body: { items, unreadCount: items.filter((item) => item.readAt === null).length, nextCursor: null },
+      };
+    }
+    case "storeNotificationsRead": {
+      const body = request.body as ApiDtoInput<"readNotificationsRequest">;
+      const ids = body.all ? notificationsOf(all, nowMs).map((item) => item.id) : body.ids;
+      const unread = ids.filter((id) => !readAt.has(id));
+      for (const id of unread) readAt.set(id, iso(nowMs));
+      return { status: 200, body: { updatedCount: unread.length, readAt: iso(nowMs) } };
     }
     default:
       return null;
