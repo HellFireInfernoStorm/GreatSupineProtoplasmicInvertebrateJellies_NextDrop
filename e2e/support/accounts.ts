@@ -15,6 +15,11 @@ export interface Account {
   login: string;
   /** The name the shell greets them with. */
   name: string;
+  /**
+   * A fixed identity for this person's device, as one real phone has. The server takes a vehicle's "last heard"
+   * from the driver's devices, so every sign-in as the walkthrough driver must come from the same phone.
+   */
+  deviceId?: string;
 }
 
 export const ACCOUNTS = {
@@ -34,7 +39,14 @@ export const ACCOUNTS = {
   /** Pradeep, Kandy dock: loads Sampath's truck in step 7. */
   kandyLoader: { role: "LOADER", loginPath: "/login/loader", home: "/loader", login: "LDR002", name: "Pradeep" },
   /** Sampath on VEH039, the walkthrough driver: steps 8, 9 and 11. */
-  driver: { role: "DRIVER", loginPath: "/login/driver", home: "/driver", login: "DRV039", name: "Sampath" },
+  driver: {
+    role: "DRIVER",
+    loginPath: "/login/driver",
+    home: "/driver",
+    login: "DRV039",
+    name: "Sampath",
+    deviceId: "01920000-0000-7000-8000-000000000039",
+  },
 } as const satisfies Record<string, Account>;
 
 export const DEPOTS = { peliyagoda: "Peliyagoda", kandy: "Kandy" } as const;

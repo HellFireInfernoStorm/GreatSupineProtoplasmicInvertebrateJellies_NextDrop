@@ -49,6 +49,12 @@ export async function signInOn(page: Page, account: Account, depot: string = DEP
 /** Open a window of its own for `account` at the given width and sign in. */
 export async function signIn(browser: Browser, account: Account, options: SignInOptions): Promise<RoleWindow> {
   const context = await browser.newContext({ viewport: VIEWPORTS[options.viewport] });
+  if (account.deviceId) {
+    // The app adopts this key as its device ID on first load, then keeps its own copy.
+    await context.addInitScript((id) => {
+      if (!window.localStorage.getItem("nextdrop.deviceId")) window.localStorage.setItem("nextdrop.deviceId", id);
+    }, account.deviceId);
+  }
   const page = await context.newPage();
   await signInOn(page, account, options.depot);
   return { context, page };

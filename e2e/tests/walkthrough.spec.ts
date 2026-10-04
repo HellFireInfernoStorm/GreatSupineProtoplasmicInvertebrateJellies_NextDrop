@@ -388,41 +388,141 @@ test.describe("Judge walkthrough (§15.4)", () => {
     await expect(page.getByText("3/4")).toBeVisible();
   });
 
-  // Waits on #145 (PR #152): no screen yet edits or cancels a stop of a trip that has left. The plan board drops a
-  // departed trip's stops. D4's "no signal" also needs device last-heard times cleared by the demo reset: they
-  // survive it today, so the state shows on a first run only.
-  test.fixme("10. Dispatcher edits a later stop and cancels a stop the driver already delivered offline. D4 shows the vehicle as no signal / last heard.", async () => {});
+  test("10. Dispatcher edits a later stop and cancels a stop the driver already delivered offline. D4 shows the vehicle as no signal / last heard.", async ({
+    demo,
+  }) => {
+    // Twenty minutes into the run, through the API (#56): the truck has not been heard from since stop 1.
+    await demo.setClock(STORY.deliveryDay, "03:45");
+    const { page } = dispatcher;
+    const main = page.getByRole("main");
+    const review = main.locator("section").filter({
+      has: page.getByRole("heading", { name: "Attempted edit retained for review" }),
+    });
+    const publish = main.getByRole("complementary").filter({
+      has: page.getByRole("heading", { name: "Publish Tue 29 Sep plan" }),
+    });
 
-  // The Driver screens are merged (#53). Waits on the plan change and the cancelled stop of step 10.
-  test.fixme("11. Driver reconnects: sync progress, plan-changed acknowledgement, and a clash card for the cancelled-but-delivered stop.", async () => {});
+    // The Kandy plan board still shows the trip that has left. Stop 1 was delivered and confirmed, so it is locked.
+    // The dispatcher knows nothing of the three deliveries waiting on the driver's phone.
+    await page.getByRole("link", { name: "Plan board", exact: true }).click();
+    const hillTrip = page.getByRole("article").filter({ hasText: "VEH039" });
+    await expect(hillTrip.getByText("Departs 03:30 · 5 stops")).toBeVisible();
+    await expect(hillTrip.getByRole("combobox", { name: "Move to… ORD10490" })).toBeDisabled();
+    await expect(hillTrip.getByText("4 · OUT106 Waypoint Fresh, Nuwara Eliya")).toBeVisible();
+    await expect(hillTrip.getByText("5 · OUT107 Waypoint Fresh, Nuwara Eliya")).toBeVisible();
 
-  // The exceptions inbox is merged (#128). Waits on the clash that steps 10 and 11 make.
-  test.fixme("12. Dispatcher exceptions inbox shows the clash with the POD photo; resolve it.", async () => {});
+    // Cancel the OUT106 stop, which the driver has in fact already delivered offline. Taking it off the trip also
+    // edits the stop after it: OUT107 moves up to fourth, with a new ETA.
+    await hillTrip.getByRole("combobox", { name: "Move to… ORD10491" }).selectOption("unassigned");
+    await expect(review.getByText("All available checks pass")).toBeVisible();
+    await review.getByRole("button", { name: "Save changes" }).click();
+    await expect(main.getByText(/^\d+ trips · 7 of 8 orders planned · 1 unassigned/)).toBeVisible();
+    await expect(hillTrip.getByText("4 · OUT107 Waypoint Fresh, Nuwara Eliya")).toBeVisible();
+
+    // Publish the change: the removed order needs its reason first.
+    await page.getByRole("link", { name: /Review deferrals & publish/ }).click();
+    const removed = main.getByRole("row").filter({ hasText: "ORD10491" });
+    await removed.getByRole("textbox").fill("Store asked to take this order with Wednesday's run");
+    await expect(publish.getByText("1 of 1 reasons set")).toBeVisible();
+    await publish.getByRole("button", { name: "Publish plan" }).click();
+    await expect(main.getByRole("listitem").getByText(/Version 2 · 7 served · 1 deferred · \d+ trips/)).toBeVisible();
+
+    // Delivery Progress: the truck is not late, it is out of signal, with the time it was last heard.
+    await page.getByRole("link", { name: "Delivery Progress", exact: true }).click();
+    const card = main.getByRole("article").filter({ hasText: "VEH039" });
+    await expect(card.getByText("No signal", { exact: true })).toBeVisible();
+    await expect(card.getByText(/^Last heard 03:2\d · \d+ min ago · stop 1 of 4/)).toBeVisible();
+    await expect(card.getByText("Records sync when signal returns. Not late, just out of signal.")).toBeVisible();
+  });
+
+  test("11. Driver reconnects: sync progress, plan-changed acknowledgement, and a clash card for the cancelled-but-delivered stop.", async ({
+    offlineMode,
+  }) => {
+    const { page } = driver;
+    // Back in coverage, the project's way: the in-app switch off in one run, the browser back online in the other.
+    await goOnline(driver, offlineMode);
+
+    // The three deliveries reach the server. Two are confirmed; the third is for the stop that was cancelled, so
+    // the phone says it needs the dispatcher.
+    await page.getByRole("link", { name: "Needs dispatch" }).click();
+    // The held record shows at once; its details follow with the next sync, which "Sync now" asks for.
+    await expect(async () => {
+      const syncNow = page.getByRole("button", { name: "Sync now" });
+      if (await syncNow.isVisible()) await syncNow.click();
+      await expect(page.getByRole("heading", { name: "All synced" })).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 60_000 });
+
+    // The clash card: nothing is resolved by itself, and both records are kept side by side.
+    await expect(page.getByRole("status").filter({ hasText: "Clash — both records kept" })).toContainText("OUT106");
+    const record = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Your record" }) });
+    await expect(record.getByText("Delivered in full")).toBeVisible();
+    await expect(record.getByText(/^Captured \d{2}:\d{2} on phone$/).first()).toBeVisible();
+    await expect(record.getByText(/^Received \d{2}:\d{2} by server$/).first()).toBeVisible();
+    await expect(record.getByRole("img", { name: "Saved proof image" })).toBeVisible();
+    const change = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Dispatch change" }) });
+    await expect(change.getByText("Stop deferred")).toBeVisible();
+    await expect(change.getByText("Plan 1 → 2")).toBeVisible();
+    await expect(page.getByText("Sent to dispatch's exceptions inbox")).toBeVisible();
+
+    // The plan-changed acknowledgement: review the stops of the new plan, then accept it.
+    const changed = page.getByRole("dialog", { name: "Your run changed" });
+    if (!(await changed.isVisible())) await page.getByRole("button", { name: "Review plan" }).click();
+    await expect(changed.getByText("Review your current stops on plan 2 before acknowledging.")).toBeVisible();
+    await expect(changed.getByText("4 · OUT107 · Nuwara Eliya")).toBeVisible();
+    await changed.getByRole("button", { name: "Got it" }).click();
+    await expect(changed).toBeHidden();
+
+    // The run now follows the new plan: three stops, two of them done, with both times on the synced deliveries.
+    await page.getByRole("button", { name: "OK, back to run" }).click();
+    await expect(page.getByText("2/3")).toBeVisible();
+    await expect(page.getByText(/^ORD10412 · Delivered \d{2}:\d{2} · confirmed \d{2}:\d{2} after sync$/)).toBeVisible();
+  });
+
+  test("12. Dispatcher exceptions inbox shows the clash with the POD photo; resolve it.", async () => {
+    const { page } = dispatcher;
+    const main = page.getByRole("main");
+
+    // Delivery Progress is still open from step 10. The cancelled-but-delivered stop is in the inbox, once for
+    // each record the driver's phone held for it: the arrival, the outcome and the proof of delivery.
+    const clash = page.getByRole("region", { name: "Sync clash · ORD10491" });
+    await expect(page.getByRole("tab", { name: /^Sync clashes 3$/ })).toBeVisible();
+    await page.getByRole("tab", { name: /^Sync clashes 3$/ }).click();
+    await main
+      .getByRole("tabpanel")
+      .getByRole("button", { name: /^ORD10491 · OUT106/ })
+      .first()
+      .click();
+
+    // The evidence: what clashed, and the driver's proof-of-delivery image beside the plan change.
+    await expect(clash.getByText("OUT106 Waypoint Fresh, Nuwara Eliya · T043 · VEH039 · chilled")).toBeVisible();
+    await expect(
+      clash.getByRole("definition").filter({ hasText: "Delivered offline, but the stop was cancelled" }),
+    ).toBeVisible();
+    await expect(clash.getByRole("img", { name: "Driver proof of delivery 1" })).toBeVisible();
+
+    // Resolve it: the driver's fact stands. Each of the three held records is accepted in turn.
+    for (let left = 3; left > 0; left -= 1) {
+      await main
+        .getByRole("tabpanel")
+        .getByRole("button", { name: /^ORD10491 · OUT106/ })
+        .first()
+        .click();
+      await clash.getByRole("button", { name: "Accept fact" }).click();
+      await expect(page.getByRole("tab", { name: new RegExp(`^Sync clashes ${left - 1}$`) })).toBeVisible();
+    }
+    await expect(
+      page.getByRole("status").filter({ hasText: "Delivery fact accepted for ORD10491" }).first(),
+    ).toBeVisible();
+  });
 
   test("13. Store: sees delivered (double timestamp), confirms receipt of one order, reports a shortage on another.", async ({
     browser,
-    demo,
-    offlineMode,
   }) => {
-    // The run goes on: the clock moves forward through the API, as the app has no clock control (#56).
-    await demo.setClock(STORY.deliveryDay, "06:45");
-
-    // Ishara, the hill store's manager, on a phone. The driver has been out of coverage since stop 1, so nothing
-    // can be confirmed yet. The "No signal" state itself is not asserted: the server takes the last time any of
-    // the driver's devices was heard, device rows survive a demo reset, and so it only shows on a first run.
+    // Ishara, the hill store's manager, on a phone. Both orders were handed over while the driver was out of
+    // coverage, so each shows two times: on the driver's phone, and when the record reached the server.
     hillStore = await signIn(browser, ACCOUNTS.hillStore, { viewport: "phone" });
     const { page } = hillStore;
     await expect(page.getByText("Trip T043 · you are stop 2")).toBeVisible();
-    await expect(page.getByRole("button", { name: /^Confirm/ })).toBeDisabled();
-
-    // Stand-in for the reconnect of step 11, which is still fixme: the Driver's phone comes back and syncs.
-    await goOnline(driver, offlineMode);
-    await expect(
-      driver.page.getByText(/^ORD10412 · Delivered \d{2}:\d{2} · confirmed \d{2}:\d{2} after sync$/),
-    ).toBeVisible({ timeout: 30_000 });
-
-    // The store sees the delivery with both times: on the driver's phone, and when it reached the server.
-    await page.reload();
     await expect(page.getByText(/Delivered \d{2}:\d{2} on the driver's phone/)).toBeVisible();
     await expect(page.getByText(/Confirmed \d{2}:\d{2} after sync/)).toBeVisible();
 
@@ -452,12 +552,42 @@ test.describe("Judge walkthrough (§15.4)", () => {
     await expect(page.getByText("of 6 delivered")).toBeVisible();
     await page.getByRole("button", { name: "Send to dispatcher" }).click();
 
-    // The order is now disputed, and the report is on its timeline for the dispatcher to resolve in step 14.
+    // The order is now disputed, and the report is with the dispatcher.
     await expect(page.getByRole("heading", { name: "Order timeline" })).toBeVisible();
     await expect(page.getByText("ORD10468 · Dry · OUT104")).toBeVisible();
     await expect(page.getByText("Disputed", { exact: true }).first()).toBeVisible();
   });
 
-  // Step 13 now opens the dispute, and D4 can resolve it (#128). Waits on #55 (PR #150) for the capacity outlook.
-  test.fixme("14. Dispatcher resolves the dispute; opens the capacity outlook.", async () => {});
+  test("14. Dispatcher resolves the dispute; opens the capacity outlook.", async () => {
+    const { page } = dispatcher;
+    const main = page.getByRole("main");
+
+    // The store's report is in the inbox, with the driver's proof of delivery and both delivery times beside it.
+    await page.getByRole("tab", { name: /^Disputes 1$/ }).click();
+    await main
+      .getByRole("tabpanel")
+      .getByRole("button", { name: /^ORD10468 · OUT104/ })
+      .click();
+    const dispute = page.getByRole("region", { name: "Reported issue · ORD10468" });
+    await expect(dispute.getByText("Disputed", { exact: true })).toBeVisible();
+    await expect(dispute.getByRole("definition").filter({ hasText: /^Short delivery · / })).toBeVisible();
+    await expect(dispute.getByRole("img", { name: "Driver proof of delivery 1" })).toBeVisible();
+    await expect(dispute.getByRole("definition").filter({ hasText: /on the driver's phone$/ })).toBeVisible();
+    await expect(dispute.getByRole("definition").filter({ hasText: /after sync$/ })).toBeVisible();
+
+    // Resolve it: the store is credited for the missing case.
+    await dispute.getByRole("button", { name: "Credit" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Credit recorded for ORD10468" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /^Disputes 0$/ })).toBeVisible();
+
+    // The capacity outlook: weekly demand against the depot's fleet capacity, as a chart and as a table.
+    await page.getByRole("link", { name: "Capacity outlook", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Capacity outlook" })).toBeVisible();
+    await expect(
+      main.getByRole("img", { name: /^Weekly demand in m³ against a fleet capacity of [\d,.]+ m³$/ }),
+    ).toBeVisible();
+    const weeks = main.getByRole("table", { name: "Weekly demand and capacity (m³)" }).getByRole("rowheader");
+    await expect(weeks.first()).toHaveText(/^2026-W\d{2}$/);
+    expect(await weeks.count()).toBeGreaterThanOrEqual(12);
+  });
 });

@@ -23,6 +23,8 @@ E2E_BASE_URL=http://localhost:8162 E2E_BROWSER_CHANNEL=chrome pnpm e2e
 
 **Every run resets the demo data** of the stack it points at (`POST /api/demo/reset`). On the public deployment every judge sees that reset (ADR 0007). The GitHub workflow `e2e-public` runs the suite against a URL you give it.
 
+**If step 10 fails on "No signal"**, the database holds another device that signed in as the driver `DRV039` and sent nothing. Signing in stamps a device with the real time, which is ahead of the demo clock, so the truck never looks silent. The suite always signs in as that driver from one fixed phone to avoid this. Start from an empty database (`docker compose down -v`, then up) and run again.
+
 ## What is here
 
 | Path                                                               | What it is                                                                                                                  |
