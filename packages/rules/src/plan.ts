@@ -17,7 +17,7 @@ export interface PlanOrder {
 }
 
 export interface PlanTrip {
-  /** Dispatcher explicitly ordered these stops; allocator trips use the default window ordering. */
+  /** Departed dispatcher trips retain explicit stop order; other drafts and allocator trips use window ordering. */
   readonly preserveOrder?: boolean;
   /** Display id, e.g. `T015`. Unique within a plan. */
   readonly ref: string;

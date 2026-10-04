@@ -5,7 +5,6 @@ import { Button, Modal, CapacityBar } from "../../ui";
 import {
   addTrip,
   evaluate,
-  toPlan,
   type DraftData,
   type Order,
   type Outlet,
@@ -64,7 +63,7 @@ export function AddTrip({
   const shown = unassigned.filter(
     (o) => !district || outlets.find((out) => out.id === o.outletId)?.district === district,
   );
-  const plan = toPlan(candidate, orders, date, reference);
+  const plan = result.plan;
   const trip = plan.trips.find((trip) => trip.ref === nextRef);
   const rulesVehicle = slot ? reference.ref.vehicles.get(slot.vehicle.displayId) : undefined;
   const usage = rulesVehicle ? runUsage(plan.trips, rulesVehicle, reference.ref, context) : undefined;
