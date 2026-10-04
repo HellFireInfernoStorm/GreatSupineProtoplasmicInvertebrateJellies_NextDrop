@@ -1,4 +1,4 @@
-import type { ApiError, ErrorCode } from "@nextdrop/contracts";
+import type { ApiError, ApiValidationResult, ErrorCode } from "@nextdrop/contracts";
 
 /**
  * Every failed API call rejects with this.
@@ -10,13 +10,21 @@ export class ApiRequestError extends Error {
   readonly kind: "http" | "network" | "invalid";
   readonly status: number | null;
   readonly error: ApiError | null;
+  readonly validation: ApiValidationResult | null;
 
-  constructor(kind: "http" | "network" | "invalid", status: number | null, error: ApiError | null, message: string) {
+  constructor(
+    kind: "http" | "network" | "invalid",
+    status: number | null,
+    error: ApiError | null,
+    message: string,
+    validation: ApiValidationResult | null = null,
+  ) {
     super(message);
     this.name = "ApiRequestError";
     this.kind = kind;
     this.status = status;
     this.error = error;
+    this.validation = validation;
   }
 
   get code(): ErrorCode | null {

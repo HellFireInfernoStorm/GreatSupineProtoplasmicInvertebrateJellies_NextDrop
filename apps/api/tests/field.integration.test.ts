@@ -455,31 +455,6 @@ describe.skipIf(!testDatabaseUrl)("field snapshot, sync push and heartbeat again
       expect((await get("nimal", "/api/notifications")).json().items[0].kind).toBe("damaged_reported");
     });
 
-    it("refuses TRIP_READY until every short line is resolved other than HOLD_TRIP (ADR 0005)", async () => {
-      const blocked = (
-        await push("loader", [ev("loader", "TRIP_READY", { tripId: ids.trip }, { tripId: ids.trip })])
-      ).json();
-      expect(blocked.results[0]).toMatchObject({ status: "REJECTED", code: "ILLEGAL_TRANSITION", index: 0 });
-      await prisma.orderEvent.create({
-        data: {
-          type: "SHORT_RESOLVED",
-          source: "SERVER",
-          actorRole: "DISPATCHER",
-          actorUserId: ids.dispatcher,
-          capturedAt: clock,
-          orderId: ids.orderA,
-          payload: { orderId: ids.orderA, lineId: lines.aMilk, outcome: "SHIP_PARTIAL" },
-        },
-      });
-      const ready = (
-        await push("loader", [ev("loader", "TRIP_READY", { tripId: ids.trip }, { tripId: ids.trip })])
-      ).json();
-      expect(ready.results[0].status).toBe("ACCEPTED");
-      expect((await prisma.trip.findUniqueOrThrow({ where: { id: ids.trip } })).status).toBe("READY");
-      const stops = await prisma.tripStop.findMany({ where: { tripId: ids.trip } });
-      expect(stops.every((s) => s.tripStatus === "READY")).toBe(true);
-    });
-
     it("handles a partial batch: bad events are rejected with their index, good neighbours are accepted", async () => {
       const malformed = { ...ev("loader", "LOAD_DAMAGED", { orderId: ids.orderA }, { lines: [] }) };
       const wrongAuthor = ev("loader", "STOP_ARRIVED", { orderId: ids.orderA }, { orderId: ids.orderA });

@@ -54,14 +54,20 @@ describe("locale files", () => {
     expect(Object.keys(english).sort()).toEqual(
       [
         "dispatcher/login",
+        "dispatcher/planning",
+        "dispatcher/runs",
         "driver/login",
         "driver/run",
         "loader/login",
         "shared/common",
         "shared/ui",
+        "store/deliveries",
         "store/login",
+        "store/notifications",
         "store/order",
+        "store/receipt",
         "store/shell",
+        "store/tracking",
       ].sort(),
     );
     // English is the source: plain strings, with no `{ text, review }` leaves. A key may still be called "review".

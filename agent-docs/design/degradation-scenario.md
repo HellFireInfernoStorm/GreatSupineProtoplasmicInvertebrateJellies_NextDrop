@@ -58,4 +58,6 @@ Caveat: someone else added a green **"Confirm Delivery"** button (hero, second A
 - The **Sync clash** inbox item reuses the dispute evidence panel. It shows the driver's proof of delivery and capture time beside the plan change that cancelled or moved the stop. Actions: Accept fact / Reject fact (`CONFLICT_RESOLVED`). Conflict kinds are labelled from `spec/sync/recovery-and-conflicts.md`.
 - **Escalated** (`ESCALATED`: no signal and behind schedule) uses the existing status tones. The Style Guide rule is "Late is not lost: only mark a run amber when it is behind plan; escalate only then".
 
+**As built (#61).** The grey card is dashed, with a neutral "No signal" pill and "Last heard 06:31 · N min ago · stop N of M · district"; the escalated card keeps the grey card with a danger pill, a red border and a call-the-driver note. The Sync clash item uses the danger tone of the other inbox items and is listed first. Its evidence panel puts a "Plan change" panel (conflict kind and the time the clash opened on sync) beside the driver's proof-of-delivery photos. The clash names the order from the stops the dispatcher's session has seen on today's runs, because a cancelled stop leaves the runs. A dispute's store column shows the store's report: stores cannot upload photos in this build (ADR 0035), so every photo the exception carries is the driver's proof.
+
 ---

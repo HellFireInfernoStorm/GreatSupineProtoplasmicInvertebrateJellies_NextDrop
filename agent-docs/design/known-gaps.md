@@ -25,7 +25,7 @@ Datasets: the reference CSVs go in `data/reference/` (ADR 0011). Real IDs replac
 1. **The dispatcher side of the degradation story is incomplete.**
    - D4's grey card is T002 · VEH004 · Gampaha ("low-coverage area near Minuwangoda"), not the Kandy trip.
    - Not drawn: a "Sync clash" item in the D4 inbox (recovery rule 3), and the escalated (behind schedule) state.
-   - The build retargets the card to the Kandy fixture and adds both states in the D4 visual language (ADR 0008 amendment; `degradation-scenario.md` §7.3).
+   - The build retargets the card to the Kandy fixture and adds both states in the D4 visual language (ADR 0008 amendment; `degradation-scenario.md` §7.3). Built in #61: the grey card is whichever run the API reports `NO_SIGNAL` or `ESCALATED`, so no trip is hard-coded.
 2. **The story data is inconsistent across apps.**
    - Store, Dispatcher and Loader use Peliyagoda, T001, VEH001 and Ruwan S. with real-looking IDs.
    - Driver uses Kandy and Sampath with `OUT0xx` placeholders, and names loader Kasun on the "Kandy dock".

@@ -48,24 +48,26 @@ Each login screen has quick-login chips for these four accounts, under "Demo acc
 
 ## Judge walkthrough
 
-> **TODO (#62):** this numbered walkthrough must match, step for step, the Playwright test in `e2e/`. The test is not written yet, so the steps below are the **planned outline** (`agent-docs/spec/data/seed-and-demo.md` §15.4). Replace each step with the exact clicks once the test passes against the deployed build. Driver and Loader are meant to be judged at phone width.
+> **TODO (#62):** this numbered walkthrough must match, step for step, the Playwright test in `e2e/`. The test is not written yet. The Store steps (1, 6 and 13) are written from the built screens. The other steps are still the **planned outline** (`agent-docs/spec/data/seed-and-demo.md` §15.4): replace each with the exact clicks once its screens merge and the test passes against the deployed build. Driver and Loader are meant to be judged at phone width.
 
-| # | Role | Step (planned) | Waits on |
+Status as of 4 Oct 2026, 17:30.
+
+| # | Role | Step | Status |
 | --- | --- | --- | --- |
-| 1 | Store | Reset to `before-cutoff`. Sign in at phone width, see the cutoff countdown, place a dry and a chilled order for tomorrow, get confirmation. | #38, #43 |
-| 2 | (demo clock) | Move the demo clock past 16:00. Orders close. | #38 |
-| 3 | Dispatcher | Open the queue, see demand exceed capacity, **Propose plan**, inspect trips and capacity bars. | #45, #46 |
-| 4 | Dispatcher | Try a rule-breaking move (a chilled order onto an ambient truck): blocked, with the reason. Make a valid edit. | #46 |
-| 5 | Dispatcher | Review deferrals (reason codes, unavoidable vs choice, outlets skipped yesterday pinned). **Publish**. | #48, #49 |
-| 6 | Store | See the deferral notice and the ETA band. | #41, #44 |
-| 7 | Loader | Accept the plan, open the trip, load in reverse stop order, flag a shortfall, hold to mark ready. | #52 |
-| 8 | Driver | Start the run, deliver a stop with proof of delivery. | #50, #53 |
-| 9 | Driver | Switch to force-offline, record two more stops offline (pending count visible). | #40, #53 |
-| 10 | Dispatcher | Edit a later stop and cancel a stop the driver already delivered offline. D4 shows the vehicle as no signal. | #61 |
-| 11 | Driver | Reconnect: sync progress, plan-changed acknowledgement, a clash card for the cancelled-but-delivered stop. | #47, #54 |
-| 12 | Dispatcher | The exceptions inbox shows the clash with the proof-of-delivery photo. Resolve it. | #54, #61 |
-| 13 | Store | See delivered (two timestamps), confirm receipt of one order, report a shortage on another. | #44 |
-| 14 | Dispatcher | Resolve the dispute, open the capacity outlook. | #59, #55 |
+| 1 | Store | At phone width, open `/login/store` and sign in as `OUT004` (or tap the **Store manager** chip under "Demo accounts"). Tap **Place order**: the banner shows the cutoff for the next delivery day and the time left. Tap **Add items from the catalogue**, tap **+** on a dry item, switch to the **Chilled** tab, tap **+** on a chilled item, then tap **Done**. Tap **Review 2 orders**, then **Submit 2 orders**. The "2 orders placed" screen shows one order ID for the dry order and one for the chilled order. On desktop the same step uses **Add from products**, then **Add** on each item, **Review order** and **Submit 2 orders**, and the confirmation is a dialog. | Built (#43). Run on the Compose stack at phone width and on desktop. The step should start from a reset to `before-cutoff`, which has no control in the app yet (#56). |
+| 2 | (demo clock) | Move the demo clock past 16:00. Orders close. | Planned. The clock API is built (#38); it has no control in the app yet (#56). |
+| 3 | Dispatcher | Open the queue, see demand exceed capacity, **Propose plan**, inspect trips and capacity bars. | Screens built (#46). The exact clicks are not written here yet. |
+| 4 | Dispatcher | Try a rule-breaking move (a chilled order onto an ambient truck): blocked, with the reason. Make a valid edit. | Screens built (#46). The exact clicks are not written here yet. |
+| 5 | Dispatcher | Review deferrals (reason codes, unavoidable vs choice, outlets skipped yesterday pinned). **Publish**. | Planned. Waits on #49. |
+| 6 | Store | Open **My deliveries**. The card for the next delivery day lists each order: a planned order shows its ETA band and trip, and a deferred order shows "Moved to" its new day with the reason. Tap **View deferral notice** to open the deferred order: the notice names the new day and the reason, above the order's timeline. The bell shows the deferral as an unread notification. | Built (#44). Checked against mock data only; needs steps 3 to 5 to run on the real stack. |
+| 7 | Loader | Accept the plan, open the trip, load in reverse stop order, flag a shortfall, hold to mark ready. | Planned. Waits on #52. |
+| 8 | Driver | Start the run, deliver a stop with proof of delivery. | Planned. Waits on #53. |
+| 9 | Driver | Switch to force-offline, record two more stops offline (pending count visible). | Planned. Waits on #53. |
+| 10 | Dispatcher | Edit a later stop and cancel a stop the driver already delivered offline. D4 shows the vehicle as no signal. | Planned. Waits on #61. |
+| 11 | Driver | Reconnect: sync progress, plan-changed acknowledgement, a clash card for the cancelled-but-delivered stop. | Planned. Waits on #53. |
+| 12 | Dispatcher | The exceptions inbox shows the clash with the proof-of-delivery photo. Resolve it. | Planned. Waits on #61. |
+| 13 | Store | Open **My deliveries**. While the driver is out of coverage the card says "No signal" with the time it was last heard, and **Late or lost? How to read this** explains it. After the driver's phone syncs, the card shows two times, "Delivered … on the driver's phone" and "Confirmed … after sync". Tap **Confirm delivery**, check the counts pre-filled from the driver's record, and tap **Received as delivered**: the order shows Received. Open the other order from **Today's orders**, tap **Report an issue**, choose **Short**, pick the item and how many, and tap **Send to dispatcher**: the order shows Disputed. | Built (#44). Checked against mock data only; needs steps 7 to 11 to run on the real stack. |
+| 14 | Dispatcher | Resolve the dispute, open the capacity outlook. | Planned. Waits on #61 and #55. |
 
 **TODO (#56):** list the reset presets a judge can use to jump to a role's step (`before-cutoff`, `orders-closed`, `plan-published`, `loading`, `mid-run`, `clash-ready`) once they ship.
 
@@ -88,7 +90,7 @@ docker compose up
 - **Profiles.** `--profile public` adds Caddy (automatic HTTPS for `CADDY_DOMAIN`), to be finished by #33. `--profile solver` is a placeholder: the solver is not built (ADR 0014).
 - **Several stacks at once** (one per worktree): copy `.env.example` to `.env.local`, set a free `APP_PORT`, then run `docker compose -p wp-<issue> --env-file .env.local up`. The project name keeps containers and volumes apart. The database is never published to the host, so only `APP_PORT` has to differ.
 
-The seed loads the reference data, the seeded accounts, the Peliyagoda peak day and the Kandy story orders (see [Local development](#local-development-works-today)); under Compose it runs on every start. **TODO (#38):** say how to reset the demo day once the demo tools merge.
+The seed loads the reference data, the seeded accounts, the Peliyagoda peak day and the Kandy story orders (see [Local development](#local-development-works-today)); under Compose it runs on every start. To start again from a clean seeded day, run `docker compose down -v` and then `docker compose up`. With `DEMO_MODE=true` the API also has a demo clock and a reset for a signed-in Dispatcher (`POST /api/demo/clock`, `POST /api/demo/reset` with the `before-cutoff` preset, ADR 0033). **TODO (#56):** the app has no control for them yet; describe the demo panel here once it ships.
 
 ### Local development (works today)
 
@@ -171,8 +173,25 @@ These depart from the Day 5 design as submitted. Each is recorded in an ADR in `
    - capacity is shown in m³ instead of the design's tonnes;
    - timelines are ordered by server insertion, never by device clocks.
 6. **Product name** (ADR 0012). The product is NextDrop. Waypoint Group remains the customer and Waypoint Fresh a brand.
+7. **Login screens** (ADR 0031):
+   - the Driver login has the language chips, as the Loader login does;
+   - the Loader and Driver logins name the role only, because the depot and dock are not known before sign-in;
+   - with demo mode on, quick-login chips for the seeded accounts show under each form;
+   - below 1024 px the Loader login is one column, with the keypad under the PIN;
+   - "Keep me signed in" is not shown: session length is fixed per role.
+8. **Store: place order** (ADR 0039):
+   - "Notes for the dispatcher" is not shown, because an order has no notes field;
+   - times are 24-hour ("closes 16:00"), where the frames say "4:00 PM";
+   - the desktop sidebar has a "Sign out" link;
+   - "Add" on a product starts from last week's quantity, or one if there was none.
+9. **Store: deliveries, tracking, receipt and issues** (ADR 0045):
+   - the hero card's progress bar follows the order's own stages (planned, loaded, out for delivery, delivered), and the card says "you are stop 4" without the run's stop count or the vehicle's name: a store is given only its own stop of a trip;
+   - on desktop, the order timeline, order detail, confirm receipt and report an issue are pages, not dialogs, and timeline and detail are one screen;
+   - report an issue has no photo, because photo upload is open to the Loader and Driver only;
+   - the issue kinds are Short, Damaged, Warm on arrival and Something else, where the frame has "Wrong item";
+   - quantities are shown as "units", because an order's lines can have different unit labels.
 
-**TODO (#22, before submission):** add any departure recorded after this draft. Check merged PRs labelled `designathon-departure` and new ADRs. Open issues already labelled as departures (#36, #46, #52, #61) point to the ADRs above. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008 and need a line here once built.
+**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:30. This list covers the ADRs up to 0047. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). The Loader, Driver and Dispatcher D4 screens are not merged yet: their issues are labelled as departures (#52, #61) and each needs a line here once its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
 
 ## Scope: what is not built
 
@@ -181,7 +200,7 @@ Recorded decisions:
 - **No SMS.** Notifications are in-app (change feed and SSE hint). Web Push is optional (ADR 0013, #65).
 - **No optimisation sidecar.** The greedy allocator in `packages/rules` is the only planning engine (ADR 0014).
 
-> **TODO (#20):** list each tier S item that was not built: authorization matrix test (#58), capacity outlook (#55), remaining demo presets and panel (#56), load reversal (#60), fleet and breakdowns (#63), Sinhala and Tamil strings (#57), Web Push (#65).
+> **TODO (#20):** list each tier S item that was not built. The authorization matrix test (#58) is built. Still open: capacity outlook (#55), remaining demo presets and panel (#56), load reversal (#60), fleet and breakdowns (#63), Sinhala and Tamil strings (#57), Web Push (#65).
 >
 > **TODO (#57):** native review is pending for Sinhala and Tamil strings. Every leaf in `apps/web/src/i18n/locales/{si,ta}/shared/ui.json` and the development gallery's `apps/web/src/ui/gallery/locales/{si,ta}.json` is marked `draft`; these translations are not yet native-reviewed. Existing login locale review states remain in their own files.
 
@@ -223,14 +242,15 @@ In use today:
 | Concern | Choice |
 | --- | --- |
 | Language and monorepo | TypeScript (strict), pnpm workspaces, Node.js 22 |
-| Web | Vite, React 19, React Router, TanStack Query, Tailwind CSS 4 |
-| API | Fastify 5, `fastify-type-provider-zod`, pino |
+| Web | Vite, React 19, React Router, TanStack Query, Tailwind CSS 4, zustand, react-i18next |
+| Offline | `vite-plugin-pwa` (Workbox) for the app shell, Dexie.js (IndexedDB) for field data and the outbox |
+| API | Fastify 5, `fastify-type-provider-zod`, pino, pg-boss (jobs), argon2 (credential hashing) |
 | Data | PostgreSQL 16, Prisma 7 with the `pg` driver adapter; hand-written SQL in migrations for triggers, CHECKs and partial indexes |
 | Contracts | zod 4 schemas in `packages/contracts`, shared by web and API |
 | Tests | Vitest, fast-check (property tests), integration tests against PostgreSQL |
 | Quality | ESLint, Prettier, lefthook git hooks |
 
-Planned by the spec (`agent-docs/spec/platform/stack-and-layout.md` §3.1) and added with the features that need them: `vite-plugin-pwa` (Workbox), Dexie.js, react-i18next, shadcn/ui, pg-boss, Luxon, argon2, Playwright and axe. **TODO (before submission):** move each into the table above once it is used.
+Planned by the spec (`agent-docs/spec/platform/stack-and-layout.md` §3.1) and not in use yet: shadcn/ui, Luxon, Playwright and axe. **TODO (before submission):** move each into the table above once it is used.
 
 ## Repository layout
 
@@ -292,6 +312,25 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0026 | Short-resolution and load-reversal routes |
 | 0027 D | Story fixture picks from the reference CSVs (under ADR 0008) |
 | 0028 | Auth session, lockout and policy details |
+| 0029 | Feed audience, catch-up protocol and notification delivery |
+| 0030 | Seed idempotency, the reset epoch and seeded story state |
+| 0031 D | Web shell login routes, session handling, build flags and login-screen departures |
+| 0032 | Store order writes, idempotency and the store's trip view |
+| 0033 | Server clock scope, the planning-day tick and the demo reset |
+| 0034 | Field ingest, trip facts and the field snapshot |
+| 0035 | Blob reads, linking and upload idempotency |
+| 0036 | Planning API: when drafts can be written, and what the day reports |
+| 0037 | Publish transaction details |
+| 0038 | Reference read scopes and the calendar range |
+| 0039 D | Store place-order screens: routes and departures |
+| 0040 | Sync conflict classification and resolution details |
+| 0041 | Run monitor states, the exceptions inbox and dispute resolution |
+| 0042 | Loader damage reason codes on LOAD_DAMAGED |
+| 0043 | Conflict outcomes for field devices |
+| 0044 | Historical context for field conflicts |
+| 0045 D | Store deliveries, tracking, receipt and issues: routes and departures |
+| 0046 | Dispatcher planning validation context |
+| 0047 | Shared Loader checklist readiness for TRIP_READY |
 
 ## Submission documents
 
