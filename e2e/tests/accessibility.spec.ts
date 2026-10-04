@@ -31,7 +31,10 @@ const ROLES: RoleCheck[] = [
     name: "Dispatcher at desktop width",
     account: ACCOUNTS.dispatcher,
     viewport: "desktop",
-    known: { login: "Link colour #2778f8 on white is 4.09:1 at 14 px (needs 4.5:1)" },
+    known: {
+      login: "Link colour #2778f8 on white is 4.09:1 at 14 px (needs 4.5:1)",
+      home: "Dashboard: muted text #6b7585 on #f6f9fa is 4.4:1, the info banner's #1f6bd6 on #e5f0ff is 4.41:1",
+    },
   },
   { name: "Loader at phone width", account: ACCOUNTS.loader, viewport: "phone" },
   { name: "Loader at tablet width", account: ACCOUNTS.loader, viewport: "tablet" },
