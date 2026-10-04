@@ -10,6 +10,16 @@ export interface PublishedStop {
 
 export type StopPlacement = Pick<PublishedStop, "orderId" | "vehicleId" | "tripNo" | "seq">;
 
+/** Only departed published trips retain dispatcher draft order (ADR 0053). */
+export function preserveDraftOrder(
+  trip: Pick<PublishedStop, "vehicleId" | "tripNo">,
+  publishedStops: readonly PublishedStop[] = [],
+): boolean {
+  return publishedStops.some(
+    (stop) => stop.departed && stop.vehicleId === trip.vehicleId && stop.tripNo === trip.tripNo,
+  );
+}
+
 /** First illegal edit, or null. Departed cargo may only leave or move later on its original trip. */
 export function lockedStopChange(current: readonly PublishedStop[], next: readonly StopPlacement[]): string | null {
   const placements = new Map(next.map((stop) => [stop.orderId, stop]));

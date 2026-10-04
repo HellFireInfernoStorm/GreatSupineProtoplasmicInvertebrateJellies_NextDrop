@@ -5,6 +5,7 @@ import {
   serviceAllowanceFromRow,
   validatePlan,
   lockedStopChange,
+  preserveDraftOrder,
   validateTrip,
   type Plan,
   type ValidationContext,
@@ -81,7 +82,13 @@ export function addTrip(data: DraftData, trip: ApiDto<"draftTrip">): DraftData {
   return candidate;
 }
 
-export function toPlan(data: DraftData, orders: readonly Order[], date: string, reference: BrowserReference): Plan {
+export function toPlan(
+  data: DraftData,
+  orders: readonly Order[],
+  date: string,
+  reference: BrowserReference,
+  context: ValidationContext = {},
+): Plan {
   const mapped = orders.map((o) => ({
     id: o.id,
     outletId: reference.outletDisplay.get(o.outletId) ?? o.outletId,
@@ -96,15 +103,18 @@ export function toPlan(data: DraftData, orders: readonly Order[], date: string, 
     date,
     orders: mapped,
     deferrals: data.deferrals,
-    trips: data.trips.map((t) => ({
-      preserveOrder: true,
-      ...t,
-      vehicleId: reference.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId,
-      orders: t.orderIds.map(
-        (id) =>
-          byId.get(id) ?? { id, outletId: "", temp: "ambient" as const, weightG: 0, volumeL: 0, deliveryDate: date },
-      ),
-    })),
+    trips: data.trips.map((t) => {
+      const vehicleId = reference.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId;
+      return {
+        ...t,
+        preserveOrder: preserveDraftOrder({ vehicleId, tripNo: t.tripNo }, context.publishedStops),
+        vehicleId,
+        orders: t.orderIds.map(
+          (id) =>
+            byId.get(id) ?? { id, outletId: "", temp: "ambient" as const, weightG: 0, volumeL: 0, deliveryDate: date },
+        ),
+      };
+    }),
   };
 }
 
@@ -116,7 +126,7 @@ export function evaluate(
   unavailableVehicleIds: ReadonlySet<string>,
   context: ValidationContext = {},
 ) {
-  const plan = toPlan(data, orders, date, reference);
+  const plan = toPlan(data, orders, date, reference, context);
   const ctx = { ...context, unavailableVehicleIds };
   const whole = validatePlan(plan, reference.ref, ctx);
   // Trip checks receive their siblings so second-trip budgets, windows and fuel are evaluated together.

@@ -405,6 +405,14 @@ describe.skipIf(!url)("publish transaction (PostgreSQL)", () => {
     const published = await call("POST", day("/publish", "Kandy"), { revision: saved.revision });
     expect(published.statusCode, published.body).toBe(200);
     expect(
+      (published.json() as ApiDto<"publishResponse">).plan.trips
+        .find((t) => t.id === hill.id)!
+        .stops.map((s) => s.order.id),
+    ).toEqual(edited.trips.find((t) => t.ref === target.ref)!.orderIds);
+    expect(
+      (await prisma.tripStop.findMany({ where: { tripId: hill.id }, orderBy: { seq: "asc" } })).map((s) => s.orderId),
+    ).toEqual(edited.trips.find((t) => t.ref === target.ref)!.orderIds);
+    expect(
       await prisma.orderEvent.count({
         where: { type: "PLAN_CHANGED", orderId: { in: target.orderIds.slice(1).filter((id) => id !== offline) } },
       }),
@@ -602,5 +610,57 @@ describe.skipIf(!url)("publish transaction (PostgreSQL)", () => {
     expect(await prisma.tripStop.count({ where: { orderId: skipped } })).toBe(0);
     expect((await prisma.order.findUniqueOrThrow({ where: { id: skipped } })).status).toBe("DEFERRED");
     expect((await prisma.order.findUniqueOrThrow({ where: { id: reported } })).status).toBe("OUT_FOR_DELIVERY");
+  }, 60000);
+  it("publishes an undeparted trip's appended earliest-closing outlet in window order", async () => {
+    const prisma = database.prisma!;
+    const date = "2026-10-06";
+    const vehicle = await prisma.vehicle.findUniqueOrThrow({ where: { displayId: "VEH039" } });
+    const product = await prisma.product.findFirstOrThrow({ where: { brand: "Fresh", tempRequirement: "ambient" } });
+    await prisma.planningDay.create({ data: { depot: "Kandy", date: new Date(date), state: "CLOSED" } });
+    const ids = ["01930b7e-0000-7000-8000-000000000910", "01930b7e-0000-7000-8000-000000000912"];
+    for (const [index, displayId] of ["OUT110", "OUT112"].entries()) {
+      const outlet = await prisma.outlet.findUniqueOrThrow({ where: { displayId } });
+      await prisma.order.create({
+        data: {
+          id: ids[index]!,
+          displayId: `ORD160-${displayId}`,
+          brand: "Fresh",
+          tempRequirement: "ambient",
+          requestedDate: new Date(date),
+          currentDate: new Date(date),
+          weightG: 1000,
+          volumeL: 1,
+          idempotencyKey: randomUUID(),
+          outletId: outlet.id,
+          orderLine_orderId: {
+            create: {
+              productId: product.id,
+              qtyOrdered: 1,
+              unitWeightKg: product.unitWeightKg,
+              unitVolumeM3: product.unitVolumeM3,
+            },
+          },
+        },
+      });
+    }
+    const data: DraftData = {
+      trips: [{ ref: "T160", vehicleId: vehicle.id, tripNo: 1, orderIds: ids }],
+      unassignedOrderIds: [],
+      deferrals: [],
+    };
+    const saved = await saveDraft(0, data, "Kandy", date);
+    const published = await call("POST", day("/publish", "Kandy", date), { revision: saved.revision });
+    expect(published.statusCode, published.body).toBe(200);
+    const trip = (published.json() as ApiDto<"publishResponse">).plan.trips[0]!;
+    expect(trip.stops.map((s) => s.order.id)).toEqual([ids[1], ids[0]]);
+    expect(
+      (await prisma.tripStop.findMany({ where: { tripId: trip.id }, orderBy: { seq: "asc" } })).map((s) => ({
+        orderId: s.orderId,
+        seq: s.seq,
+      })),
+    ).toEqual([
+      { orderId: ids[1], seq: 1 },
+      { orderId: ids[0], seq: 2 },
+    ]);
   }, 60000);
 });

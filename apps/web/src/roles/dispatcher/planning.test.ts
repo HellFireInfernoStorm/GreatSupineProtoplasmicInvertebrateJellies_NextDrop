@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ApiDto } from "@nextdrop/contracts";
 import { moveOrder, addTrip, emptyDraft, toPlan, makeReference, evaluate, validationContext } from "./planning";
 import { apiFixtures } from "@nextdrop/contracts";
+import { sequenceStops } from "@nextdrop/rules";
 
 const a = "01930b7e-0000-7000-8000-000000000001";
 const b = "01930b7e-0000-7000-8000-000000000002";
@@ -43,6 +44,72 @@ describe("dispatcher draft edits", () => {
 });
 
 describe("rules adapter", () => {
+  it("sequences an appended earlier-window order before departure and preserves departed draft order", () => {
+    const outlets = [
+      {
+        ...apiFixtures.outlet,
+        id: a,
+        displayId: "OUT110",
+        district: "Badulla",
+        depot: "Kandy",
+        dockType: "rear_dock" as const,
+        parking: "normal" as const,
+        window: { open: 180, close: 480 },
+      },
+      {
+        ...apiFixtures.outlet,
+        id: b,
+        displayId: "OUT111",
+        district: "Badulla",
+        depot: "Kandy",
+        dockType: "rear_dock" as const,
+        parking: "normal" as const,
+        window: { open: 180, close: 480 },
+      },
+      {
+        ...apiFixtures.outlet,
+        id: vehicle,
+        displayId: "OUT112",
+        district: "Badulla",
+        depot: "Kandy",
+        dockType: "rear_dock" as const,
+        parking: "normal" as const,
+        window: { open: 240, close: 465 },
+      },
+    ];
+    const truck = {
+      ...apiFixtures.vehicle,
+      displayId: "VEH039",
+      depot: "Kandy",
+      type: "truck" as const,
+      temp: "reefer" as const,
+    };
+    const orders = outlets.map((outlet, index) => ({
+      ...apiFixtures.order,
+      id: outlet.id,
+      outletId: outlet.id,
+      status: "PLANNED" as const,
+      displayId: `ORD160${index}`,
+    }));
+    const reference = makeReference(outlets, [truck], [apiFixtures.calendarDay]);
+    const data = moveOrder(
+      {
+        trips: [{ ref: "T160", vehicleId: truck.id, tripNo: 1 as const, orderIds: [a, b] }],
+        unassignedOrderIds: [vehicle],
+        deferrals: [],
+      },
+      vehicle,
+      "T160",
+    );
+    const result = evaluate(data, orders, orders[0]!.currentDate, reference, new Set());
+    expect(result.violations.filter((v) => v.code === "WINDOW_MISSED")).toEqual([]);
+    expect(sequenceStops(result.plan.trips[0]!, reference.ref).map((o) => o.id)).toEqual([vehicle, a, b]);
+    const context = {
+      publishedStops: [{ orderId: a, vehicleId: "VEH039", tripNo: 1, seq: 1, locked: false, departed: true }],
+    };
+    const departed = evaluate(data, orders, orders[0]!.currentDate, reference, new Set(), context);
+    expect(sequenceStops(departed.plan.trips[0]!, reference.ref).map((o) => o.id)).toEqual([a, b, vehicle]);
+  });
   it("uses fetched weekly fuel and loaded pins, while repeated deferrals remain warnings", () => {
     const order = { ...apiFixtures.order, status: "LOADED" as const };
     const reference = makeReference([apiFixtures.outlet], [apiFixtures.vehicle], [apiFixtures.calendarDay]);
