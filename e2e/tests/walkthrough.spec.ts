@@ -93,8 +93,9 @@ test.describe("Judge walkthrough (§15.4)", () => {
     const { page } = dispatcher;
     const main = page.getByRole("main");
 
-    // The peak day is Peliyagoda's. The dashboard opens on the account's first depot, so choose it. The selector
-    // follows the address bar while the page settles, hence the retry.
+    // The peak day is Peliyagoda's, so choose it in the selector. Bug #131: the dashboard opens on the account's
+    // first depot, not the one chosen at sign-in, and the selector is overwritten while the page settles. Choosing
+    // the depot stays; the retry goes when #131 is fixed.
     await expect(async () => {
       await page.getByRole("combobox", { name: "Depot" }).selectOption(DEPOTS.peliyagoda);
       await expect(page).toHaveURL(/depot=Peliyagoda/, { timeout: 2_000 });

@@ -13,8 +13,8 @@ interface RoleCheck {
   viewport: ViewportName;
   /**
    * A violation axe finds today, per screen. The test is then expected to fail, and fails the run once the screen
-   * is fixed, so the entry cannot outlive the problem. Listed in the plan comment of #62; never add one to hide a
-   * new failure.
+   * is fixed, so the entry cannot outlive the problem. The entries below are tracked in #134: remove each one with
+   * its fix. Never add one to hide a new failure.
    */
   known?: { login?: string; home?: string };
 }
