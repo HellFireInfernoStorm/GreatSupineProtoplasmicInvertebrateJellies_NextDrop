@@ -14,7 +14,7 @@ import { useSend } from "./useSend";
 
 /**
  * S3 Report an issue: short, damaged, warm or something else, about one item or the whole order. Phone: Figma
- * `235:1029`. Desktop draws it as a dialog (`234:893`); the build gives it a page of its own (ADR 0041).
+ * `235:1029`. Desktop draws it as a dialog (`234:893`); the build gives it a page of its own (ADR 0042).
  */
 export function IssuePage() {
   const { t } = useTranslation("store/receipt");

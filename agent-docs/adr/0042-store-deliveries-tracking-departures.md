@@ -1,4 +1,4 @@
-# ADR 0041: Store deliveries, tracking, receipt and issues: routes and departures
+# ADR 0042: Store deliveries, tracking, receipt and issues: routes and departures
 
 - Status: proposed
 - Date: 2026-10-04
