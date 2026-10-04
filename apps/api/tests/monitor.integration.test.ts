@@ -476,4 +476,47 @@ describe.skipIf(!testDatabaseUrl)("run monitor, exceptions and disputes against 
     }[];
     expect(items.filter((i) => i.type === "ISSUE")).toEqual([]);
   });
+
+  it("GET /dispatch/outlook reports seeded weekly demand, a moving average after it, and depot capacity (#55)", async () => {
+    await prisma.weeklyDemandHistory.createMany({
+      data: [
+        { depot: "Kandy", brand: "Fresh", isoYear: 2026, isoWeek: 39, totalVolumeM3: 50, chilledVolumeM3: 20 },
+        { depot: "Kandy", brand: "Fresh", isoYear: 2026, isoWeek: 40, totalVolumeM3: 70, chilledVolumeM3: 30 },
+        { depot: "Peliyagoda", brand: "Fresh", isoYear: 2026, isoWeek: 40, totalVolumeM3: 999, chilledVolumeM3: 1 },
+      ],
+    });
+    const vehicles = await prisma.vehicle.findMany({ where: { depot: "Kandy" } });
+    const capacity = Math.round(vehicles.reduce((sum, v) => sum + Number(v.volumeCapM3), 0) * 6 * 1000);
+    const res = await call("nimal", "GET", "/api/dispatch/outlook?depot=Kandy&from=2026-09-21&weeks=3");
+    expect(res.statusCode).toBe(200);
+    expect(res.json().items).toEqual([
+      {
+        isoYear: 2026,
+        isoWeek: 39,
+        brand: "Fresh",
+        demandVolumeL: 50000,
+        chilledVolumeL: 20000,
+        capacityVolumeL: capacity,
+      },
+      {
+        isoYear: 2026,
+        isoWeek: 40,
+        brand: "Fresh",
+        demandVolumeL: 70000,
+        chilledVolumeL: 30000,
+        capacityVolumeL: capacity,
+      },
+      {
+        isoYear: 2026,
+        isoWeek: 41,
+        brand: "Fresh",
+        demandVolumeL: 60000,
+        chilledVolumeL: 25000,
+        capacityVolumeL: capacity,
+      },
+    ]);
+    expect((await call("colombo", "GET", "/api/dispatch/outlook?depot=Kandy&from=2026-09-21&weeks=3")).statusCode).toBe(
+      403,
+    );
+  });
 });
