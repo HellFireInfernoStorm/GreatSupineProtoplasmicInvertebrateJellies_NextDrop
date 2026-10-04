@@ -23,6 +23,20 @@ import { allocationStatsSchema, draftDataSchema, draftSchema, planVersionSchema 
 import { orderSchema, tripSchema, vehicleSchema } from "./resources";
 
 export const dayQuerySchema = z.strictObject({ depot: nonempty });
+export const planningContextSchema = z.strictObject({
+  vehicleFuel: z.array(z.strictObject({ vehicleId: uuidV7, usedOtherDaysThisWeekMl: count })),
+  outletService: z.array(
+    z.strictObject({ outletId: uuidV7, daysSinceLastServed: count, deferredLastRun: z.boolean() }),
+  ),
+  loadedOrders: z.array(
+    z.strictObject({
+      orderId: uuidV7,
+      vehicleId: uuidV7,
+      tripNo: z.union([z.literal(1), z.literal(2)]),
+      reversalRequested: z.boolean(),
+    }),
+  ),
+});
 export const dayResponseSchema = z.strictObject({
   date: localDate,
   depot: nonempty,
@@ -30,6 +44,7 @@ export const dayResponseSchema = z.strictObject({
   ordersClosedAt: isoDateTime.nullable(),
   currentVersion: count.nullable(),
   queue: z.array(orderSchema),
+  planningContext: planningContextSchema,
   demandCapacity: allocationStatsSchema,
   serverTime: isoDateTime,
 });
@@ -157,6 +172,7 @@ export const outlookResponseSchema = z.strictObject({
   serverTime: isoDateTime,
 });
 export const dispatchSchemas = {
+  planningContext: planningContextSchema,
   dayQuery: dayQuerySchema,
   dayResponse: dayResponseSchema,
   proposeRequest: proposeRequestSchema,

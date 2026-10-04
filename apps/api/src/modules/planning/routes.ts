@@ -27,7 +27,7 @@ import { ApiHttpError, forbidden } from "../../lib/errors";
 import { dateOnly, toOrderDto } from "../orders";
 import type { Notifier } from "../notifications";
 import { collectionResource, type Resource } from "../policy";
-import { loadDayInputs, toDraftData, toRulesPlan, type DayInputs } from "./inputs";
+import { loadDayInputs, toDraftData, toRulesPlan, toPlanningContext, type DayInputs } from "./inputs";
 import { publishDay } from "./publish";
 import type { ReferenceSource } from "./reference";
 
@@ -144,6 +144,7 @@ export const planningRoutes: FastifyPluginAsyncZod<PlanningRouteDependencies> = 
         ordersClosedAt: row?.ordersClosedAt?.toISOString() ?? null,
         currentVersion: row && row.currentVersion > 0 ? row.currentVersion : null,
         queue: day.queue.map(toOrderDto),
+        planningContext: toPlanningContext(day),
         // What the allocator could serve from this queue with the available fleet: demand against capacity.
         demandCapacity: proposePlan(day.allocation, day.reference.ref).stats,
         serverTime: clock.now().toISOString(),
