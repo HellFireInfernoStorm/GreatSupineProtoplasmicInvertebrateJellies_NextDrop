@@ -162,16 +162,20 @@ function useRowText() {
     const eta = order.assignment;
     const units = orderUnits(order);
     // The two times of a delivery, once the driver's record has reached the server.
-    const delivered = ["DELIVERED", "RECEIVED", "DISPUTED"].includes(order.status) ? stop : null;
+    const handedOver = ["DELIVERED", "RECEIVED", "DISPUTED"].includes(order.status);
+    const delivered = handedOver ? stop : null;
     return {
       temp: tDeliveries(`temp.${order.tempRequirement}`),
       date: day(order.currentDate),
       was: moved ? t("tracking.was", { day: day(order.requestedDate) }) : null,
       when: delivered?.deliveredAt
         ? t("tracking.delivered", { time: formatTime(delivered.deliveredAt) })
-        : eta
-          ? t("tracking.eta", { from: formatTime(eta.etaFrom), to: formatTime(eta.etaTo) })
-          : t("tracking.afterPlan"),
+        : handedOver
+          ? // The history list has no stop record, so no times: the order's timeline has them.
+            t("tracking.deliveredNoTime")
+          : eta
+            ? t("tracking.eta", { from: formatTime(eta.etaFrom), to: formatTime(eta.etaTo) })
+            : t("tracking.afterPlan"),
       // A delivery's second time, kept apart from the first.
       whenSub: delivered?.deliveredAt
         ? delivered.confirmedAt

@@ -54,6 +54,7 @@
     "tripStop": "Trip {{trip}} · stop {{seq}}",
     "afterPlan": "After the next plan",
     "delivered": "Delivered {{time}}",
+    "deliveredNoTime": "Delivered",
     "confirmed": "confirmed {{time}} after sync",
     "footnote": "Status words shared by every role: Ordered → Planned / Deferred → Loaded / Short → Out for delivery → Delivered → Received / Disputed.",
     "empty": "No orders to track."
