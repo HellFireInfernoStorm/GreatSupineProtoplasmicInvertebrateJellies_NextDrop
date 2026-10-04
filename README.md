@@ -238,10 +238,11 @@ Loader recording and Undo ([ADR 0052](agent-docs/adr/0052-loader-recording-and-u
 
 Recorded decisions:
 
-- **No SMS.** Notifications are in-app (change feed and SSE hint). Web Push is optional (ADR 0013, #65).
+- **No SMS.** Notifications are in-app (change feed and SSE hint) (ADR 0013).
+- **No Web Push.** It was optional and last in tier S, to be attempted only after the full walkthrough passed (ADR 0013, #65), and it is left out. In-app is the only `NotificationChannel`. The `VAPID_*` variables in `.env.example` are placeholders: nothing reads them.
 - **No optimisation sidecar.** The greedy allocator in `packages/rules` is the only planning engine (ADR 0014).
 
-> **TODO (#20):** list each tier S item that was not built. The authorization matrix test (#58) is built. Still open: capacity outlook (#55), remaining demo presets and panel (#56), load reversal (#60), fleet and breakdowns (#63), Sinhala and Tamil strings (#57), Web Push (#65).
+> **TODO (#20):** list each tier S item that was not built. The authorization matrix test (#58) is built. Web Push (#65) is recorded above as left out. Still open: capacity outlook (#55), remaining demo presets and panel (#56), load reversal (#60), fleet and breakdowns (#63), Sinhala and Tamil strings (#57).
 >
 ### Draft Sinhala and Tamil strings (#22, #57)
 
