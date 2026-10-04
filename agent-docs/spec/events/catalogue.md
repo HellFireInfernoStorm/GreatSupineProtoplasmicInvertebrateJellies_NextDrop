@@ -22,7 +22,7 @@ sources: guide §7.2
 | `SHORT_RESOLVED` | Server / dispatcher | orderId, lineId, outcome SHIP_PARTIAL, HOLD_TRIP, BACKORDER; note | resolves a `LOAD_SHORT` line; BACKORDER creates a follow-up order via `ORDER_PLACED` with `replacesOrderId` |
 | `LOAD_REVERSAL_REQUESTED` | Server / dispatcher | orderId, to PLANNED or DEFERRED, planVersion | loader task; order stays LOADED |
 | `LOAD_REVERSED` | Field / loader | orderId, lines | LOADED -> PLANNED or DEFERRED |
-| `TRIP_READY` | Field / loader (hold-to-confirm) | tripId | trip -> READY (requires every `LOAD_SHORT` line to have a `SHORT_RESOLVED` other than `HOLD_TRIP`; ADRs 0005, 0026) |
+| `TRIP_READY` | Field / loader (hold-to-confirm) | tripId | trip -> READY (requires every checklist line checked and every `LOAD_SHORT` line resolved other than `HOLD_TRIP`; ADRs 0005, 0026, 0047) |
 | `TRIP_DEPARTED` | Field / driver | tripId | trip -> DEPARTED; server derives `ORDER_OUT_FOR_DELIVERY` per PLANNED or LOADED order on the trip (ADR 0019) |
 | `ORDER_OUT_FOR_DELIVERY` | Server / derived from `TRIP_DEPARTED` | tripId? | -> OUT_FOR_DELIVERY (ADR 0019) |
 | `STOP_ARRIVED` | Field / driver | orderId | none (progress + last heard) |
