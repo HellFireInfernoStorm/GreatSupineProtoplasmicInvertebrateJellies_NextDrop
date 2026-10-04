@@ -146,7 +146,7 @@ export function PhoneNav() {
           end={item.end}
           className={({ isActive }) =>
             `flex flex-1 flex-col items-center justify-center gap-1 text-xs ${
-              isActive ? "font-semibold text-text" : "text-faint"
+              isActive ? "font-semibold text-text" : "text-muted"
             }`
           }
         >

@@ -661,6 +661,11 @@
   font-size: var(--ui-size-11);
   line-height: 1.5;
 }
+/* At 11 px the tone colours miss AA on their tints (info is 4.41:1), so the text is body colour and the icon keeps
+   the tone (#134, ADR 0049). */
+[data-theme="dispatcher"] .nd-banner-body {
+  color: var(--nd-text);
+}
 [data-theme="dispatcher"] .nd-banner-icon {
   width: var(--ui-size-18);
   height: var(--ui-size-18);

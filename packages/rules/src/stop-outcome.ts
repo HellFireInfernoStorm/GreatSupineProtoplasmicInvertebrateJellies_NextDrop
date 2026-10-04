@@ -9,7 +9,7 @@ export function isDriverStopTerminal(status: OrderStatus): boolean {
 export type StopOutcomeCode =
   "INVALID_DELIVERY_QUANTITY" | "INVALID_PARTIAL" | "REASON_PHOTO_REQUIRED" | "PROOF_REQUIRED";
 
-/** Driver outcome/proof policy (ADR 0049). No I/O or wire-envelope dependencies. */
+/** Driver outcome/proof policy (ADR 0050). No I/O or wire-envelope dependencies. */
 export function validateStopOutcome(input: {
   lines: readonly { id: string; qtyLoaded: number }[];
   outcome: StopOutcome;

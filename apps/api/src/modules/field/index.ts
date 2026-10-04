@@ -13,6 +13,6 @@ export { buildSnapshot } from "./snapshot";
 
 export async function registerField(app: FastifyInstance, deps: { prisma: PrismaClient | null; now: () => Date }) {
   if (!deps.prisma) return;
-  const ingest = createIngest({ prisma: deps.prisma, now: deps.now, notifier: createNotifier() });
+  const ingest = createIngest({ prisma: deps.prisma, now: deps.now, notifier: createNotifier(deps.now) });
   await app.register(fieldRoutes, { prisma: deps.prisma, now: deps.now, ingest });
 }

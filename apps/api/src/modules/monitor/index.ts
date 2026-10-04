@@ -95,7 +95,7 @@ export async function registerMonitor(app: FastifyInstance, deps: { prisma: Pris
     prisma: deps.prisma,
     now: deps.now,
     calendar: createCalendarSource(deps.prisma),
-    notifier: createNotifier(),
+    notifier: createNotifier(deps.now),
   });
   await app.register(monitorRoutes, { prisma: deps.prisma, now: deps.now, issues });
 }

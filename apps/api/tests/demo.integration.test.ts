@@ -316,6 +316,11 @@ describe.skipIf(!url)("demo module (PostgreSQL)", () => {
       expect(notes.map((n) => (n.params as { depot: string }).depot).sort()).toEqual(["Kandy", "Peliyagoda"]);
       const peliyagoda = notes.find((n) => (n.params as { depot: string }).depot === "Peliyagoda")!;
       expect(peliyagoda.params).toMatchObject({ date: "2026-09-29", orders: 86 });
+      // Stamped on the demo clock, not the database's real time (#132, ADR 0033 §1).
+      for (const n of notes) expect(Math.abs(n.createdAt.getTime() - Date.parse(after))).toBeLessThan(5_000);
+      const listed = (await asDispatcher("GET", "/api/notifications")).json() as { items: { createdAt: string }[] };
+      expect(listed.items.length).toBeGreaterThan(0);
+      for (const n of listed.items) expect(Math.abs(Date.parse(n.createdAt) - Date.parse(after))).toBeLessThan(5_000);
     }, 60000);
 
     it("reports serverTime on the demo clock but keeps sessions on real time", async () => {

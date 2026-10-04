@@ -1,4 +1,4 @@
-# ADR 0049: Driver run, proof and recovery
+# ADR 0050: Driver run, proof and recovery
 
 - Status: proposed
 - Date: 2026-10-04

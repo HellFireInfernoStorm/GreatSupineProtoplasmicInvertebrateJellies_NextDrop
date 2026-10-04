@@ -68,6 +68,7 @@ export interface NotificationChannel {
     tx: Prisma.TransactionClient,
     input: NotificationInput,
     recipients: readonly Recipient[],
+    at: Date,
   ): Promise<FeedRowInput[]>;
 }
 
@@ -95,7 +96,7 @@ function feedAudience(audience: NotificationAudience, recipients: readonly Recip
  */
 export const inAppChannel: NotificationChannel = {
   name: "in-app",
-  async deliver(tx, input, recipients) {
+  async deliver(tx, input, recipients, at) {
     if (recipients.length === 0) return [];
     // Record the addressed scope next to each recipient; a direct-to-user notification has none.
     const { audience } = input;
@@ -113,6 +114,8 @@ export const inAppChannel: NotificationChannel = {
         titleKey: `notifications.${input.kind}`,
         params: input.params ?? {},
         entityRef: input.entity,
+        // Business time: the server clock, demo offset included (ADR 0033 §1), not the database's now().
+        createdAt: at,
       })),
       select: { id: true },
     });
@@ -147,12 +150,14 @@ export interface Notifier {
   notify(tx: Prisma.TransactionClient, input: NotificationInput): Promise<FeedRowInput[]>;
 }
 
-export function createNotifier(channels: readonly NotificationChannel[] = [inAppChannel]): Notifier {
+/** `now` is the server clock (`app.clock.now`), so notification times follow the demo clock. */
+export function createNotifier(now: () => Date, channels: readonly NotificationChannel[] = [inAppChannel]): Notifier {
   return {
     async notify(tx, input) {
       const recipients = await resolveRecipients(tx, input.audience);
+      const at = now();
       const feed: FeedRowInput[] = [];
-      for (const channel of channels) feed.push(...(await channel.deliver(tx, input, recipients)));
+      for (const channel of channels) feed.push(...(await channel.deliver(tx, input, recipients, at)));
       return feed;
     },
   };
