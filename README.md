@@ -190,8 +190,9 @@ These depart from the Day 5 design as submitted. Each is recorded in an ADR in `
    - report an issue has no photo, because photo upload is open to the Loader and Driver only;
    - the issue kinds are Short, Damaged, Warm on arrival and Something else, where the frame has "Wrong item";
    - quantities are shown as "units", because an order's lines can have different unit labels.
+10. **AA text contrast** (ADR 0049). Four elements use a darker existing colour so their text meets WCAG AA: the Store's inactive tab bar tabs, the Dispatcher login links, the Dispatcher page subtitle and Depot and Date labels, and Dispatcher banner text (whose icon and tint keep the tone colour).
 
-**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:30. This list covers the ADRs up to 0047. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). The Loader, Driver and Dispatcher D4 screens are not merged yet: their issues are labelled as departures (#52, #61) and each needs a line here once its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
+**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:30. This list covers the ADRs up to 0049. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). The Loader, Driver and Dispatcher D4 screens are not merged yet: their issues are labelled as departures (#52, #61) and each needs a line here once its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
 
 ## Scope: what is not built
 
@@ -331,6 +332,8 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0045 D | Store deliveries, tracking, receipt and issues: routes and departures |
 | 0046 | Dispatcher planning validation context |
 | 0047 | Shared Loader checklist readiness for TRIP_READY |
+| 0048 | Kandy reefer trucks in the workshop on the story day |
+| 0049 D | AA contrast on four Store and Dispatcher elements |
 
 ## Submission documents
 
