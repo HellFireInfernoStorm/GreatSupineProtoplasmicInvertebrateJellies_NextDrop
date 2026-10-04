@@ -6,6 +6,7 @@ import type { Clock } from "../../lib/clock";
 import { createNotifier } from "../notifications";
 import { createReferenceSource } from "./reference";
 import { planningRoutes } from "./routes";
+import { fleetRoutes } from "./fleet";
 
 export { fuelUsedThisWeek, loadDayInputs, QUEUE_STATUSES, toDraftData, toRulesPlan, type DayInputs } from "./inputs";
 export { publishDay, type PublishDependencies, type PublishInput } from "./publish";
@@ -15,6 +16,7 @@ export { loadCalendar, orderableDate, tickPlanningDays } from "./tick";
 export async function registerPlanning(app: FastifyInstance, deps: { prisma: PrismaClient | null; clock: Clock }) {
   // Without a database (ops-only test servers) the planning routes are not registered.
   if (!deps.prisma) return;
+  await app.register(fleetRoutes, { prisma: deps.prisma, clock: deps.clock });
   await app.register(planningRoutes, {
     prisma: deps.prisma,
     clock: deps.clock,
