@@ -16,5 +16,6 @@
     "open": "{{day}} order closes in",
     "closed": "{{day}} orders are closed"
   },
-  "signOut": "Sign out"
+  "signOut": "Sign out",
+  "signOutFailed": "You are still signed in: the server could not be reached. Check the connection and try again."
 }

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router";
 import { useServerNow } from "../../lib/clock";
@@ -34,6 +34,20 @@ function Sidebar() {
   const { t } = useTranslation("store/shell");
   const { user } = useSession();
   const outlet = useOutlet().data;
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutFailed, setSignOutFailed] = useState(false);
+  async function onSignOut() {
+    setSigningOut(true);
+    setSignOutFailed(false);
+    try {
+      // On success the shell sees the session go and leaves for the login screen.
+      await signOut();
+    } catch {
+      // The server was not reached, so the session is still live there: stay signed in and say so.
+      setSignOutFailed(true);
+      setSigningOut(false);
+    }
+  }
   return (
     <aside className="flex w-60 shrink-0 flex-col bg-panel px-4 py-6 text-on-panel">
       <div className="px-2">
@@ -62,11 +76,17 @@ function Sidebar() {
         {outlet && <p className="mt-0.5 text-xs text-on-panel-muted">{outlet.name}</p>}
         <button
           type="button"
-          onClick={() => void signOut()}
-          className="mt-3 text-xs font-semibold text-on-panel-muted hover:text-on-panel"
+          disabled={signingOut}
+          onClick={() => void onSignOut()}
+          className="mt-3 text-xs font-semibold text-on-panel-muted hover:text-on-panel disabled:opacity-60"
         >
           {t("signOut")}
         </button>
+        {signOutFailed && (
+          <p role="alert" className="mt-2 rounded-lg bg-warn-bg px-3 py-2 text-xs font-semibold text-warn-fg">
+            {t("signOutFailed")}
+          </p>
+        )}
       </div>
     </aside>
   );
