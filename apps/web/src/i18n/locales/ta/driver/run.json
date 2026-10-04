@@ -39,7 +39,11 @@
     "text": "இணைப்புக்காகக் காத்திருக்கிறது",
     "review": "draft"
   },
-  "offlineSaved": {
+  "offlineSaved_one": {
+    "text": "இணைப்பு இல்லை — {{count}} விநியோகங்கள் இந்தத் தொலைபேசியில் சேமிக்கப்பட்டன",
+    "review": "draft"
+  },
+  "offlineSaved_other": {
     "text": "இணைப்பு இல்லை — {{count}} விநியோகங்கள் இந்தத் தொலைபேசியில் சேமிக்கப்பட்டன",
     "review": "draft"
   },
@@ -277,7 +281,11 @@
     "text": "விநியோகம் அல்லது அணுகல் சிக்கலின் புகைப்படம் தேவை",
     "review": "draft"
   },
-  "photosSaved": {
+  "photosSaved_one": {
+    "text": "{{count}} புகைப்படங்கள் தொலைபேசியில் சேமிக்கப்பட்டன",
+    "review": "draft"
+  },
+  "photosSaved_other": {
     "text": "{{count}} புகைப்படங்கள் தொலைபேசியில் சேமிக்கப்பட்டன",
     "review": "draft"
   },
@@ -563,14 +571,6 @@
   },
   "flagSaved": {
     "text": "சிக்கல் தொலைபேசியில் சேமிக்கப்பட்டது · ஒத்திசைவுக்காகக் காத்திருக்கிறது",
-    "review": "draft"
-  },
-  "offlineSaved_one": {
-    "text": "இணைப்பு இல்லை — {{count}} விநியோகங்கள் இந்தத் தொலைபேசியில் சேமிக்கப்பட்டன",
-    "review": "draft"
-  },
-  "offlineSaved_other": {
-    "text": "இணைப்பு இல்லை — {{count}} விநியோகங்கள் இந்தத் தொலைபேசியில் சேமிக்கப்பட்டன",
     "review": "draft"
   },
   "capturedOnly": {
