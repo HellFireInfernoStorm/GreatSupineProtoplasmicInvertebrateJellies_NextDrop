@@ -26,7 +26,7 @@ export interface FieldReceipt {
   date: string;
   tripId: string;
   orderId?: string;
-  kind: "DELIVERY" | "PLAN_ACK";
+  kind: "DELIVERY" | "PLAN_ACK" | "LOAD" | "TRIP_READY";
   planVersion: number;
   events: OutboxEntry[];
 }

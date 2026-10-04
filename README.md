@@ -194,7 +194,9 @@ These depart from the Day 5 design as submitted. Each is recorded in an ADR in `
 
 Driver run, proof and recovery ([ADR 0050](agent-docs/adr/0050-driver-run-proof-and-recovery.md), #53 / #130): each order in an adjacent-outlet card has its own recording route; settings expose language and diagnostics. Recovery follows real queue/context/confirmation gates instead of prototype timing. Server-received held facts remain Needs dispatch beside All synced. Existing real fixture IDs and grouping follow ADRs 0008 and 0010.
 
-**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:30. This list covers the ADRs up to 0050. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). The Loader, Driver and Dispatcher D4 screens are not merged yet: their issues are labelled as departures (#52, #61) and each needs a line here once its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
+Loader recording and Undo ([ADR 0051](agent-docs/adr/0051-loader-recording-and-undo.md), #52): per-line actions preserve multi-line order accounting; Undo cancels a durable unsent draft. Hand-over uses shared readiness and real sync states. Plan review shows the current order; missing vehicle capacities and driver details remain unavailable. Loader switching uses PIN sign-in.
+
+**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:30. This list covers the ADRs up to 0051. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). Loader (#52) is recorded above; Dispatcher D4 (#61) still needs a final departure entry when its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
 
 ## Scope: what is not built
 
@@ -337,6 +339,7 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0048 | Kandy reefer trucks in the workshop on the story day |
 | 0049 D | AA contrast on four Store and Dispatcher elements |
 | 0050 D | Driver run, proof and recovery |
+| 0051 D | Loader recording, Undo and plan review |
 
 ## Submission documents
 

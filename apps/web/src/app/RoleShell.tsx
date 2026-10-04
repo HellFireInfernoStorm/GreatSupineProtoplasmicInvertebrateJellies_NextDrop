@@ -28,7 +28,7 @@ export function RoleShell({ role, children }: RoleShellProps) {
     <SessionContext value={session}>
       <div data-theme={ROLE_PATHS[role].theme} lang={language} className="flex min-h-dvh flex-col">
         <ResetBanner />
-        {isFieldRole(role) && <FieldSync compact={role === "DRIVER"} />}
+        {isFieldRole(role) && <FieldSync compact />}
         {children}
       </div>
     </SessionContext>
