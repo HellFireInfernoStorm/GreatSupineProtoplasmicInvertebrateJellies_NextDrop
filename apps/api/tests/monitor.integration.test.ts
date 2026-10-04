@@ -477,7 +477,7 @@ describe.skipIf(!testDatabaseUrl)("run monitor, exceptions and disputes against 
     expect(items.filter((i) => i.type === "ISSUE")).toEqual([]);
   });
 
-  it("GET /dispatch/outlook reports seeded weekly demand, a moving average after it, and depot capacity (#55)", async () => {
+  it("GET /dispatch/outlook reports seeded weekly demand, a moving average after it, and usable fleet capacity (#55, ADR 0056)", async () => {
     await prisma.weeklyDemandHistory.createMany({
       data: [
         { depot: "Kandy", brand: "Fresh", isoYear: 2026, isoWeek: 39, totalVolumeM3: 50, chilledVolumeM3: 20 },
@@ -485,34 +485,88 @@ describe.skipIf(!testDatabaseUrl)("run monitor, exceptions and disputes against 
         { depot: "Peliyagoda", brand: "Fresh", isoYear: 2026, isoWeek: 40, totalVolumeM3: 999, chilledVolumeM3: 1 },
       ],
     });
-    const vehicles = await prisma.vehicle.findMany({ where: { depot: "Kandy" } });
-    const capacity = Math.round(vehicles.reduce((sum, v) => sum + Number(v.volumeCapM3), 0) * 6 * 1000);
+    // Kandy's districts: Nuwara Eliya at 70 km and Matale at 30 km, so the typical round trip is (140 + 60) / 2 = 100 km.
+    await prisma.district.create({
+      data: {
+        name: "Matale",
+        depot: "Kandy",
+        roadClass: "hill",
+        freeFlowKmh: 30,
+        depotToDistrictKm: 30,
+        depotToDistrictFreeflowMin: 50,
+        interStopKm: 3,
+        interStopFreeflowMin: 8,
+      },
+    });
+    const vehicle = (
+      displayId: string,
+      temp: "reefer" | "ambient",
+      volumeCapM3: number,
+      kmPerL: number,
+      quota: number,
+    ) =>
+      prisma.vehicle.create({
+        data: {
+          displayId,
+          type: "van",
+          temp,
+          weightCapKg: 1000,
+          volumeCapM3,
+          fuelType: "diesel",
+          kmPerL,
+          weeklyFuelQuotaL: quota,
+          depot: "Kandy",
+        },
+      });
+    // VEH039 (reefer, 20 m³, 300 L × 6 km/L / 100 km = 18 fuel trips) runs the full 2 trips a day.
+    // VEH040 (ambient, 10 m³, 40 L × 10 km/L / 100 km = 4 fuel trips): the fuel quota binds.
+    await vehicle("VEH040", "ambient", 10, 10, 40);
+    // VEH041 (reefer, 15 m³, 100 fuel trips) is in the workshop on the outlook's start date, so it is not usable.
+    const workshop = await vehicle("VEH041", "reefer", 15, 10, 1000);
+    await prisma.vehicleAvailability.create({
+      data: {
+        vehicleId: workshop.id,
+        date: new Date("2026-09-21"),
+        status: "IN_WORKSHOP",
+        reason: "BREAKDOWN",
+        setBy: ids.dispatcher,
+      },
+    });
+    // Week 41 (Mon 5 to Sun 11 Oct) is in the calendar with Wed 7 Oct a holiday: five operating days, 10 trips a vehicle.
+    await prisma.calendarDay.createMany({
+      data: [5, 6, 7, 8, 9, 10, 11].map((day, dow) => ({
+        date: new Date(`2026-10-${String(day).padStart(2, "0")}`),
+        dow,
+        isoYear: 2026,
+        isoWeek: 41,
+        isPayday: false,
+        festivalRamp: 0,
+        isHoliday: day === 7,
+        monsoon: false,
+        isOperating: day !== 7 && dow !== 6,
+      })),
+    });
+    // Six operating days: VEH039 20 m³ × 12 trips + VEH040 10 m³ × 4 trips. Five: 20 m³ × 10 + 10 m³ × 4.
+    const sixDays = { capacityVolumeL: 280000, reeferCapacityVolumeL: 240000 };
+    const fiveDays = { capacityVolumeL: 240000, reeferCapacityVolumeL: 200000 };
     const res = await call("nimal", "GET", "/api/dispatch/outlook?depot=Kandy&from=2026-09-21&weeks=3");
     expect(res.statusCode).toBe(200);
     expect(res.json().items).toEqual([
-      {
-        isoYear: 2026,
-        isoWeek: 39,
-        brand: "Fresh",
-        demandVolumeL: 50000,
-        chilledVolumeL: 20000,
-        capacityVolumeL: capacity,
-      },
+      { isoYear: 2026, isoWeek: 39, brand: "Fresh", demandVolumeL: 50000, chilledVolumeL: 20000, ...sixDays },
+      { isoYear: 2026, isoWeek: 40, brand: "Fresh", demandVolumeL: 70000, chilledVolumeL: 30000, ...sixDays },
+      { isoYear: 2026, isoWeek: 41, brand: "Fresh", demandVolumeL: 60000, chilledVolumeL: 25000, ...fiveDays },
+    ]);
+    // Availability is per date: from the next Monday, VEH041 (15 m³ × 12 trips) is usable again.
+    const later = await call("nimal", "GET", "/api/dispatch/outlook?depot=Kandy&from=2026-09-28&weeks=1");
+    expect(later.json().items).toEqual([
       {
         isoYear: 2026,
         isoWeek: 40,
         brand: "Fresh",
         demandVolumeL: 70000,
         chilledVolumeL: 30000,
-        capacityVolumeL: capacity,
-      },
-      {
-        isoYear: 2026,
-        isoWeek: 41,
-        brand: "Fresh",
-        demandVolumeL: 60000,
-        chilledVolumeL: 25000,
-        capacityVolumeL: capacity,
+        capacityVolumeL: 280000 + 15000 * 12,
+        reeferCapacityVolumeL: 240000 + 15000 * 12,
       },
     ]);
     expect((await call("colombo", "GET", "/api/dispatch/outlook?depot=Kandy&from=2026-09-21&weeks=3")).statusCode).toBe(

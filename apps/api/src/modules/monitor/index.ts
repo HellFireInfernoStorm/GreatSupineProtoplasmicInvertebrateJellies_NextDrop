@@ -15,7 +15,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { PrismaClient } from "../../generated/prisma/client";
 import { forbidden, notFound } from "../../lib/errors";
 import { createNotifier } from "../notifications";
-import { createCalendarSource } from "../orders";
+import { createCalendarSource, type CalendarSource } from "../orders";
 import type { ResourceResolver } from "../policy";
 import { listExceptions } from "./exceptions";
 import { createIssues, type Issues } from "./issues";
@@ -46,6 +46,7 @@ function issueResource(prisma: PrismaClient): ResourceResolver {
 interface MonitorDependencies {
   prisma: PrismaClient;
   now: () => Date;
+  calendar: CalendarSource;
   issues: Issues;
 }
 
@@ -60,7 +61,8 @@ const monitorRoutes: FastifyPluginAsyncZod<MonitorDependencies> = async (app, de
     },
     async (request) => {
       const { depot, from, weeks } = request.query;
-      return { items: await listOutlook(prisma, depot, from, weeks), serverTime: deps.now().toISOString() };
+      const items = await listOutlook(prisma, await deps.calendar.get(), depot, from, weeks);
+      return { items, serverTime: deps.now().toISOString() };
     },
   );
 
@@ -106,11 +108,7 @@ const monitorRoutes: FastifyPluginAsyncZod<MonitorDependencies> = async (app, de
 
 export async function registerMonitor(app: FastifyInstance, deps: { prisma: PrismaClient | null; now: () => Date }) {
   if (!deps.prisma) return;
-  const issues = createIssues({
-    prisma: deps.prisma,
-    now: deps.now,
-    calendar: createCalendarSource(deps.prisma),
-    notifier: createNotifier(deps.now),
-  });
-  await app.register(monitorRoutes, { prisma: deps.prisma, now: deps.now, issues });
+  const calendar = createCalendarSource(deps.prisma);
+  const issues = createIssues({ prisma: deps.prisma, now: deps.now, calendar, notifier: createNotifier(deps.now) });
+  await app.register(monitorRoutes, { prisma: deps.prisma, now: deps.now, calendar, issues });
 }

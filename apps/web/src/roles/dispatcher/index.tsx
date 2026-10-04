@@ -12,6 +12,7 @@ import { Button } from "../../ui";
 import { Notifications } from "./Notifications";
 import { Workspace } from "./Workspace";
 import { Outlook } from "./Outlook";
+import { OUTLOOK_WEEKS } from "./outlook-model";
 import { DeliveryProgress } from "./progress/DeliveryProgress";
 import { useDispatchFeed } from "./feed";
 import { initialDepot } from "./depot";
@@ -173,7 +174,13 @@ function DispatcherFrame() {
                     })
                   : t(`nav.${page}`, { defaultValue: t("nav.dashboard") })}
               </h1>
-              {!live && <p>{t("planningFor", { date: formatDay(`${date}T12:00:00+05:30`), depot })}</p>}
+              {!live && (
+                <p>
+                  {page === "outlook"
+                    ? t("outlookView.intro", { count: OUTLOOK_WEEKS })
+                    : t("planningFor", { date: formatDay(`${date}T12:00:00+05:30`), depot })}
+                </p>
+              )}
             </div>
             <div className="dispatch-controls">
               <label>

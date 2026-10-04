@@ -1,5 +1,7 @@
 import { apiFixtures, type ApiDtoInput, type ApiRouteName } from "@nextdrop/contracts";
+import { addDays, calendarDay, dayOfWeek, isoWeekOf } from "@nextdrop/rules";
 import { readStored, writeStored } from "../storage";
+import { MOCK_CALENDAR } from "./mockCalendar";
 import { mockId } from "./mockStore";
 import type { RawResponse, TransportRequest } from "./types";
 
@@ -282,6 +284,63 @@ function story(nowMs: number) {
   };
 }
 
+// D5 Capacity outlook: seven weeks of forecast against 367 m³ of usable fleet and 152 m³ of reefers (ADR 0056). Payday
+// weeks of the mock calendar run tight; the festival week (or the sixth week, when the window has no festival) goes
+// over both limits.
+type OutlookItem = ApiDtoInput<"outlookResponse">["items"][number];
+const FLEET_M3 = 367;
+const REEFER_M3 = 152;
+/** [forecast, chilled] in m³ for an ordinary week, by ISO week, then for payday weeks and the peak week. */
+const ORDINARY_WEEKS = [
+  [318, 131],
+  [309, 128],
+  [326, 135],
+  [331, 137],
+  [314, 129],
+  [322, 133],
+  [329, 136],
+] as const;
+const PAYDAY_WEEKS = [
+  [352, 146],
+  [360, 149],
+] as const;
+const PEAK_WEEK = [398, 172] as const;
+
+function outlook(from: string, weeks: number): OutlookItem[] {
+  const firstMonday = addDays(from, -dayOfWeek(from));
+  const mondays = Array.from({ length: weeks }, (_, i) => addDays(firstMonday, 7 * i));
+  const days = (monday: string) => Array.from({ length: 7 }, (_, d) => calendarDay(addDays(monday, d), MOCK_CALENDAR));
+  const festivalWeek = mondays.findIndex((monday) => days(monday).some((day) => day.festival !== null));
+  const peak = festivalWeek >= 0 ? festivalWeek : Math.min(5, weeks - 1);
+  let paydays = 0;
+  return mondays.flatMap((monday, i) => {
+    const { isoYear, isoWeek } = isoWeekOf(monday);
+    const [total, chilled] =
+      i === peak
+        ? PEAK_WEEK
+        : days(monday).some((day) => day.isPayday)
+          ? PAYDAY_WEEKS[paydays++ % PAYDAY_WEEKS.length]!
+          : ORDINARY_WEEKS[isoWeek % ORDINARY_WEEKS.length]!;
+    // Chilled is Fresh only; the rest of the forecast splits across the three brands.
+    const fresh = chilled + Math.round((total - chilled) * 0.25);
+    const style = Math.round((total - fresh) * 0.55);
+    const split = [
+      ["Fresh", fresh, chilled],
+      ["Style", style, 0],
+      ["Tech", total - fresh - style, 0],
+    ] as const;
+    return split.map(([brand, demand, chilledM3]) => ({
+      isoYear,
+      isoWeek,
+      brand,
+      demandVolumeL: demand * 1000,
+      chilledVolumeL: chilledM3 * 1000,
+      capacityVolumeL: FLEET_M3 * 1000,
+      reeferCapacityVolumeL: REEFER_M3 * 1000,
+    }));
+  });
+}
+
 export function mockDispatchRespond(
   request: Pick<TransportRequest, "name" | "url" | "body">,
   nowMs: number,
@@ -292,6 +351,13 @@ export function mockDispatchRespond(
   switch (name) {
     case "runs":
       return { status: 200, body: { items: story(nowMs).runs, serverTime } };
+    case "outlook": {
+      const query = new URL(request.url, "http://mock.local").searchParams;
+      const from = query.get("from");
+      const weeks = Number(query.get("weeks"));
+      if (!from || !(weeks > 0)) return null;
+      return { status: 200, body: { items: outlook(from, Math.min(weeks, 52)), serverTime } };
+    }
     case "exceptions":
       return { status: 200, body: { items: story(nowMs).exceptions } };
     case "resolveConflict":

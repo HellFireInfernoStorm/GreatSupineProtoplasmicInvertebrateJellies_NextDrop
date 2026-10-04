@@ -871,3 +871,223 @@
 .dispatch-pinned-order .dispatch-card-heading > div {
   flex: 1;
 }
+
+/* D5 Capacity outlook (Figma 277:1215). */
+.dispatch-outlook {
+  display: grid;
+  gap: 16px;
+}
+.dispatch-outlook .dispatch-card {
+  border-radius: 14px;
+}
+.dispatch-outlook .dispatch-card h2 {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+/* Pills here are soft fills with coloured text and no dot (Figma "Dispatcher pill"). */
+.dispatch-outlook .nd-pill {
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+.dispatch-outlook .nd-pill-icon {
+  display: none;
+}
+.dispatch-outlook-tiles {
+  margin-bottom: 0;
+  gap: 16px;
+}
+.dispatch-outlook-tiles .dispatch-queue-metric {
+  min-height: 112px;
+}
+.dispatch-outlook-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.dispatch-outlook-icon {
+  color: var(--nd-tone);
+}
+.dispatch-outlook-icon[data-accent="true"] {
+  color: var(--nd-accent);
+}
+.dispatch-outlook-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.dispatch-outlook-chart {
+  padding: 20px;
+}
+.dispatch-card .dispatch-outlook-sub {
+  margin: 2px 0 12px;
+  font-size: 11px;
+  color: var(--nd-muted);
+}
+.dispatch-outlook-plot {
+  margin: 0;
+  overflow-x: auto;
+}
+.dispatch-outlook-plot-inner {
+  min-width: 440px;
+}
+.dispatch-outlook-plot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.dispatch-outlook-grid {
+  stroke: var(--nd-border);
+}
+.dispatch-outlook-baseline {
+  stroke: var(--nd-faint);
+}
+.dispatch-outlook-tick,
+.dispatch-outlook-line-label {
+  font-size: 11px;
+  fill: var(--nd-muted);
+}
+.dispatch-outlook-peak,
+.dispatch-outlook-line-value {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--nd-text);
+}
+.dispatch-outlook-bar {
+  fill: var(--nd-info);
+}
+.dispatch-outlook-capacity {
+  fill: none;
+  stroke: var(--nd-text);
+  stroke-width: 2;
+}
+.dispatch-outlook-axis {
+  display: grid;
+  margin-top: 6px;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--nd-muted);
+}
+.dispatch-outlook-axis > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+}
+.dispatch-outlook-axis strong {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--nd-text);
+}
+.dispatch-outlook-flag {
+  margin-top: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--nd-deferred-bg);
+  color: var(--nd-text);
+  white-space: nowrap;
+}
+.dispatch-outlook-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 840fr) minmax(280px, 434fr);
+  gap: 16px;
+  align-items: stretch;
+}
+.dispatch-outlook-table {
+  padding: 0;
+  overflow: hidden;
+}
+.dispatch-outlook-table h2 {
+  padding: 14px 20px 10px;
+}
+.dispatch-outlook-table table {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.dispatch-outlook-table thead th {
+  height: 30px;
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--nd-muted);
+  background: var(--nd-surface-2);
+  border-top: 1px solid var(--nd-border);
+}
+.dispatch-outlook-table tbody th,
+.dispatch-outlook-table td {
+  height: 28px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+.dispatch-outlook-table tbody th {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nd-text);
+}
+.dispatch-outlook-table tr > :first-child {
+  padding-left: 20px;
+}
+.dispatch-outlook-table tr > :last-child {
+  padding-right: 20px;
+}
+.dispatch-outlook-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.dispatch-outlook-insights {
+  padding: 20px;
+}
+.dispatch-outlook-insights ul {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.dispatch-outlook-insights li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.dispatch-outlook-insights .dispatch-outlook-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--nd-tone-bg);
+}
+.dispatch-outlook-insights strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.dispatch-outlook-insights small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--nd-muted);
+}
+@media (max-width: 1200px) {
+  .dispatch-outlook-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dispatch-outlook-charts,
+  .dispatch-outlook-bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .dispatch-outlook-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dispatch-outlook-tiles .dispatch-queue-metric {
+    flex-direction: row;
+  }
+}

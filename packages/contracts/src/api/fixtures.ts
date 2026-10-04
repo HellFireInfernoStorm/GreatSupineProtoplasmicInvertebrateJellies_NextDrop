@@ -302,6 +302,7 @@ export const apiFixtures = {
         demandVolumeL: 12000,
         chilledVolumeL: 8000,
         capacityVolumeL: 10000,
+        reeferCapacityVolumeL: 6000,
       },
     ],
     serverTime: MOCK_TIME,

@@ -45,3 +45,23 @@ export function formatDay(instant: Date | string): string {
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
   return `${part("weekday")} ${part("day")} ${part("month")}`;
 }
+
+/** Midday in Colombo on a local `YYYY-MM-DD` date, so it formats as that date in the display zone. */
+export function localDateInstant(date: string): string {
+  return `${date}T12:00:00+05:30`;
+}
+
+/** "29 Sep" */
+export function formatDayMonth(instant: Date | string): string {
+  const parts = dayFormat.formatToParts(typeof instant === "string" ? new Date(instant) : instant);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${part("day")} ${part("month")}`;
+}
+
+/** "28 Sep–3 Oct", or "5–10 Oct" when both days fall in one month. */
+export function formatDayRange(from: Date | string, to: Date | string): string {
+  const start = formatDayMonth(from);
+  const end = formatDayMonth(to);
+  const [startDay, startMonth] = start.split(" ");
+  return startMonth === end.split(" ")[1] ? `${startDay}–${end}` : `${start}–${end}`;
+}
