@@ -12,6 +12,7 @@ describe("field routes", () => {
     );
     expect(fieldMutations.map(([, route]) => route.path).sort()).toEqual([
       "/api/sync/blobs/:id",
+      "/api/sync/conflicts",
       "/api/sync/events",
       "/api/sync/heartbeat",
     ]);

@@ -60,6 +60,16 @@ const conflict = {
   resolution: null,
   note: null,
 } satisfies ApiDtoInput<"conflict">;
+const fieldConflict = {
+  conflictId: MOCK_ID,
+  clientEventId: MOCK_ID,
+  kind: "FACT_ON_REASSIGNED_STOP",
+  openedAt: MOCK_TIME,
+  state: "RESOLVED",
+  resolution: "REJECT_FACT",
+  note: "Mock resolution",
+  resolvedAt: MOCK_TIME,
+} satisfies ApiDtoInput<"fieldConflict">;
 const issue = {
   id: MOCK_ID,
   orderId: MOCK_ORDER_ID,
@@ -255,6 +265,9 @@ export const apiFixtures = {
     lastKnownStop: null,
   },
   heartbeatResponse: { serverTime: MOCK_TIME, feedHead: "9007199254740993", resetEpoch: 1 },
+  fieldConflictsRequest: { clientEventIds: [MOCK_ID] },
+  fieldConflict: fieldConflict,
+  fieldConflictsResponse: { items: [fieldConflict], serverTime: MOCK_TIME, feedHead: "9007199254740993" },
   blobHeaders: { "content-type": "image/jpeg", "x-nextdrop-csrf": "mock-csrf-token" },
   blobBody: new Uint8Array([255, 216, 255, 217]),
   blobResponse: { clientBlobId: MOCK_ID, mime: "image/jpeg", size: 4 },

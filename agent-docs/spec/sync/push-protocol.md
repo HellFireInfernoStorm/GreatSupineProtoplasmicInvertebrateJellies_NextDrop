@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §9, §9.1-9.2; ADR 0034, 0040
+sources: guide §9, §9.1-9.2; ADR 0034, 0040, 0043
 ---
 
 # Sync shape and push protocol
@@ -29,7 +29,7 @@ Response: `{ results: [{ clientEventId, status, index?, code?, conflictId?, serv
 | --- | --- |
 | `ACCEPTED` | mark acked |
 | `DUPLICATE` | mark acked |
-| `HELD_CONFLICT` | mark acked; show local conflict card; fact is preserved server-side |
+| `HELD_CONFLICT` | keep held; show local conflict card; fact is preserved server-side; learn the decision from `POST /sync/conflicts` (ADR 0043) |
 | `REJECTED` (+ code) | move to visible **failed** state with reason; never silently dropped |
 | network/5xx (no result) | keep pending; retry with backoff |
 

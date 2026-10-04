@@ -66,17 +66,27 @@ export function FieldSync() {
         <details className="bg-surface p-4 text-text">
           <summary>{t("sync.details")}</summary>
           <ul>
-            {diagnostics.failedItems.map((item) => (
-              <li key={"clientEventId" in item ? item.clientEventId : item.clientBlobId}>
-                {t("sync.failedAction", {
-                  reference:
-                    "clientEventId" in item
-                      ? (item.subject.orderId ?? item.subject.tripId ?? item.clientEventId)
-                      : item.clientBlobId,
-                })}{" "}
-                {t("sync.reason", { code: item.lastError ?? "UNKNOWN" })}
-              </li>
-            ))}
+            {diagnostics.failedItems.map((item) =>
+              "clientEventId" in item && item.resolution ? (
+                <li key={item.clientEventId}>
+                  {t("sync.rejectedAction", {
+                    reference: item.subject.orderId ?? item.subject.tripId ?? item.clientEventId,
+                    time: formatTime(item.resolution.resolvedAt),
+                  })}
+                  {item.resolution.note && <> {t("sync.dispatcherNote", { note: item.resolution.note })}</>}
+                </li>
+              ) : (
+                <li key={"clientEventId" in item ? item.clientEventId : item.clientBlobId}>
+                  {t("sync.failedAction", {
+                    reference:
+                      "clientEventId" in item
+                        ? (item.subject.orderId ?? item.subject.tripId ?? item.clientEventId)
+                        : item.clientBlobId,
+                  })}{" "}
+                  {t("sync.reason", { code: item.lastError ?? "UNKNOWN" })}
+                </li>
+              ),
+            )}
           </ul>
         </details>
       )}

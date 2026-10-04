@@ -176,6 +176,14 @@
       "text": "{{reference}} සඳහා කරුණ සේවාදායකයේ සුරැකී සැලසුම්කරුගේ විමසුමට ඇත.",
       "review": "draft"
     },
+    "rejectedAction": {
+      "text": "{{reference}} සඳහා කරුණ සැලසුම්කරු පිළිගත්තේ නැත ({{time}}). එය මෙහි සුරැකී ඇති අතර යෙදුනේ නැත.",
+      "review": "draft"
+    },
+    "dispatcherNote": {
+      "text": "සැලසුම්කරුගේ සටහන: {{note}}",
+      "review": "draft"
+    },
     "captured": {
       "text": "සටහන් කළේ {{time}}",
       "review": "draft"
