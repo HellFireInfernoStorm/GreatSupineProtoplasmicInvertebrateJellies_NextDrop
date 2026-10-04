@@ -8,7 +8,15 @@ import { orderRoutes } from "./routes";
 
 export { createCalendarSource, dateOnly, localDateOf, type CalendarSource } from "./calendar";
 export { appendServerEvent, insertionOrder, toEnvelope, toRulesEvent } from "./events";
-export { orderInclude, toOrderDto, toOutletDto, toTripDto, tripInclude, type OrderRecord } from "./projection";
+export {
+  orderInclude,
+  outletInclude,
+  toOrderDto,
+  toOutletDto,
+  toTripDto,
+  tripInclude,
+  type OrderRecord,
+} from "./projection";
 export { NO_SIGNAL_AFTER_MIN, orderResource } from "./routes";
 export { orderChanged } from "./commands";
 

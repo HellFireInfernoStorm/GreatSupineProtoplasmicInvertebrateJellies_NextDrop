@@ -15,6 +15,7 @@ import { feedRoutes } from "./modules/feed";
 import { registerField } from "./modules/field";
 import { createNotifier, notificationRoutes } from "./modules/notifications";
 import { registerOrders } from "./modules/orders";
+import { registerReference } from "./modules/reference";
 
 export interface ServerDependencies {
   ready?: Readiness;
@@ -83,6 +84,7 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
   // Field facts are received on business time too (receivedAt, confirmed-after-sync, serverTime).
   await registerField(app, { prisma, now: clock.now });
   await registerBlobs(app, { prisma });
+  await registerReference(app, { prisma });
   // Demo tooling needs the database: the clock offset, the tick and the reset all live there.
   if (prisma) {
     await app.register(demoRoutes, {

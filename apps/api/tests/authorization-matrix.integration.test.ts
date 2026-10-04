@@ -11,10 +11,35 @@ const now = new Date("2026-10-03T00:00:00Z");
 let suite: SuiteDatabase;
 let app: App;
 const callers = new Map<HumanRole, { cookie: string; csrf: string; own: string; foreign: string }>();
+const REFERENCE_RESPONSES = [
+  "outletsResponse",
+  "vehiclesResponse",
+  "productsResponse",
+  "calendarResponse",
+  "reasonsResponse",
+];
 // Generate currently implemented collection paths from the contracts, including store aliases.
 const collectionRoutes = routes.filter(([, route]) =>
-  ["notificationsResponse", "readNotificationsResponse", "changesResponse"].includes(route.responses[200] ?? ""),
+  ["notificationsResponse", "readNotificationsResponse", "changesResponse", ...REFERENCE_RESPONSES].includes(
+    route.responses[200] ?? "",
+  ),
 );
+// Reference rows each role may see (ADR 0038). The driver has no trips here, so it sees no outlets.
+const QUERIES: Record<string, string> = {
+  changesResponse: "?after=0",
+  calendarResponse: "?from=2026-10-01&to=2026-10-03",
+};
+const referenceIds = { ownOutlet: "", foreignOutlet: "", ownVehicle: "", foreignVehicle: "", fresh: "", other: "" };
+const visibleReference: Record<string, Record<HumanRole, (keyof typeof referenceIds)[]>> = {
+  outletsResponse: { STORE: ["ownOutlet"], DISPATCHER: ["ownOutlet"], LOADER: ["ownOutlet"], DRIVER: [] },
+  vehiclesResponse: { STORE: [], DISPATCHER: ["ownVehicle"], LOADER: ["ownVehicle"], DRIVER: ["ownVehicle"] },
+  productsResponse: {
+    STORE: ["fresh"],
+    DISPATCHER: ["fresh", "other"],
+    LOADER: ["fresh", "other"],
+    DRIVER: ["fresh", "other"],
+  },
+};
 
 describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and real handlers)", () => {
   beforeAll(async () => {
@@ -56,6 +81,56 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
         weeklyFuelQuotaL: 200,
         depot: "Own depot",
       },
+    });
+    const foreignOutlet = await prisma.outlet.create({
+      data: {
+        displayId: "MATRIX_FOREIGN_OUTLET",
+        brand: "Fresh",
+        depot: "Foreign depot",
+        districtId: district.id,
+        dockType: "rear_dock",
+        parkingConstraint: "normal",
+        windowOpen: 300,
+        windowClose: 600,
+      },
+    });
+    const foreignVehicle = await prisma.vehicle.create({
+      data: {
+        displayId: "MATRIX_FOREIGN_VEHICLE",
+        type: "van",
+        temp: "ambient",
+        weightCapKg: 1000,
+        volumeCapM3: 10,
+        fuelType: "diesel",
+        kmPerL: 8,
+        weeklyFuelQuotaL: 200,
+        depot: "Foreign depot",
+      },
+    });
+    for (const [n, v] of [vehicle, foreignVehicle].entries()) {
+      await prisma.driver.create({
+        data: { displayId: `MATRIX_DRV${n}`, name: "Driver", phone: "0770000000", vehicleId: v.id },
+      });
+    }
+    const product = (sku: string, brand: "Fresh" | "Tech") =>
+      prisma.product.create({
+        data: {
+          sku,
+          name: sku,
+          brand,
+          tempRequirement: "ambient",
+          unitLabel: "box",
+          unitWeightKg: 1,
+          unitVolumeM3: 0.01,
+        },
+      });
+    Object.assign(referenceIds, {
+      ownOutlet: outlet.id,
+      foreignOutlet: foreignOutlet.id,
+      ownVehicle: vehicle.id,
+      foreignVehicle: foreignVehicle.id,
+      fresh: (await product("MATRIX-FRESH", "Fresh")).id,
+      other: (await product("MATRIX-TECH", "Tech")).id,
     });
     const otherUser = await prisma.user.create({
       data: {
@@ -174,7 +249,7 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
     await suite.prisma.notification.updateMany({ data: { readAt: null } });
     const response = await app.inject({
       method: route.method,
-      url: route.path + (route.responses[200] === "changesResponse" ? "?after=0" : ""),
+      url: route.path + (QUERIES[route.responses[200] ?? ""] ?? ""),
       cookies: { [SESSION_COOKIE]: app.signCookie(caller.cookie) },
       headers: { [CSRF_HEADER]: caller.csrf },
       ...(route.method === "POST" ? { payload: scope === "all" ? { all: true } : { all: false, ids: [target] } } : {}),
@@ -192,6 +267,17 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
         expect(
           (await suite.prisma.notification.findUniqueOrThrow({ where: { id: caller.foreign } })).readAt,
         ).toBeNull();
+      } else if (route.responses[200] === "calendarResponse") {
+        expect(response.json().items.map((day: { date: string }) => day.date)).toEqual([
+          "2026-10-01",
+          "2026-10-02",
+          "2026-10-03",
+        ]);
+      } else if (route.responses[200] === "reasonsResponse") {
+        expect(response.json().loadShort.length).toBeGreaterThan(0);
+      } else if (visibleReference[route.responses[200] ?? ""]) {
+        const expected = visibleReference[route.responses[200]!]![role].map((key) => referenceIds[key]);
+        expect(response.json().items.map((item: { id: string }) => item.id)).toEqual(expected);
       } else if (route.responses[200] === "changesResponse") {
         const visible = role === "DISPATCHER" ? ["1", "3", "4"] : role === "LOADER" ? ["1", "3"] : ["1"];
         expect(response.json().items.map((item: { seq: string }) => item.seq)).toEqual(visible);

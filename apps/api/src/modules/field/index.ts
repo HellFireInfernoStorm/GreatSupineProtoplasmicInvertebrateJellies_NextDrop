@@ -5,7 +5,7 @@ import { createNotifier } from "../notifications";
 import { createIngest } from "./ingest";
 import { fieldRoutes } from "./routes";
 
-export { LATE_GRACE_MIN, reasonLists, snapshotConfig } from "./config";
+export { LATE_GRACE_MIN, snapshotConfig } from "./config";
 export { createIngest, type Ingest } from "./ingest";
 export { SYNC_BODY_LIMIT } from "./routes";
 export { buildSnapshot } from "./snapshot";
