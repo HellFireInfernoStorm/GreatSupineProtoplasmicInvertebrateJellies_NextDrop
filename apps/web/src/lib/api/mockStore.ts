@@ -19,11 +19,12 @@ import type { RawResponse, TransportRequest } from "./types";
 type Product = ApiDtoInput<"product">;
 type Order = ApiDtoInput<"order">;
 
-const outlet = apiFixtures.outletsResponse.items[0]!;
+export const MOCK_OUTLET = apiFixtures.outletsResponse.items[0]!;
+const outlet = MOCK_OUTLET;
 /** No rows: every date falls back to the default Monday-to-Saturday calendar. */
 const calendar = new Map<string, never>();
 
-const id = (n: number) => `018f1234-5678-7890-abcd-ef12345670${String(n).padStart(2, "0")}`;
+export const mockId = (n: number) => `018f1234-5678-7890-abcd-ef12345670${String(n).padStart(2, "0")}`;
 
 const product = (
   n: number,
@@ -33,7 +34,16 @@ const product = (
   tempRequirement: Product["tempRequirement"],
   unitWeightG: number,
   unitVolumeM3: number,
-): Product => ({ id: id(n), sku, name, brand: outlet.brand, tempRequirement, unitLabel, unitWeightG, unitVolumeM3 });
+): Product => ({
+  id: mockId(n),
+  sku,
+  name,
+  brand: outlet.brand,
+  tempRequirement,
+  unitLabel,
+  unitWeightG,
+  unitVolumeM3,
+});
 
 export const MOCK_PRODUCTS: readonly Product[] = [
   product(1, "FD-101", "Rice 5 kg", "bag", "ambient", 5000, 0.007),
@@ -63,7 +73,7 @@ const placed: Order[] = [];
 const byIdempotencyKey = new Map<string, Order>();
 let nextDisplayNumber = 10475;
 
-function buildOrder(
+export function buildOrder(
   n: number,
   displayId: string,
   requestedDate: string,
@@ -73,7 +83,7 @@ function buildOrder(
   const picked = lines.map((line) => ({ line, product: MOCK_PRODUCTS.find((p) => p.id === line.productId)! }));
   return {
     ...apiFixtures.order,
-    id: id(n),
+    id: mockId(n),
     displayId,
     outletId: outlet.id,
     brand: outlet.brand,

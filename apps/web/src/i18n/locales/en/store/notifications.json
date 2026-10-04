@@ -1,0 +1,22 @@
+{
+  "title": "Notifications",
+  "bell": "Notifications",
+  "bellUnread_one": "Notifications, {{count}} unread",
+  "bellUnread_other": "Notifications, {{count}} unread",
+  "unread_one": "{{count}} unread",
+  "unread_other": "{{count}} unread",
+  "unreadMark": "Unread:",
+  "allRead": "You are all caught up.",
+  "markAll": "Mark all read",
+  "none": "No notifications yet.",
+  "failed": "The notifications could not be loaded.",
+  "kind": {
+    "deferral_notice": "Order {{order}} was deferred",
+    "eta_updated": "New ETA for order {{order}}",
+    "delivered": "Order {{order}} was delivered",
+    "dispute_updated": "Your report on order {{order}} was updated",
+    "short_resolved": "The dispatcher decided on the short items of order {{order}}",
+    "short_reported": "Order {{order}} is short at the dock",
+    "other": "An update for your store"
+  }
+}
