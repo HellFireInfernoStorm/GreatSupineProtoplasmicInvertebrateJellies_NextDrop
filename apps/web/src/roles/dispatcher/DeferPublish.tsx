@@ -266,10 +266,9 @@ export function DeferPublish(props: Props) {
                               })}
                             </small>
                             <small>
-                              {t("consequence", {
-                                days: row.explanation.daysUnserved,
+                              {`${t("daysUnserved", { count: row.explanation.daysUnserved })} · ${t("deferralCount", {
                                 count: row.explanation.consecutiveDeferrals,
-                              })}
+                              })}`}
                             </small>
                           </td>
                           <td>
