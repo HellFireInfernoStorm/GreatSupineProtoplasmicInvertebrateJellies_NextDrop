@@ -8,6 +8,7 @@ export * from "./units";
 export * from "./order-reducer";
 export * from "./etas";
 export * from "./fuel";
+export * from "./run-usage";
 export * from "./plan";
 export * from "./trip-time";
 export * from "./validator";

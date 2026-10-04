@@ -10,8 +10,16 @@ export interface CapacityBarProps {
   capacity?: number | null;
   unit: string;
   tone?: "ok" | "info";
+  presentation?: "default" | "summary";
 }
-export function CapacityBar({ label, used, capacity, unit, tone = "info" }: CapacityBarProps) {
+export function CapacityBar({
+  label,
+  used,
+  capacity,
+  unit,
+  tone = "info",
+  presentation = "default",
+}: CapacityBarProps) {
   const { t, i18n } = useTranslation("shared/ui");
   const id = useId();
   const ratio = capacityRatio(used, capacity);
@@ -24,10 +32,10 @@ export function CapacityBar({ label, used, capacity, unit, tone = "info" }: Capa
       ? t("capacity.unavailable")
       : t("capacity.value", { used: number.format(used), capacity: number.format(capacity as number), unit });
   return (
-    <div className="nd-capacity" data-tone={displayTone} data-used={used}>
+    <div className="nd-capacity" data-tone={displayTone} data-used={used} data-presentation={presentation}>
       <div className="nd-capacity-header">
         <span id={id}>{label}</span>
-        <strong>{value}</strong>
+        <strong>{presentation === "summary" ? `${number.format(used)} ${unit}` : value}</strong>
       </div>
       {ratio !== null && (
         <div
@@ -42,6 +50,7 @@ export function CapacityBar({ label, used, capacity, unit, tone = "info" }: Capa
           <span className="nd-capacity-fill" style={{ width: `${ratio * 100}%` }} />
         </div>
       )}
+      {presentation === "summary" && <small>{value}</small>}
     </div>
   );
 }

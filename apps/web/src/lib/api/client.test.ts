@@ -22,6 +22,21 @@ afterEach(() => {
 });
 
 describe("callApi", () => {
+  it("preserves the validated violation details and base error of a draft 422", async () => {
+    const fixture = apiRouteFixtures.saveDraft;
+    const body = fixture.responses[422];
+    record({ status: 422, body });
+    const error = await callApi("saveDraft", fixture.request).catch((e: unknown) => e);
+    expect(error).toMatchObject({ status: 422, code: "VALIDATION_FAILED", validation: body.validation });
+  });
+
+  it("does not trust malformed extended validation errors", async () => {
+    const fixture = apiRouteFixtures.saveDraft;
+    record({ status: 422, body: { ...fixture.responses[422], validation: { ok: false, violations: [{}] } } });
+    const error = await callApi("saveDraft", fixture.request).catch((e: unknown) => e);
+    expect(error).toMatchObject({ status: 422, error: null, validation: null });
+  });
+
   it("builds the path and the query from the route table", async () => {
     const fixture = apiRouteFixtures.storeOrder;
     const sent = record({ status: 200, body: fixture.responses[200] });
