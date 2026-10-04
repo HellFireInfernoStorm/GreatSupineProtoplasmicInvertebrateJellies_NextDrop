@@ -1,4 +1,7 @@
 {
+  "confirm": { "text": "உறுதிப்படுத்தவும்", "review": "draft" },
+  "statusUnknown": { "text": "தெரியாத நிலை", "review": "draft" },
+  "timeUnavailable": { "text": "நேரம் கிடைக்கவில்லை", "review": "draft" },
   "status": {
     "ORDERED": {
       "text": "ஆர்டர் செய்யப்பட்டது",

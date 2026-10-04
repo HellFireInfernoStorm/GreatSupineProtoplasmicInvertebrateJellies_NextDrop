@@ -22,7 +22,7 @@ const english = localeFiles.en ?? {};
 const fieldNamespaces = Object.keys(english).filter((ns) => /^(loader|driver|shared)\//.test(ns));
 
 describe("locale files", () => {
-  it.each(["si", "ta"])("preserves DEV gallery %s keys, placeholders and draft review states", (language) => {
+  it.each(["si", "ta"])("preserves DEV gallery %s keys, placeholders and valid review states", (language) => {
     const tree = language === "si" ? gallerySi : galleryTa;
     const source = leaves(galleryEn);
     const target = leaves(tree);
@@ -30,7 +30,7 @@ describe("locale files", () => {
     for (const [path, text] of source) expect(placeholders(target.get(path)!)).toEqual(placeholders(text));
     const drafts = (node: LocaleTree) => {
       for (const value of Object.values(node)) {
-        if (isReviewedString(value)) expect(value.review).toBe("draft");
+        if (isReviewedString(value)) expect(["draft", "reviewed"]).toContain(value.review);
         else {
           expect(typeof value).toBe("object");
           drafts(value as LocaleTree);
@@ -39,6 +39,16 @@ describe("locale files", () => {
     };
     drafts(tree);
     drafts(localeFiles[language]!["shared/ui"]!);
+    // A native speaker may review leaves independently; key/placeholder coverage must keep passing.
+    const reviewed = structuredClone(tree) as LocaleTree;
+    const markReviewed = (node: LocaleTree) => {
+      for (const value of Object.values(node)) {
+        if (isReviewedString(value)) value.review = "reviewed";
+        else if (typeof value === "object") markReviewed(value);
+      }
+    };
+    markReviewed(reviewed);
+    drafts(reviewed);
   });
   it("has English for every namespace, as plain strings", () => {
     expect(Object.keys(english).sort()).toEqual(

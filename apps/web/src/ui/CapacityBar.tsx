@@ -12,12 +12,17 @@ export interface CapacityBarProps {
   tone?: "ok" | "info";
 }
 export function CapacityBar({ label, used, capacity, unit, tone = "info" }: CapacityBarProps) {
-  const { t } = useTranslation("shared/ui");
+  const { t, i18n } = useTranslation("shared/ui");
   const id = useId();
   const ratio = capacityRatio(used, capacity);
   const displayTone: Tone =
     ratio === null ? "neutral" : used > (capacity as number) ? "danger" : ratio >= 0.9 ? "warn" : tone;
-  const value = ratio === null ? t("capacity.unavailable") : t("capacity.value", { used, capacity, unit });
+  // Presentation precision removes floating-point noise; raw values still drive validation and fill.
+  const number = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumSignificantDigits: 12 });
+  const value =
+    ratio === null
+      ? t("capacity.unavailable")
+      : t("capacity.value", { used: number.format(used), capacity: number.format(capacity as number), unit });
   return (
     <div className="nd-capacity" data-tone={displayTone} data-used={used}>
       <div className="nd-capacity-header">

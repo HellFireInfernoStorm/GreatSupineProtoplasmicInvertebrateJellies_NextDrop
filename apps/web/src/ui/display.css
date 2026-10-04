@@ -581,6 +581,10 @@
   color: var(--nd-on-panel);
   border-color: var(--nd-panel-line);
 }
+/* Store: match the owner's inspected result when the transparent background override is disabled. */
+[data-theme="store"] .nd-button[data-variant="on-panel-outline"]:not(:disabled) {
+  background: var(--nd-primary);
+}
 .nd-chilled-icon {
   display: block;
   width: 100%;

@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { formatDay, formatTime } from "../lib/time";
+import { formatDay, formatTime, sameDisplayDay } from "../lib/time";
 import "./display.css";
-import { assertInstant } from "./instant";
+import { isInstant } from "./instant";
+import { useServerNow } from "../lib/clock";
 
 export interface TimelineEvent {
   id: string;
@@ -13,10 +14,13 @@ export interface TimelineEvent {
   confirmedAt: string | null;
 }
 export function Instant({ instant }: { instant: string }) {
-  assertInstant(instant);
+  const { t } = useTranslation("shared/ui");
+  const now = useServerNow(60_000);
+  if (!isInstant(instant)) return <span>{t("timeUnavailable")}</span>;
   return (
     <time dateTime={instant}>
-      {formatDay(instant)} · {formatTime(instant)}
+      {!sameDisplayDay(instant, now.getTime()) && <>{formatDay(instant)} · </>}
+      {formatTime(instant)}
     </time>
   );
 }

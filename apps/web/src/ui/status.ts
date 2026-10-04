@@ -22,6 +22,6 @@ export const TRIP_TONES = {
   CANCELLED: "neutral",
 } as const satisfies Record<TripStatus, Tone>;
 export function statusTone(status: OrderStatus): Tone {
-  if (!Object.hasOwn(STATUS_TONES, status)) throw new TypeError(`Unknown order status: ${status}`);
+  if (!Object.hasOwn(STATUS_TONES, status)) return "neutral";
   return STATUS_TONES[status];
 }

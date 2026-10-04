@@ -9,12 +9,15 @@ export interface ToastProps {
   message: ReactNode;
   action?: ReactNode;
   durationMs?: number;
+  /** Set for replacements with the same copy or ReactNode messages whose identity changes on render. */
+  notificationId?: string | number;
 }
-export function Toast({ open, onClose, message, action, durationMs = 5000 }: ToastProps) {
+export function Toast({ open, onClose, message, action, durationMs = 5000, notificationId }: ToastProps) {
   const { t } = useTranslation("shared/ui");
   const callback = useRef(onClose);
   const timer = useRef<ReturnType<typeof createDismissTimer> | null>(null);
   const paused = useRef({ hover: false, focus: false });
+  const notification = notificationId ?? message;
   useEffect(() => {
     callback.current = onClose;
   }, [onClose]);
@@ -30,7 +33,7 @@ export function Toast({ open, onClose, message, action, durationMs = 5000 }: Toa
       instance.dispose();
       timer.current = null;
     };
-  }, [open, durationMs]);
+  }, [open, durationMs, notification]);
   const update = (kind: "hover" | "focus", value: boolean) => {
     paused.current[kind] = value;
     if (paused.current.hover || paused.current.focus) timer.current?.pause();

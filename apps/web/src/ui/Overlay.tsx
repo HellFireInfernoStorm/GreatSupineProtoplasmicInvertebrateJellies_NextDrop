@@ -14,6 +14,7 @@ function Overlay({ open, onClose, title, children, sheet = false }: OverlayProps
   const dialog = useRef<HTMLDialogElement>(null);
   const callback = useRef(onClose);
   const active = useRef(false);
+  const backdropPress = useRef(false);
   useEffect(() => {
     callback.current = onClose;
   }, [onClose]);
@@ -25,6 +26,7 @@ function Overlay({ open, onClose, title, children, sheet = false }: OverlayProps
     element.showModal();
     return () => {
       active.current = false;
+      backdropPress.current = false;
       if (element.open) element.close();
       if (opener?.isConnected) opener.focus();
     };
@@ -34,18 +36,34 @@ function Overlay({ open, onClose, title, children, sheet = false }: OverlayProps
       ref={dialog}
       className={`nd-overlay ${sheet ? "nd-sheet" : "nd-modal"}`}
       aria-labelledby={id}
-      onClose={() => {
-        if (active.current) {
+      onClose={(event) => {
+        // close() queues its event; StrictMode or a rapid reopen may already have opened it again.
+        if (!event.currentTarget.open && active.current) {
           active.current = false;
           callback.current();
         }
       }}
       onCancel={(event) => {
+        if (event.target !== event.currentTarget) return;
         event.preventDefault();
         callback.current();
       }}
+      onPointerDown={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        backdropPress.current =
+          event.target === event.currentTarget &&
+          (event.clientX < rect.left ||
+            event.clientX > rect.right ||
+            event.clientY < rect.top ||
+            event.clientY > rect.bottom);
+      }}
+      onPointerCancel={() => {
+        backdropPress.current = false;
+      }}
       onClick={(event) => {
-        if (event.target !== event.currentTarget) return;
+        const startedOutside = backdropPress.current;
+        backdropPress.current = false;
+        if (!startedOutside || event.target !== event.currentTarget) return;
         const rect = event.currentTarget.getBoundingClientRect();
         if (
           event.clientX < rect.left ||

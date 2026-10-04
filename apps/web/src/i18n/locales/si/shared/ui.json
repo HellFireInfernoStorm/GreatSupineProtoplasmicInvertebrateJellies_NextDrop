@@ -1,4 +1,7 @@
 {
+  "confirm": { "text": "තහවුරු කරන්න", "review": "draft" },
+  "statusUnknown": { "text": "නොදන්නා තත්ත්වය", "review": "draft" },
+  "timeUnavailable": { "text": "වේලාව ලබාගත නොහැක", "review": "draft" },
   "status": {
     "ORDERED": {
       "text": "ඇණවුම් කර ඇත",

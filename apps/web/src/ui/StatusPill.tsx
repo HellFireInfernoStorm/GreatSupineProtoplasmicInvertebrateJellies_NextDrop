@@ -21,7 +21,7 @@ export function StatusPill({ status, icon }: { status: OrderStatus; icon?: React
   const { t } = useTranslation("shared/ui");
   return (
     <Pill tone={statusTone(status)} icon={icon}>
-      {t(`status.${status}`)}
+      {t(`status.${status}`, { defaultValue: t("statusUnknown") })}
     </Pill>
   );
 }

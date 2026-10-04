@@ -1,6 +1,6 @@
 import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ORDER_STATUSES } from "@nextdrop/contracts";
 import { statusTone } from "./status";
 import { CapacityBar } from "./CapacityBar";
@@ -8,9 +8,10 @@ import { capacityRatio } from "./capacity";
 import { Timeline } from "./Timeline";
 import { FormField } from "./FormField";
 import { Button } from "./Button";
-import { SyncPill } from "./StatusPill";
+import { StatusPill, SyncPill } from "./StatusPill";
 import { TripCard } from "./Cards";
 import "../i18n";
+afterEach(() => vi.useRealTimers());
 
 describe("shared display kit", () => {
   it("keeps the trip departure day separate from its primary 24-hour time", () => {
@@ -20,11 +21,11 @@ describe("shared display kit", () => {
     expect(html).toContain('dateTime="2026-10-03T18:00:00Z"');
     expect(html).toContain('<span class="nd-trip-day">Sat 3 Oct</span>');
     expect(html).toContain('<span class="nd-trip-time">23:30</span>');
-    expect(() =>
+    expect(
       render(h(TripCard, { id: "TRIP-1", vehicle: "Truck", departure: "2026-10-03T18:00:00", status: "PLANNED" })),
-    ).toThrow();
+    ).toContain("Time unavailable");
   });
-  it("covers contract statuses and rejects flags as statuses", () => {
+  it("covers contract statuses and degrades unknown display values to neutral", () => {
     const expected = {
       ORDERED: "neutral",
       PLANNED: "info",
@@ -40,7 +41,7 @@ describe("shared display kit", () => {
     expect(Object.keys(expected).sort()).toEqual([...ORDER_STATUSES].sort());
     for (const status of ORDER_STATUSES) expect(statusTone(status)).toBe(expected[status]);
     expect(statusTone("DEFERRED")).toBe("deferred");
-    expect(() => statusTone("SHORT" as never)).toThrow();
+    expect(statusTone("SHORT" as never)).toBe("neutral");
   });
   it("clamps only the capacity fill and retains overflow counts", () => {
     expect(capacityRatio(12, 10)).toBe(1);
@@ -51,7 +52,54 @@ describe("shared display kit", () => {
     expect(html).toContain('aria-valuenow="10"');
     expect(html).toContain('data-used="12"');
   });
+  it("formats floating measurements in both visible and accessible capacity text", () => {
+    const html = render(h(CapacityBar, { label: "Volume", used: 0.1 + 0.2, capacity: 12, unit: "m³" }));
+    expect(html).toContain("0.3 / 12 m³");
+    expect(html).toContain('aria-valuetext="0.3 / 12 m³"');
+    expect(html).not.toContain("0.30000000000000004 /");
+  });
+  it("omits today's day while retaining the day on older field facts", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-04T03:00:00Z"));
+    const html = render(
+      h(Timeline, {
+        events: [
+          { id: "fact", title: "Delivered", capturedAt: "2026-10-03T18:00:00Z", confirmedAt: "2026-10-04T02:10:00Z" },
+        ],
+      }),
+    );
+    expect(html).toContain("Sat 3 Oct");
+    expect(html).not.toContain("Sun 4 Oct");
+    expect(html).toContain("07:40");
+  });
+  it("does not mistake the same weekday and month/day in a different year for today", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-04T03:00:00Z"));
+    const html = render(
+      h(Timeline, {
+        events: [{ id: "old", title: "Delivered", capturedAt: "2020-10-04T02:00:00Z", confirmedAt: null }],
+      }),
+    );
+    expect(html).toContain("Sun 4 Oct");
+  });
+  it("isolates unknown order statuses", () => {
+    const status = render(h(StatusPill, { status: "NEW_SERVER_STATE" as never }));
+    expect(status).toContain('data-tone="neutral"');
+    expect(status).toContain("Unknown status");
+  });
+  it("isolates ambiguous timestamps without inventing a time", () => {
+    const html = render(
+      h(Timeline, { events: [{ id: "bad", title: "Recorded", capturedAt: "2026-10-03T18:00:00", confirmedAt: null }] }),
+    );
+    expect(html).toContain("Time unavailable");
+    expect(html).not.toContain("dateTime=");
+    expect(render(h(TripCard, { id: "trip", vehicle: "Truck", status: "READY", departure: "invalid" }))).toContain(
+      "Time unavailable",
+    );
+  });
   it("preserves separate capture and confirmation instants across days", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-05T03:00:00Z"));
     const html = render(
       h(Timeline, {
         events: [
@@ -66,10 +114,10 @@ describe("shared display kit", () => {
     expect(html).toContain("Sat 3 Oct");
     expect(html).toContain("Sun 4 Oct");
   });
-  it("does not invent confirmation and rejects invalid dates", () => {
+  it("does not invent confirmation or an invalid date", () => {
     const event = { id: "pending", title: "Loaded", capturedAt: "2026-10-03T18:00:00Z", confirmedAt: null };
     expect(render(h(Timeline, { events: [event] })).match(/dateTime=/g)).toHaveLength(1);
-    expect(() => render(h(Timeline, { events: [{ ...event, capturedAt: "invalid" }] }))).toThrow();
+    expect(render(h(Timeline, { events: [{ ...event, capturedAt: "invalid" }] }))).toContain("Time unavailable");
   });
   it("associates field labels, hints and errors with the control", () => {
     const html = render(
