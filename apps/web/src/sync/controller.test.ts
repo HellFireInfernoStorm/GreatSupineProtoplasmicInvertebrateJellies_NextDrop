@@ -1,4 +1,5 @@
 import {
+  fieldConflictContextFixture,
   apiFieldConflictFixtures,
   apiFixtures,
   apiVariantFixtures,
@@ -464,4 +465,75 @@ it.each([413, 502])("only retries transient blob failures (HTTP %s)", async (sta
   expect((await db.blobQueue.get(id))?.state).toBe(status === 413 ? "failed" : "pending");
   await controller.syncNow();
   expect(uploads).toBe(status === 413 ? 1 : 2);
+});
+
+it("persists open historical context across snapshot replacement and cold resume, retaining dispatcher decision", async () => {
+  await repository.replaceSnapshot(data, "driver-1");
+  const entry = await enqueue();
+  const conflictId = uuidv7();
+  await db.outbox.update(entry.clientEventId, { state: "held" });
+  const item = structuredClone(fieldConflictContextFixture);
+  item.clientEventId = entry.clientEventId;
+  item.conflictId = conflictId;
+  item.context.fact.clientEventId = entry.clientEventId;
+  item.context.fact.actor.userId = "driver-1";
+  transport.conflicts = async () => ({
+    items: [item],
+    serverTime: entry.capturedAt,
+    feedHead: data.feedCursor,
+    resetEpoch: data.resetEpoch,
+  });
+  await controller.syncNow();
+  await repository.replaceSnapshot({ ...data, planVersion: 9 }, "driver-1");
+  const resumed = new SyncController(
+    new FieldRepository(db),
+    transport,
+    () => "driver-1",
+    () => false,
+  );
+  await resumed.syncNow();
+  expect((await db.conflictsLocal.get(conflictId))?.context).toEqual(item.context);
+  transport.conflicts = async () => ({
+    items: [
+      { ...item, state: "RESOLVED", resolution: "REJECT_FACT", note: "Store moved", resolvedAt: entry.capturedAt },
+    ],
+    serverTime: entry.capturedAt,
+    feedHead: data.feedCursor,
+  });
+  await resumed.syncNow();
+  expect(await db.conflictsLocal.get(conflictId)).toMatchObject({
+    context: item.context,
+    resolution: { decision: "REJECT_FACT", note: "Store moved" },
+  });
+  expect((await db.outbox.get(entry.clientEventId))?.state).toBe("rejected");
+});
+it("ignores another owner's context and discards old context when lookup reports a reset", async () => {
+  await repository.replaceSnapshot(data, "driver-1");
+  const entry = await enqueue();
+  await db.outbox.update(entry.clientEventId, { state: "held" });
+  const item = structuredClone(fieldConflictContextFixture);
+  item.clientEventId = entry.clientEventId;
+  item.context.fact.clientEventId = entry.clientEventId;
+  transport.conflicts = async () => ({
+    items: [item],
+    serverTime: entry.capturedAt,
+    feedHead: data.feedCursor,
+    resetEpoch: data.resetEpoch,
+  });
+  await controller.syncNow();
+  expect(await db.conflictsLocal.count()).toBe(0);
+  item.context.fact.actor.userId = "driver-1";
+  await controller.syncNow();
+  expect(await db.conflictsLocal.count()).toBe(1);
+  const nextEpoch = data.resetEpoch + 1;
+  transport.conflicts = async () => ({
+    items: [item],
+    serverTime: entry.capturedAt,
+    feedHead: data.feedCursor,
+    resetEpoch: nextEpoch,
+  });
+  data = { ...data, resetEpoch: nextEpoch };
+  await controller.syncNow();
+  expect(await db.conflictsLocal.count()).toBe(0);
+  expect(await db.outbox.count()).toBe(0);
 });

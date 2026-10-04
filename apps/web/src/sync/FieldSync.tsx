@@ -8,7 +8,7 @@ import { setForceOffline, useSyncDiagnostics } from "./hooks";
 import { DEMO_MODE } from "../lib/demo";
 
 /** Shared field plumbing; role screens remain under their own issue. */
-export function FieldSync() {
+export function FieldSync({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation("shared/common");
   const needed = useReauthNeeded();
   const activity = useSyncActivity();
@@ -25,84 +25,88 @@ export function FieldSync() {
   }, [needed]);
   return (
     <>
-      <div
-        role="status"
-        className={`flex flex-wrap items-center gap-3 px-4 py-2 text-sm ${activity.offline || diagnostics.simulateOffline ? "bg-warn-bg text-warn-fg" : "bg-surface text-text"}`}
-      >
-        <span>
-          {t(
-            activity.offline || diagnostics.simulateOffline
-              ? "sync.offline"
-              : activity.syncing
-                ? "sync.syncing"
-                : needed
-                  ? "sync.paused"
-                  : activity.error
-                    ? "sync.retrying"
-                    : diagnostics.lastSyncedAt
-                      ? "sync.synced"
-                      : "sync.waiting",
+      <div hidden={compact}>
+        <div
+          role="status"
+          className={`flex flex-wrap items-center gap-3 px-4 py-2 text-sm ${activity.offline || diagnostics.simulateOffline ? "bg-warn-bg text-warn-fg" : "bg-surface text-text"}`}
+        >
+          <span>
+            {t(
+              activity.offline || diagnostics.simulateOffline
+                ? "sync.offline"
+                : activity.syncing
+                  ? "sync.syncing"
+                  : needed
+                    ? "sync.paused"
+                    : activity.error
+                      ? "sync.retrying"
+                      : diagnostics.lastSyncedAt
+                        ? "sync.synced"
+                        : "sync.waiting",
+            )}
+          </span>
+          <span>{t("sync.pending", { count: diagnostics.pendingCount })}</span>
+          {diagnostics.lastSyncedAt && <span>{t("sync.last", { time: formatTime(diagnostics.lastSyncedAt) })}</span>}
+          {!!diagnostics.failedItems.length && (
+            <span>{t("sync.failed", { count: diagnostics.failedItems.length })}</span>
           )}
-        </span>
-        <span>{t("sync.pending", { count: diagnostics.pendingCount })}</span>
-        {diagnostics.lastSyncedAt && <span>{t("sync.last", { time: formatTime(diagnostics.lastSyncedAt) })}</span>}
-        {!!diagnostics.failedItems.length && <span>{t("sync.failed", { count: diagnostics.failedItems.length })}</span>}
-        {!!diagnostics.heldCount && <span>{t("sync.held", { count: diagnostics.heldCount })}</span>}
-        <button type="button" disabled={needed || activity.syncing} onClick={() => void syncController.syncNow()}>
-          {t("sync.now")}
-        </button>
-        {DEMO_MODE && (
-          <label>
-            <input
-              type="checkbox"
-              checked={diagnostics.simulateOffline}
-              onChange={(event) => void setForceOffline(event.target.checked)}
-            />{" "}
-            {t("sync.forceOffline")}
-          </label>
+          {!!diagnostics.heldCount && <span>{t("sync.held", { count: diagnostics.heldCount })}</span>}
+          <button type="button" disabled={needed || activity.syncing} onClick={() => void syncController.syncNow()}>
+            {t("sync.now")}
+          </button>
+          {DEMO_MODE && (
+            <label>
+              <input
+                type="checkbox"
+                checked={diagnostics.simulateOffline}
+                onChange={(event) => void setForceOffline(event.target.checked)}
+              />{" "}
+              {t("sync.forceOffline")}
+            </label>
+          )}
+        </div>
+        {!!diagnostics.failedItems.length && (
+          <details className="bg-surface p-4 text-text">
+            <summary>{t("sync.details")}</summary>
+            <ul>
+              {diagnostics.failedItems.map((item) =>
+                "clientEventId" in item && item.resolution ? (
+                  <li key={item.clientEventId}>
+                    {t("sync.rejectedAction", {
+                      reference: item.subject.orderId ?? item.subject.tripId ?? item.clientEventId,
+                      time: formatTime(item.resolution.resolvedAt),
+                    })}
+                    {item.resolution.note && <> {t("sync.dispatcherNote", { note: item.resolution.note })}</>}
+                  </li>
+                ) : (
+                  <li key={"clientEventId" in item ? item.clientEventId : item.clientBlobId}>
+                    {t("sync.failedAction", {
+                      reference:
+                        "clientEventId" in item
+                          ? (item.subject.orderId ?? item.subject.tripId ?? item.clientEventId)
+                          : item.clientBlobId,
+                    })}{" "}
+                    {t("sync.reason", { code: item.lastError ?? "UNKNOWN" })}
+                  </li>
+                ),
+              )}
+            </ul>
+          </details>
+        )}
+        {!!diagnostics.heldItems.length && (
+          <ul className="bg-warn-bg px-4 py-2 text-warn-fg">
+            {diagnostics.heldItems.map((item) => (
+              <li key={item.clientEventId}>
+                {t("sync.heldAction", { reference: item.subject.orderId ?? item.subject.tripId ?? item.clientEventId })}{" "}
+                {t("sync.captured", {
+                  time: formatTime(new Date(Date.parse(item.capturedAt) + (item.clockOffsetMs ?? 0))),
+                })}
+                {item.confirmedAt && <span> · {t("sync.confirmed", { time: formatTime(item.confirmedAt) })}</span>}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-      {!!diagnostics.failedItems.length && (
-        <details className="bg-surface p-4 text-text">
-          <summary>{t("sync.details")}</summary>
-          <ul>
-            {diagnostics.failedItems.map((item) =>
-              "clientEventId" in item && item.resolution ? (
-                <li key={item.clientEventId}>
-                  {t("sync.rejectedAction", {
-                    reference: item.subject.orderId ?? item.subject.tripId ?? item.clientEventId,
-                    time: formatTime(item.resolution.resolvedAt),
-                  })}
-                  {item.resolution.note && <> {t("sync.dispatcherNote", { note: item.resolution.note })}</>}
-                </li>
-              ) : (
-                <li key={"clientEventId" in item ? item.clientEventId : item.clientBlobId}>
-                  {t("sync.failedAction", {
-                    reference:
-                      "clientEventId" in item
-                        ? (item.subject.orderId ?? item.subject.tripId ?? item.clientEventId)
-                        : item.clientBlobId,
-                  })}{" "}
-                  {t("sync.reason", { code: item.lastError ?? "UNKNOWN" })}
-                </li>
-              ),
-            )}
-          </ul>
-        </details>
-      )}
-      {!!diagnostics.heldItems.length && (
-        <ul className="bg-warn-bg px-4 py-2 text-warn-fg">
-          {diagnostics.heldItems.map((item) => (
-            <li key={item.clientEventId}>
-              {t("sync.heldAction", { reference: item.subject.orderId ?? item.subject.tripId ?? item.clientEventId })}{" "}
-              {t("sync.captured", {
-                time: formatTime(new Date(Date.parse(item.capturedAt) + (item.clockOffsetMs ?? 0))),
-              })}
-              {item.confirmedAt && <span> · {t("sync.confirmed", { time: formatTime(item.confirmedAt) })}</span>}
-            </li>
-          ))}
-        </ul>
-      )}
       {needed && (
         <form
           aria-label={t("sync.reauth")}

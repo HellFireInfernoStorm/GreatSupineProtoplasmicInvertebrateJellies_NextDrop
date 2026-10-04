@@ -21,7 +21,7 @@ Screen inventory. The authoritative list and visuals are the live Figma file (AD
 - **Store:** sign-in; my deliveries; place order with the outlet brand's product catalogue (`/store/order`, the catalogue at `/store/order/items`; on phone, review at `/store/order/review` and the confirmation at `/store/order/placed`, ADR 0039); review and submit; order placed; deferral notice; order tracking, timeline, history and detail; confirm receipt; report issue; notifications; the "late or lost?" sheet.
 - **Dispatcher:** sign-in with depot; dashboard (D0); order queue (D1); plan board (D2) with the add-trip modal in valid and blocked states; defer and publish (D3); Delivery Progress (D4, the live run monitor, route `/dispatch/runs`, with exceptions inbox and evidence detail); capacity outlook (D5); fleet and capacity; notifications popover; confirmation toasts.
 - **Loader:** PIN sign-in with language chips; trips by departure; loading checklist in reverse stop order; short and damaged sheets; ready and hand-over with hold-to-confirm; connection and plan-changed states.
-- **Driver:** PIN sign-in; today's run; stop detail; flag a problem; outcome and proof of delivery; sync, offline, reconnect, clash and plan-changed states; settings with sync diagnostics.
+- **Driver:** routes `/driver` (run), `/driver/stop/:stopId` (per-order stop), `/driver/sync` (recovery) and `/driver/settings` (language and diagnostics). PIN sign-in; today's run; stop detail; flag a problem; outcome and proof of delivery; sync, offline, reconnect, clash and plan-changed states; settings with sync diagnostics.
 
 ## 14.3 Conventions
 

@@ -1,0 +1,580 @@
+{
+  "title": {
+    "text": "අද ගමන් වාරය",
+    "review": "draft"
+  },
+  "settings": {
+    "text": "සැකසුම්",
+    "review": "draft"
+  },
+  "back": {
+    "text": "ගමන් වාරයට ආපසු",
+    "review": "draft"
+  },
+  "offline": {
+    "text": "සම්බන්ධතාව නැත",
+    "review": "draft"
+  },
+  "syncing": {
+    "text": "{{count}} යවමින්",
+    "review": "draft"
+  },
+  "needsDispatch": {
+    "text": "සැලසුම්කරුගේ තීරණය අවශ්‍යයි",
+    "review": "draft"
+  },
+  "needsAttention": {
+    "text": "අවධානය අවශ්‍යයි",
+    "review": "draft"
+  },
+  "waiting": {
+    "text": "{{count}} ක් රැඳී ඇත",
+    "review": "draft"
+  },
+  "syncedAt": {
+    "text": "{{time}} සමමුහුර්ත විය",
+    "review": "draft"
+  },
+  "waitingSignal": {
+    "text": "සම්බන්ධතාව එනතුරු රැඳී ඇත",
+    "review": "draft"
+  },
+  "offlineSaved": {
+    "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
+    "review": "draft"
+  },
+  "goToStop": {
+    "text": "නැවතුම් {{number}} වෙත යන්න",
+    "review": "draft"
+  },
+  "startRun": {
+    "text": "ගමන් වාරය අරඹන්න",
+    "review": "draft"
+  },
+  "saveError": {
+    "text": "සුරැකීමට නොහැකි විය. නැවත උත්සාහ කරන්න.",
+    "review": "draft"
+  },
+  "noRun": {
+    "text": "මෙම දුරකථනයේ ගමන් වාරයක් නැත. බාගැනීමට සම්බන්ධ වන්න.",
+    "review": "draft"
+  },
+  "loading": {
+    "text": "සුරැකි ගමන් වාරය පූරණය වෙමින්…",
+    "review": "draft"
+  },
+  "vehicle": {
+    "truck": {
+      "text": "ලොරි රථය",
+      "review": "draft"
+    },
+    "van": {
+      "text": "වෑන් රථය",
+      "review": "draft"
+    }
+  },
+  "reefer": {
+    "text": "ශීතකරණ රථය",
+    "review": "draft"
+  },
+  "trip": {
+    "text": "ගමන {{trip}} · {{brand}} · {{depot}} · {{time}}",
+    "review": "draft"
+  },
+  "runComplete": {
+    "text": "ගමන් වාරය අවසන්",
+    "review": "draft"
+  },
+  "stopsDone": {
+    "text": "අවසන් නැවතුම්",
+    "review": "draft"
+  },
+  "nextStop": {
+    "text": "ඊළඟ නැවතුම",
+    "review": "draft"
+  },
+  "maps": {
+    "text": "Google Maps විවෘත කරන්න",
+    "review": "draft"
+  },
+  "dock": {
+    "rear_dock": {
+      "text": "පසුපස බෑමේ ස්ථානය",
+      "review": "draft"
+    },
+    "street": {
+      "text": "මාර්ගය",
+      "review": "draft"
+    },
+    "mall_bay": {
+      "text": "සාප්පු සංකීර්ණ බෑමේ ස්ථානය",
+      "review": "draft"
+    }
+  },
+  "parking": {
+    "normal": {
+      "text": "වෙළඳසැලේ සාමාන්‍ය රථගාල භාවිතා කරන්න.",
+      "review": "draft"
+    },
+    "van_only": {
+      "text": "වෑන් රථ පමණයි. ඇතුළුවීමට පෙර සැලසුම්කරු අමතන්න.",
+      "review": "draft"
+    },
+    "mall_dock": {
+      "text": "සාප්පු සංකීර්ණයේ බෑමේ ස්ථානය භාවිතා කරන්න.",
+      "review": "draft"
+    }
+  },
+  "chilled": {
+    "text": "ශීත කළ",
+    "review": "draft"
+  },
+  "completed": {
+    "text": "සටහන් කර ඇත",
+    "review": "draft"
+  },
+  "groupedOrders": {
+    "text": "මෙම වෙළඳසැලේ ඇණවුම් {{count}} ක් · වෙන වෙනම සටහන් වේ",
+    "review": "draft"
+  },
+  "twoTimes": {
+    "text": "බෙදාහැරියේ {{captured}} · සමමුහුර්ත වූ පසු {{confirmed}} තහවුරු විය",
+    "review": "draft"
+  },
+  "noStops": {
+    "text": "මෙම සැලසුමේ නැවතුම් නැත.",
+    "review": "draft"
+  },
+  "stop": {
+    "text": "නැවතුම",
+    "review": "draft"
+  },
+  "stopUnavailable": {
+    "text": "මෙම නැවතුම දැන් ගමන් වාරයේ නැත. සුරැකි බෙදාහැරීම් සඳහා සමමුහුර්ත තත්ත්වය බලන්න.",
+    "review": "draft"
+  },
+  "proofTitle": {
+    "text": "සාක්ෂි · නැවතුම {{number}}",
+    "review": "draft"
+  },
+  "stopTitle": {
+    "text": "නැවතුම {{number}} · {{outlet}}",
+    "review": "draft"
+  },
+  "arrived": {
+    "text": "පැමිණියා",
+    "review": "draft"
+  },
+  "saveDelivery": {
+    "text": "බෙදාහැරීම සුරකින්න",
+    "review": "draft"
+  },
+  "continueRun": {
+    "text": "ගමන් වාරය දිගටම කරගෙන යන්න",
+    "review": "draft"
+  },
+  "savedTitle": {
+    "text": "මෙම දුරකථනයේ සුරැකී ඇත",
+    "review": "draft"
+  },
+  "savedDetail": {
+    "text": "බෙදාහැරීම සහ සාක්ෂි මෙහි සුරැකී ඇත. සම්බන්ධතාව ලැබුණු විට සමමුහුර්ත වේ.",
+    "review": "draft"
+  },
+  "proofKept": {
+    "text": "සැලසුම්කරු මෙම නැවතුම වෙනස් කළත් ඔබේ සටහන රැකේ.",
+    "review": "draft"
+  },
+  "alreadyRecorded": {
+    "text": "මෙම නැවතුමේ ප්‍රතිඵලය දැනටමත් සටහන් කර ඇත.",
+    "review": "draft"
+  },
+  "itemsOnBoard": {
+    "text": "රථයේ ඇති භාණ්ඩ",
+    "review": "draft"
+  },
+  "loadedShort": {
+    "text": "අඩුවෙන් පටවා ඇත",
+    "review": "draft"
+  },
+  "flagProblem": {
+    "text": "ගැටලුවක් දන්වන්න",
+    "review": "draft"
+  },
+  "howDidItGo": {
+    "text": "බෙදාහැරීම කෙසේ සිදු වූවාද?",
+    "review": "draft"
+  },
+  "outcome": {
+    "FULL": {
+      "text": "සම්පූර්ණයෙන් බෙදාහැරියා",
+      "review": "draft"
+    },
+    "PARTIAL": {
+      "text": "අර්ධ වශයෙන්",
+      "review": "draft"
+    },
+    "REFUSED": {
+      "text": "ප්‍රතික්ෂේප කළා",
+      "review": "draft"
+    },
+    "FAILED": {
+      "text": "අසාර්ථකයි",
+      "review": "draft"
+    }
+  },
+  "outcomeHelp": {
+    "FULL": {
+      "text": "පටවා තිබූ සියල්ල පිළිගත්තා",
+      "review": "draft"
+    },
+    "PARTIAL": {
+      "text": "පටවා තිබූ භාණ්ඩ සමහරක් පිළිගත්තේ නැත",
+      "review": "draft"
+    },
+    "REFUSED": {
+      "text": "වෙළඳසැල බෙදාහැරීම පිළිගත්තේ නැත",
+      "review": "draft"
+    },
+    "FAILED": {
+      "text": "මෙම නැවතුම සම්පූර්ණ කළ නොහැකි විය",
+      "review": "draft"
+    }
+  },
+  "nonFullHelp": {
+    "text": "අර්ධ, ප්‍රතික්ෂේප සහ අසාර්ථක බෙදාහැරීම් සඳහා හේතුවක් සහ ඡායාරූපයක් අවශ්‍යයි.",
+    "review": "draft"
+  },
+  "reasonLabel": {
+    "text": "හේතුව",
+    "review": "draft"
+  },
+  "chooseReason": {
+    "text": "හේතුව තෝරන්න",
+    "review": "draft"
+  },
+  "receivedBy": {
+    "text": "භාරගත් අයගේ / සම්බන්ධතා නම",
+    "review": "draft"
+  },
+  "signatureOrPhoto": {
+    "text": "අත්සන හෝ ඡායාරූපය",
+    "review": "draft"
+  },
+  "signHere": {
+    "text": "මෙහි අත්සන් කරන්න",
+    "review": "draft"
+  },
+  "clear": {
+    "text": "මකන්න",
+    "review": "draft"
+  },
+  "photoOptional": {
+    "text": "අත්සන් කළ පත්‍රයේ හෝ බෙදාහැරීමේ ඡායාරූපය",
+    "review": "draft"
+  },
+  "photoRequired": {
+    "text": "බෙදාහැරීමේ හෝ පිවිසීමේ ගැටලුවේ ඡායාරූපයක් අවශ්‍යයි",
+    "review": "draft"
+  },
+  "photosSaved": {
+    "text": "ඡායාරූප {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
+    "review": "draft"
+  },
+  "changeOutcome": {
+    "text": "ප්‍රතිඵලය වෙනස් කරන්න",
+    "review": "draft"
+  },
+  "note": {
+    "text": "සටහන (අත්‍යවශ්‍ය නැත)",
+    "review": "draft"
+  },
+  "problem": {
+    "STORE_NOT_OPEN": {
+      "text": "වෙළඳසැල විවෘත නැත",
+      "review": "draft"
+    },
+    "ROAD_BLOCKED": {
+      "text": "මාර්ගය අවහිරයි",
+      "review": "draft"
+    },
+    "DOCK_UNREACHABLE": {
+      "text": "බෑමේ ස්ථානයට යා නොහැක",
+      "review": "draft"
+    },
+    "VEHICLE_PROBLEM": {
+      "text": "රථයේ ගැටලුවක්",
+      "review": "draft"
+    },
+    "RUNNING_LATE": {
+      "text": "ප්‍රමාද වෙමින්",
+      "review": "draft"
+    }
+  },
+  "reason": {
+    "STORE_CLOSED": {
+      "text": "වෙළඳසැල වසා ඇත",
+      "review": "draft"
+    },
+    "REFUSED_BY_STORE": {
+      "text": "වෙළඳසැල ප්‍රතික්ෂේප කළා",
+      "review": "draft"
+    },
+    "NO_ACCESS": {
+      "text": "පිවිසිය නොහැක",
+      "review": "draft"
+    },
+    "VEHICLE_BREAKDOWN": {
+      "text": "රථය කැඩී ඇත",
+      "review": "draft"
+    },
+    "OTHER": {
+      "text": "වෙනත්",
+      "review": "draft"
+    },
+    "TIME_BUDGET": {
+      "text": "ගමනේ කාල සීමාව",
+      "review": "draft"
+    },
+    "INSUFFICIENT_CAPACITY": {
+      "text": "ධාරිතාව ප්‍රමාණවත් නැත",
+      "review": "draft"
+    }
+  },
+  "proofPhoto": {
+    "text": "සුරැකි සාක්ෂි ඡායාරූපය",
+    "review": "draft"
+  },
+  "proofRefs": {
+    "text": "සාක්ෂි යොමු {{count}} ක් රැකේ",
+    "review": "draft"
+  },
+  "decisionReceived": {
+    "text": "සැලසුම්කරුගේ තීරණය ලැබී ඇත",
+    "review": "draft"
+  },
+  "clash": {
+    "text": "ගැටීමක් — සටහන් දෙකම රැකේ",
+    "review": "draft"
+  },
+  "historicalUnavailable": {
+    "text": "මුල් නැවතුමේ විස්තර නැත",
+    "review": "draft"
+  },
+  "yourRecord": {
+    "text": "ඔබේ සටහන",
+    "review": "draft"
+  },
+  "dispatchChange": {
+    "text": "සැලසුම්කරුගේ වෙනස",
+    "review": "draft"
+  },
+  "captured": {
+    "text": "දුරකථනයේ සටහන් කළේ {{time}}",
+    "review": "draft"
+  },
+  "received": {
+    "text": "සේවාදායකයට ලැබුණේ {{time}}",
+    "review": "draft"
+  },
+  "contextWaiting": {
+    "text": "ඔබේ සටහන රඳවා ඇත. ගැටීමේ විස්තර එනතුරු රැඳී සිටින්න.",
+    "review": "draft"
+  },
+  "versions": {
+    "text": "සැලසුම {{from}} → {{to}}",
+    "review": "draft"
+  },
+  "reasonUnavailable": {
+    "text": "හේතුවක් සටහන් කර නැත",
+    "review": "draft"
+  },
+  "changeUnavailable": {
+    "text": "අදාළ පැරණි සැලසුම් වෙනසක් නැත",
+    "review": "draft"
+  },
+  "dispatchDecides": {
+    "text": "සැලසුම්කරුගේ ගැටලු ලැයිස්තුවට යවා ඇත",
+    "review": "draft"
+  },
+  "bothRecordsKept": {
+    "text": "ඔබේ සටහන සහ සාක්ෂි රැකේ. සැලසුම්කරු එය පිළිගන්නවාදැයි තීරණය කරයි.",
+    "review": "draft"
+  },
+  "change": {
+    "REMOVED": {
+      "text": "නැවතුම ඉවත් කළා",
+      "review": "draft"
+    },
+    "DEFERRED": {
+      "text": "නැවතුම කල් දැමුවා",
+      "review": "draft"
+    },
+    "MOVED_VEHICLE": {
+      "text": "වෙනත් රථයකට මාරු කළා",
+      "review": "draft"
+    },
+    "MOVED_TRIP": {
+      "text": "වෙනත් ගමනකට මාරු කළා",
+      "review": "draft"
+    }
+  },
+  "decision": {
+    "ACCEPT_FACT": {
+      "text": "සැලසුම්කරු ඔබේ සටහන පිළිගත්තා",
+      "review": "draft"
+    },
+    "REJECT_FACT": {
+      "text": "සැලසුම්කරු ඔබේ සටහන පිළිගත්තේ නැත",
+      "review": "draft"
+    }
+  },
+  "event": {
+    "STOP_ARRIVED": {
+      "text": "පැමිණීම සටහන් කළා",
+      "review": "draft"
+    },
+    "STOP_OUTCOME": {
+      "text": "බෙදාහැරීමේ ප්‍රතිඵලය",
+      "review": "draft"
+    },
+    "POD_CAPTURED": {
+      "text": "බෙදාහැරීමේ සාක්ෂි",
+      "review": "draft"
+    },
+    "PROBLEM_FLAGGED": {
+      "text": "ගැටලුව දන්වා ඇත",
+      "review": "draft"
+    },
+    "PLAN_ACKNOWLEDGED": {
+      "text": "සැලසුම පිළිගැනීම",
+      "review": "draft"
+    },
+    "TRIP_DEPARTED": {
+      "text": "ගමන් වාරය ඇරඹුවා",
+      "review": "draft"
+    }
+  },
+  "allSynced": {
+    "text": "සියල්ල සමමුහුර්තයි",
+    "review": "draft"
+  },
+  "reconnecting": {
+    "text": "නැවත සම්බන්ධ වෙමින්",
+    "review": "draft"
+  },
+  "backToRun": {
+    "text": "හරි, ගමන් වාරයට ආපසු",
+    "review": "draft"
+  },
+  "syncProgress": {
+    "text": "සටහන් සහ ඡායාරූප {{total}} න් {{count}} ක් යවා ඇත",
+    "review": "draft"
+  },
+  "textBeforePhotos": {
+    "text": "පළමුව සටහන්, පසුව ඡායාරූප සමමුහුර්ත වේ. ගැටීම් පෙනෙන ලෙස රැකේ.",
+    "review": "draft"
+  },
+  "confirmedAll": {
+    "text": "සියලු සටහන් සහ ඡායාරූප සේවාදායකය තහවුරු කර ඇත.",
+    "review": "draft"
+  },
+  "waitingSnapshot": {
+    "text": "සේවාදායකයට ලැබී ඇත. තහවුරු කිරීමට යාවත්කාලීන ගමන් වාරය එනතුරු රැඳී සිටින්න.",
+    "review": "draft"
+  },
+  "failedCount": {
+    "text": "සටහන් හෝ ඡායාරූප {{count}} කට අවධානය අවශ්‍යයි",
+    "review": "draft"
+  },
+  "syncRetry": {
+    "text": "සමමුහුර්ත වීම අවසන් නොවීය. සුරැකි වැඩ රැකේ; සම්බන්ධ වූ විට නැවත උත්සාහ කරන්න.",
+    "review": "draft"
+  },
+  "syncNow": {
+    "text": "දැන් සමමුහුර්ත කරන්න",
+    "review": "draft"
+  },
+  "ackPending": {
+    "text": "සැලසුම පිළිගැනීම සුරැකී ඇත · තහවුරු වනතුරු රැඳී ඇත",
+    "review": "draft"
+  },
+  "planChanged": {
+    "text": "ඔබේ ගමන් වාරය වෙනස් විය",
+    "review": "draft"
+  },
+  "reviewPlan": {
+    "text": "සැලසුම බලන්න",
+    "review": "draft"
+  },
+  "reviewCurrentPlan": {
+    "text": "{{version}} සැලසුම පිළිගැනීමට පෙර වත්මන් නැවතුම් බලන්න.",
+    "review": "draft"
+  },
+  "gotIt": {
+    "text": "හරි",
+    "review": "draft"
+  },
+  "language": {
+    "text": "භාෂාව",
+    "review": "draft"
+  },
+  "diagnostics": {
+    "text": "සමමුහුර්ත විස්තර",
+    "review": "draft"
+  },
+  "heldCount": {
+    "text": "සටහන් {{count}} ක් සැලසුම්කරුගේ තීරණය බලා සිටී",
+    "review": "draft"
+  },
+  "forceOffline": {
+    "text": "සම්බන්ධතාව නැති ලෙස අත්හදා බලන්න",
+    "review": "draft"
+  },
+  "photoQueued": {
+    "text": "පෝලිමේ ඇති ඡායාරූපය",
+    "review": "draft"
+  },
+  "error": {
+    "CONFLICT_REJECTED": {
+      "text": "සැලසුම්කරු මෙම සටහන ප්‍රතික්ෂේප කළා",
+      "review": "draft"
+    },
+    "TRANSPORT_FAILED": {
+      "text": "සේවාදායකයට සම්බන්ධ විය නොහැක",
+      "review": "draft"
+    },
+    "UPLOAD_REJECTED": {
+      "text": "ඡායාරූපය යැවීම ප්‍රතික්ෂේප විය",
+      "review": "draft"
+    },
+    "PAYLOAD_TOO_LARGE": {
+      "text": "සටහන විශාල වැඩියි",
+      "review": "draft"
+    },
+    "MISSING_CONFIRMATION": {
+      "text": "සේවාදායකයේ තහවුරු කිරීම ලැබී නැත",
+      "review": "draft"
+    }
+  },
+  "startFirst": {
+    "text": "පැමිණීම සටහන් කිරීමට පෙර ගමන් වාරය අරඹන්න.",
+    "review": "draft"
+  },
+  "flagSaved": {
+    "text": "ගැටලුව මෙම දුරකථනයේ සුරැකී ඇත · සමමුහුර්ත වනතුරු රැඳී ඇත",
+    "review": "draft"
+  },
+  "offlineSaved_one": {
+    "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
+    "review": "draft"
+  },
+  "offlineSaved_other": {
+    "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
+    "review": "draft"
+  },
+  "capturedOnly": {
+    "text": "සටහන් කළේ {{time}} · සේවාදායකයේ තහවුරු කිරීම බලා සිටී",
+    "review": "draft"
+  }
+}

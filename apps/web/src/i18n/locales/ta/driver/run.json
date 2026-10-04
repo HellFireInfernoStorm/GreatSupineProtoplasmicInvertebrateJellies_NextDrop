@@ -1,0 +1,580 @@
+{
+  "title": {
+    "text": "இன்றைய பயணம்",
+    "review": "draft"
+  },
+  "settings": {
+    "text": "அமைப்புகள்",
+    "review": "draft"
+  },
+  "back": {
+    "text": "பயணத்திற்குத் திரும்பு",
+    "review": "draft"
+  },
+  "offline": {
+    "text": "இணைப்பு இல்லை",
+    "review": "draft"
+  },
+  "syncing": {
+    "text": "{{count}} அனுப்பப்படுகிறது",
+    "review": "draft"
+  },
+  "needsDispatch": {
+    "text": "அனுப்புநரின் முடிவு தேவை",
+    "review": "draft"
+  },
+  "needsAttention": {
+    "text": "கவனம் தேவை",
+    "review": "draft"
+  },
+  "waiting": {
+    "text": "{{count}} காத்திருக்கின்றன",
+    "review": "draft"
+  },
+  "syncedAt": {
+    "text": "{{time}} ஒத்திசைக்கப்பட்டது",
+    "review": "draft"
+  },
+  "waitingSignal": {
+    "text": "இணைப்புக்காகக் காத்திருக்கிறது",
+    "review": "draft"
+  },
+  "offlineSaved": {
+    "text": "இணைப்பு இல்லை — {{count}} விநியோகங்கள் இந்தத் தொலைபேசியில் சேமிக்கப்பட்டன",
+    "review": "draft"
+  },
+  "goToStop": {
+    "text": "நிறுத்தம் {{number}} செல்லவும்",
+    "review": "draft"
+  },
+  "startRun": {
+    "text": "பயணத்தைத் தொடங்கு",
+    "review": "draft"
+  },
+  "saveError": {
+    "text": "சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+    "review": "draft"
+  },
+  "noRun": {
+    "text": "இந்தத் தொலைபேசியில் பயணம் இல்லை. பதிவிறக்க இணைக்கவும்.",
+    "review": "draft"
+  },
+  "loading": {
+    "text": "சேமித்த பயணம் ஏற்றப்படுகிறது…",
+    "review": "draft"
+  },
+  "vehicle": {
+    "truck": {
+      "text": "லாரி",
+      "review": "draft"
+    },
+    "van": {
+      "text": "வேன்",
+      "review": "draft"
+    }
+  },
+  "reefer": {
+    "text": "குளிரூட்டிய வாகனம்",
+    "review": "draft"
+  },
+  "trip": {
+    "text": "பயணம் {{trip}} · {{brand}} · {{depot}} · {{time}}",
+    "review": "draft"
+  },
+  "runComplete": {
+    "text": "பயணம் முடிந்தது",
+    "review": "draft"
+  },
+  "stopsDone": {
+    "text": "முடித்த நிறுத்தங்கள்",
+    "review": "draft"
+  },
+  "nextStop": {
+    "text": "அடுத்த நிறுத்தம்",
+    "review": "draft"
+  },
+  "maps": {
+    "text": "Google Maps திறக்கவும்",
+    "review": "draft"
+  },
+  "dock": {
+    "rear_dock": {
+      "text": "பின்புற இறக்குமிடம்",
+      "review": "draft"
+    },
+    "street": {
+      "text": "வீதி",
+      "review": "draft"
+    },
+    "mall_bay": {
+      "text": "வணிக வளாக இறக்குமிடம்",
+      "review": "draft"
+    }
+  },
+  "parking": {
+    "normal": {
+      "text": "கடையின் வழக்கமான வாகன அணுகலைப் பயன்படுத்தவும்.",
+      "review": "draft"
+    },
+    "van_only": {
+      "text": "வேன் மட்டும். நுழைவதற்கு முன் அனுப்புநரைத் தொடர்புகொள்ளவும்.",
+      "review": "draft"
+    },
+    "mall_dock": {
+      "text": "வணிக வளாக இறக்குமிடத்தைப் பயன்படுத்தவும்.",
+      "review": "draft"
+    }
+  },
+  "chilled": {
+    "text": "குளிரூட்டியது",
+    "review": "draft"
+  },
+  "completed": {
+    "text": "பதிவு செய்யப்பட்டது",
+    "review": "draft"
+  },
+  "groupedOrders": {
+    "text": "இந்தக் கடையில் {{count}} ஆர்டர்கள் · தனித்தனியாகப் பதிவாகும்",
+    "review": "draft"
+  },
+  "twoTimes": {
+    "text": "விநியோகம் {{captured}} · ஒத்திசைவுக்குப் பின் {{confirmed}} உறுதியானது",
+    "review": "draft"
+  },
+  "noStops": {
+    "text": "இந்தத் திட்டத்தில் நிறுத்தங்கள் இல்லை.",
+    "review": "draft"
+  },
+  "stop": {
+    "text": "நிறுத்தம்",
+    "review": "draft"
+  },
+  "stopUnavailable": {
+    "text": "இந்த நிறுத்தம் பயணத்தில் இல்லை. சேமித்த விநியோகங்களை ஒத்திசைவில் பார்க்கவும்.",
+    "review": "draft"
+  },
+  "proofTitle": {
+    "text": "சான்று · நிறுத்தம் {{number}}",
+    "review": "draft"
+  },
+  "stopTitle": {
+    "text": "நிறுத்தம் {{number}} · {{outlet}}",
+    "review": "draft"
+  },
+  "arrived": {
+    "text": "வந்துவிட்டேன்",
+    "review": "draft"
+  },
+  "saveDelivery": {
+    "text": "விநியோகத்தைச் சேமி",
+    "review": "draft"
+  },
+  "continueRun": {
+    "text": "பயணத்தைத் தொடரவும்",
+    "review": "draft"
+  },
+  "savedTitle": {
+    "text": "இந்தத் தொலைபேசியில் சேமிக்கப்பட்டது",
+    "review": "draft"
+  },
+  "savedDetail": {
+    "text": "விநியோகமும் சான்றும் இங்கே சேமிக்கப்பட்டன. இணைப்பு வந்ததும் ஒத்திசையும்.",
+    "review": "draft"
+  },
+  "proofKept": {
+    "text": "அனுப்புநர் நிறுத்தத்தை மாற்றினாலும் உங்கள் பதிவு இருக்கும்.",
+    "review": "draft"
+  },
+  "alreadyRecorded": {
+    "text": "இந்த நிறுத்தத்தின் முடிவு ஏற்கனவே பதிவாகியுள்ளது.",
+    "review": "draft"
+  },
+  "itemsOnBoard": {
+    "text": "வாகனத்தில் உள்ள பொருட்கள்",
+    "review": "draft"
+  },
+  "loadedShort": {
+    "text": "குறைவாக ஏற்றப்பட்டது",
+    "review": "draft"
+  },
+  "flagProblem": {
+    "text": "சிக்கலைத் தெரிவி",
+    "review": "draft"
+  },
+  "howDidItGo": {
+    "text": "விநியோகம் எப்படி நடந்தது?",
+    "review": "draft"
+  },
+  "outcome": {
+    "FULL": {
+      "text": "முழுமையாக வழங்கப்பட்டது",
+      "review": "draft"
+    },
+    "PARTIAL": {
+      "text": "பகுதியாக",
+      "review": "draft"
+    },
+    "REFUSED": {
+      "text": "மறுக்கப்பட்டது",
+      "review": "draft"
+    },
+    "FAILED": {
+      "text": "தோல்வியடைந்தது",
+      "review": "draft"
+    }
+  },
+  "outcomeHelp": {
+    "FULL": {
+      "text": "ஏற்றிய அனைத்தும் ஏற்கப்பட்டன",
+      "review": "draft"
+    },
+    "PARTIAL": {
+      "text": "ஏற்றிய சில பொருட்கள் ஏற்கப்படவில்லை",
+      "review": "draft"
+    },
+    "REFUSED": {
+      "text": "கடை விநியோகத்தை ஏற்கவில்லை",
+      "review": "draft"
+    },
+    "FAILED": {
+      "text": "இந்த நிறுத்தத்தை முடிக்க முடியவில்லை",
+      "review": "draft"
+    }
+  },
+  "nonFullHelp": {
+    "text": "பகுதி, மறுப்பு, தோல்வி விநியோகங்களுக்கு காரணமும் புகைப்படமும் தேவை.",
+    "review": "draft"
+  },
+  "reasonLabel": {
+    "text": "காரணம்",
+    "review": "draft"
+  },
+  "chooseReason": {
+    "text": "காரணத்தைத் தேர்ந்தெடு",
+    "review": "draft"
+  },
+  "receivedBy": {
+    "text": "பெற்றவர் / தொடர்புப் பெயர்",
+    "review": "draft"
+  },
+  "signatureOrPhoto": {
+    "text": "கையொப்பம் அல்லது புகைப்படம்",
+    "review": "draft"
+  },
+  "signHere": {
+    "text": "இங்கே கையொப்பமிடவும்",
+    "review": "draft"
+  },
+  "clear": {
+    "text": "அழி",
+    "review": "draft"
+  },
+  "photoOptional": {
+    "text": "கையொப்பத் தாள் அல்லது விநியோகப் புகைப்படம்",
+    "review": "draft"
+  },
+  "photoRequired": {
+    "text": "விநியோகம் அல்லது அணுகல் சிக்கலின் புகைப்படம் தேவை",
+    "review": "draft"
+  },
+  "photosSaved": {
+    "text": "{{count}} புகைப்படங்கள் தொலைபேசியில் சேமிக்கப்பட்டன",
+    "review": "draft"
+  },
+  "changeOutcome": {
+    "text": "முடிவை மாற்று",
+    "review": "draft"
+  },
+  "note": {
+    "text": "குறிப்பு (விருப்பம்)",
+    "review": "draft"
+  },
+  "problem": {
+    "STORE_NOT_OPEN": {
+      "text": "கடை திறக்கவில்லை",
+      "review": "draft"
+    },
+    "ROAD_BLOCKED": {
+      "text": "சாலை தடைபட்டுள்ளது",
+      "review": "draft"
+    },
+    "DOCK_UNREACHABLE": {
+      "text": "இறக்குமிடத்தை அடைய முடியவில்லை",
+      "review": "draft"
+    },
+    "VEHICLE_PROBLEM": {
+      "text": "வாகனச் சிக்கல்",
+      "review": "draft"
+    },
+    "RUNNING_LATE": {
+      "text": "தாமதமாகிறது",
+      "review": "draft"
+    }
+  },
+  "reason": {
+    "STORE_CLOSED": {
+      "text": "கடை மூடப்பட்டுள்ளது",
+      "review": "draft"
+    },
+    "REFUSED_BY_STORE": {
+      "text": "கடை மறுத்தது",
+      "review": "draft"
+    },
+    "NO_ACCESS": {
+      "text": "அணுக முடியவில்லை",
+      "review": "draft"
+    },
+    "VEHICLE_BREAKDOWN": {
+      "text": "வாகனப் பழுது",
+      "review": "draft"
+    },
+    "OTHER": {
+      "text": "மற்றவை",
+      "review": "draft"
+    },
+    "TIME_BUDGET": {
+      "text": "பயண நேர வரம்பு",
+      "review": "draft"
+    },
+    "INSUFFICIENT_CAPACITY": {
+      "text": "கொள்ளளவு போதவில்லை",
+      "review": "draft"
+    }
+  },
+  "proofPhoto": {
+    "text": "சேமித்த சான்றுப் படம்",
+    "review": "draft"
+  },
+  "proofRefs": {
+    "text": "{{count}} சான்றுக் குறிப்புகள் பாதுகாக்கப்பட்டன",
+    "review": "draft"
+  },
+  "decisionReceived": {
+    "text": "அனுப்புநரின் முடிவு பெறப்பட்டது",
+    "review": "draft"
+  },
+  "clash": {
+    "text": "முரண்பாடு — இரு பதிவுகளும் உள்ளன",
+    "review": "draft"
+  },
+  "historicalUnavailable": {
+    "text": "முந்தைய நிறுத்த விவரங்கள் இல்லை",
+    "review": "draft"
+  },
+  "yourRecord": {
+    "text": "உங்கள் பதிவு",
+    "review": "draft"
+  },
+  "dispatchChange": {
+    "text": "அனுப்புநரின் மாற்றம்",
+    "review": "draft"
+  },
+  "captured": {
+    "text": "தொலைபேசியில் பதிவு {{time}}",
+    "review": "draft"
+  },
+  "received": {
+    "text": "சேவையகத்தில் பெற்றது {{time}}",
+    "review": "draft"
+  },
+  "contextWaiting": {
+    "text": "உங்கள் பதிவு நிறுத்தப்பட்டுள்ளது. முரண்பாட்டு விவரங்களுக்காகக் காத்திருக்கவும்.",
+    "review": "draft"
+  },
+  "versions": {
+    "text": "திட்டம் {{from}} → {{to}}",
+    "review": "draft"
+  },
+  "reasonUnavailable": {
+    "text": "காரணம் பதிவாகவில்லை",
+    "review": "draft"
+  },
+  "changeUnavailable": {
+    "text": "தொடர்புடைய முந்தைய திட்ட மாற்றம் இல்லை",
+    "review": "draft"
+  },
+  "dispatchDecides": {
+    "text": "அனுப்புநரின் சிக்கல் பட்டியலுக்கு அனுப்பப்பட்டது",
+    "review": "draft"
+  },
+  "bothRecordsKept": {
+    "text": "உங்கள் பதிவும் சான்றும் பாதுகாக்கப்படும். ஏற்க வேண்டுமா என்பதை அனுப்புநர் முடிவு செய்வார்.",
+    "review": "draft"
+  },
+  "change": {
+    "REMOVED": {
+      "text": "நிறுத்தம் நீக்கப்பட்டது",
+      "review": "draft"
+    },
+    "DEFERRED": {
+      "text": "நிறுத்தம் ஒத்திவைக்கப்பட்டது",
+      "review": "draft"
+    },
+    "MOVED_VEHICLE": {
+      "text": "வேறு வாகனத்திற்கு மாற்றப்பட்டது",
+      "review": "draft"
+    },
+    "MOVED_TRIP": {
+      "text": "வேறு பயணத்திற்கு மாற்றப்பட்டது",
+      "review": "draft"
+    }
+  },
+  "decision": {
+    "ACCEPT_FACT": {
+      "text": "அனுப்புநர் உங்கள் பதிவை ஏற்றார்",
+      "review": "draft"
+    },
+    "REJECT_FACT": {
+      "text": "அனுப்புநர் உங்கள் பதிவை ஏற்கவில்லை",
+      "review": "draft"
+    }
+  },
+  "event": {
+    "STOP_ARRIVED": {
+      "text": "வருகை பதிவானது",
+      "review": "draft"
+    },
+    "STOP_OUTCOME": {
+      "text": "விநியோக முடிவு",
+      "review": "draft"
+    },
+    "POD_CAPTURED": {
+      "text": "விநியோகச் சான்று",
+      "review": "draft"
+    },
+    "PROBLEM_FLAGGED": {
+      "text": "சிக்கல் தெரிவிக்கப்பட்டது",
+      "review": "draft"
+    },
+    "PLAN_ACKNOWLEDGED": {
+      "text": "திட்ட ஒப்புதல்",
+      "review": "draft"
+    },
+    "TRIP_DEPARTED": {
+      "text": "பயணம் தொடங்கியது",
+      "review": "draft"
+    }
+  },
+  "allSynced": {
+    "text": "அனைத்தும் ஒத்திசைந்தன",
+    "review": "draft"
+  },
+  "reconnecting": {
+    "text": "மீண்டும் இணைகிறது",
+    "review": "draft"
+  },
+  "backToRun": {
+    "text": "சரி, பயணத்திற்குத் திரும்பு",
+    "review": "draft"
+  },
+  "syncProgress": {
+    "text": "{{total}} பதிவுகள் மற்றும் படங்களில் {{count}} அனுப்பப்பட்டன",
+    "review": "draft"
+  },
+  "textBeforePhotos": {
+    "text": "முதலில் பதிவுகள், பின்னர் படங்கள் ஒத்திசையும். முரண்பாடுகள் தொடர்ந்து தெரியும்.",
+    "review": "draft"
+  },
+  "confirmedAll": {
+    "text": "அனைத்து பதிவுகளும் படங்களும் சேவையகத்தால் உறுதிப்படுத்தப்பட்டன.",
+    "review": "draft"
+  },
+  "waitingSnapshot": {
+    "text": "சேவையகம் பெற்றது. உறுதிப்படுத்த புதுப்பித்த பயணத்திற்காகக் காத்திருக்கவும்.",
+    "review": "draft"
+  },
+  "failedCount": {
+    "text": "{{count}} பதிவுகள் அல்லது படங்களுக்கு கவனம் தேவை",
+    "review": "draft"
+  },
+  "syncRetry": {
+    "text": "ஒத்திசைவு முடியவில்லை. சேமித்த வேலை பாதுகாப்பாக உள்ளது; இணைந்ததும் மீண்டும் முயற்சிக்கவும்.",
+    "review": "draft"
+  },
+  "syncNow": {
+    "text": "இப்போது ஒத்திசை",
+    "review": "draft"
+  },
+  "ackPending": {
+    "text": "திட்ட ஒப்புதல் சேமிக்கப்பட்டது · உறுதிக்காகக் காத்திருக்கிறது",
+    "review": "draft"
+  },
+  "planChanged": {
+    "text": "உங்கள் பயணம் மாறியது",
+    "review": "draft"
+  },
+  "reviewPlan": {
+    "text": "திட்டத்தைப் பார்",
+    "review": "draft"
+  },
+  "reviewCurrentPlan": {
+    "text": "திட்டம் {{version}} ஒப்புக்கொள்ளும் முன் தற்போதைய நிறுத்தங்களைப் பார்க்கவும்.",
+    "review": "draft"
+  },
+  "gotIt": {
+    "text": "புரிந்தது",
+    "review": "draft"
+  },
+  "language": {
+    "text": "மொழி",
+    "review": "draft"
+  },
+  "diagnostics": {
+    "text": "ஒத்திசைவு விவரங்கள்",
+    "review": "draft"
+  },
+  "heldCount": {
+    "text": "{{count}} பதிவுகள் அனுப்புநரின் முடிவுக்காகக் காத்திருக்கின்றன",
+    "review": "draft"
+  },
+  "forceOffline": {
+    "text": "இணைப்பில்லா நிலையைச் சோதிக்கவும்",
+    "review": "draft"
+  },
+  "photoQueued": {
+    "text": "வரிசையில் உள்ள படம்",
+    "review": "draft"
+  },
+  "error": {
+    "CONFLICT_REJECTED": {
+      "text": "அனுப்புநர் இந்தப் பதிவை மறுத்தார்",
+      "review": "draft"
+    },
+    "TRANSPORT_FAILED": {
+      "text": "சேவையகத்தை அடைய முடியவில்லை",
+      "review": "draft"
+    },
+    "UPLOAD_REJECTED": {
+      "text": "படப் பதிவேற்றம் மறுக்கப்பட்டது",
+      "review": "draft"
+    },
+    "PAYLOAD_TOO_LARGE": {
+      "text": "பதிவு மிகப் பெரியது",
+      "review": "draft"
+    },
+    "MISSING_CONFIRMATION": {
+      "text": "சேவையக உறுதி பெறப்படவில்லை",
+      "review": "draft"
+    }
+  },
+  "startFirst": {
+    "text": "வருகையைப் பதிவு செய்யும் முன் பயணத்தைத் தொடங்கவும்.",
+    "review": "draft"
+  },
+  "flagSaved": {
+    "text": "சிக்கல் தொலைபேசியில் சேமிக்கப்பட்டது · ஒத்திசைவுக்காகக் காத்திருக்கிறது",
+    "review": "draft"
+  },
+  "offlineSaved_one": {
+    "text": "இணைப்பு இல்லை — {{count}} விநியோகங்கள் இந்தத் தொலைபேசியில் சேமிக்கப்பட்டன",
+    "review": "draft"
+  },
+  "offlineSaved_other": {
+    "text": "இணைப்பு இல்லை — {{count}} விநியோகங்கள் இந்தத் தொலைபேசியில் சேமிக்கப்பட்டன",
+    "review": "draft"
+  },
+  "capturedOnly": {
+    "text": "பதிவு {{time}} · சேவையக உறுதிக்காகக் காத்திருக்கிறது",
+    "review": "draft"
+  }
+}

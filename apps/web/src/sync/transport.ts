@@ -15,7 +15,7 @@ export const syncTransport: SyncTransport = {
   changes: (after, limit) => callApi("changes", { query: { after, limit }, signal: AbortSignal.timeout(20000) }),
   push: (deviceId, events) => callApi("syncEvents", { body: { deviceId, events }, signal: AbortSignal.timeout(20000) }),
   conflicts: (clientEventIds) =>
-    callApi("fieldConflicts", { body: { clientEventIds }, signal: AbortSignal.timeout(20000) }),
+    callApi("fieldConflicts", { body: { clientEventIds, includeContext: true }, signal: AbortSignal.timeout(20000) }),
   upload: async (blob) => {
     const bytes = new Uint8Array(await blob.bytes.arrayBuffer());
     apiSchemas.blobBody.parse(bytes);
