@@ -26,6 +26,8 @@ Dinura wants every update of the public deployment to open on the seeded demo da
 
 When `plan-published` and the later presets ship (#56), setting `DEMO_DEPLOY_PRESET` makes a deploy open with published trips for the Loader and the Driver.
 
+Amended 2026-10-04 by [ADR 0055](0055-hourly-demo-reset.md): the reset moved into `docker/reset-demo.sh`, which an hourly cron job also runs, and the default preset is `orders-closed`.
+
 ## Alternatives considered
 
 - **Reset on every app start** (an env var read in `main.ts`): simpler to trigger, but a crash or a droplet reboot during judging would wipe every judge's progress. It also reverses ADR 0030's rule that a restart never reverts demo progress.

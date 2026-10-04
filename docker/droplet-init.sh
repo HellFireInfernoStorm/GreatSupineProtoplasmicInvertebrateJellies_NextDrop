@@ -2,7 +2,7 @@
 # First-boot setup for the public deployment (ADR 0051). Paste into "User data" when creating a DigitalOcean
 # droplet (Ubuntu 24.04, 2 GB). It runs once as root, and the stack is up a few minutes after boot.
 # Attach a Cloud Firewall that allows only 22, 80 and 443: Docker bypasses ufw and `app` publishes 8080.
-# Progress: /var/log/cloud-init-output.log. Redeploy later with /opt/nextdrop/docker/redeploy.sh (ADR 0054).
+# Progress: /var/log/cloud-init-output.log. Redeploy later with /opt/nextdrop/docker/redeploy.sh (ADR 0054, 0055).
 set -euxo pipefail
 
 # Public hostname. Point its A record at the droplet (or its Reserved IP) first. Empty: use <ip>.sslip.io.
@@ -36,5 +36,5 @@ TZ=Asia/Colombo
 EOF
 chmod 600 .env
 
-# Build, start, and reset the demo to before-cutoff so the clock sits on the seeded story day.
+# Build and start, install the hourly demo reset, and reset the demo to the seeded story day.
 docker/redeploy.sh
