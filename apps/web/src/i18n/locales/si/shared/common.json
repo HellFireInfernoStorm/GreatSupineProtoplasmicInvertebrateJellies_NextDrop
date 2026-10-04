@@ -196,5 +196,15 @@
       "text": "සමමුහුර්තයට රැඳී සිටී",
       "review": "draft"
     }
+  },
+  "tripReadiness": {
+    "waitingOnDispatcher": {
+      "text": "බෙදාහැරීම් සැලසුම්කරුගේ තීරණය එනතෙක්",
+      "review": "draft"
+    },
+    "heldByDispatcher": {
+      "text": "බෙදාහැරීම් සැලසුම්කරු විසින් රඳවා ඇත",
+      "review": "draft"
+    }
   }
 }

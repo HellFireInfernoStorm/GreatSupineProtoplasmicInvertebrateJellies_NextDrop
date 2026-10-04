@@ -57,9 +57,10 @@ export async function buildSnapshot(
       include: tripInclude(),
       orderBy: [{ plannedDepart: "asc" }, { displayId: "asc" }],
     }),
-    // Load reversals the loader must carry out (ADR 0004): LOADED orders with a pending reversal.
+    // Load reversals the loader must carry out (ADR 0004, ADR 0026): the depot's LOADED orders for the date with a
+    // pending reversal, whether or not the current plan still contains them.
     prisma.order.findMany({
-      where: { status: "LOADED", outlet: { depot: actor.depot } },
+      where: { status: "LOADED", currentDate: dateOnly(date), outlet: { depot: actor.depot } },
       include: orderInclude,
       orderBy: { id: "asc" },
     }),
