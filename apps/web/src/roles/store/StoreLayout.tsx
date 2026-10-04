@@ -9,6 +9,8 @@ import { Logo } from "../../ui/Logo";
 import { useOutlet } from "./data";
 import { dateInstant } from "./dates";
 import { Icon, type IconName } from "./icons";
+import { useStoreFeed } from "./notifications/feed";
+import { NotificationsBell } from "./notifications/Notifications";
 import { useCountdownText } from "./order/countdown";
 import { useOrderModel } from "./order/useOrderModel";
 
@@ -121,14 +123,7 @@ function TopBar() {
           {t("cutoffPill.open", { day: formatDay(dateInstant(model.date)) })}
           <strong className="text-sm font-semibold text-on-panel">{left}</strong>
         </p>
-        {/* The notifications panel arrives with the other Store screens (#44). */}
-        <button
-          type="button"
-          aria-label={t("notifications")}
-          className="flex size-10 items-center justify-center rounded-full border border-border text-text"
-        >
-          <Icon name="bell" />
-        </button>
+        <NotificationsBell desktop />
         <span
           aria-hidden="true"
           className="flex size-10 items-center justify-center rounded-full bg-ok-bg text-xs font-semibold text-ok"
@@ -177,7 +172,6 @@ interface PhoneScreenProps {
 
 /** A phone screen: the dark app bar, the scrolling body, the pinned action and, on top-level screens, the nav. */
 export function PhoneScreen({ title, subtitle, back, footer, nav = false, children }: PhoneScreenProps) {
-  const { t } = useTranslation("store/shell");
   return (
     <div className="flex flex-1 flex-col bg-bg">
       <header className="bg-panel px-5 pt-10 pb-5 text-on-panel">
@@ -189,15 +183,7 @@ export function PhoneScreen({ title, subtitle, back, footer, nav = false, childr
         )}
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-xl leading-[1.3] font-semibold">{title}</h1>
-          {nav && (
-            <button
-              type="button"
-              aria-label={t("notifications")}
-              className="flex size-9 items-center justify-center rounded-full bg-panel-2"
-            >
-              <Icon name="bell" className="size-[18px]" />
-            </button>
-          )}
+          {nav && <NotificationsBell desktop={false} />}
         </div>
         {subtitle && <p className="mt-1 text-xs text-on-panel-muted">{subtitle}</p>}
       </header>
@@ -218,6 +204,7 @@ export function StoreLayout({ children }: { children: ReactNode }) {
   const desktop = useIsDesktop();
   // The top bar's countdown keeps time by itself; this keeps the day in the page fresh too.
   useServerNow(60_000);
+  useStoreFeed();
   if (!desktop) return <>{children}</>;
   return (
     <div className="flex min-h-0 flex-1">

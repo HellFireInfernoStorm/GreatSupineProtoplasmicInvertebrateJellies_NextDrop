@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §9.4
+sources: guide §9.4; ADR 0045
 ---
 
 # Change feed and snapshot
@@ -13,7 +13,7 @@ sources: guide §9.4
 - **Audience** (ADR 0029): a row is visible when the caller's role is in `roles` and the row matches that role's scope column (store `outletId`, dispatcher `depot` in its depots, loader `depot`, driver `vehicleId`). A row with no depot, vehicle or outlet reaches every listed role. Writers fill every scope column that applies, and every row lists at least one role.
 - **Catch-up** (ADR 0029): the server reads `head` first and returns visible rows with `after < seq <= head`. A response with fewer than `limit` items means the client is caught up: it sets its cursor to `head`. Otherwise it sets the cursor to the last item's seq and pulls again.
 - SSE (`/stream`) only sends `head` hints. Clients compare to their cursor and call `/changes`. Reconnect uses the cursor; nothing depends on SSE delivery. Polling (15-30 s) is the fallback. The stream is unbuffered (`X-Accel-Buffering: no`), sends `{ head, resetEpoch }` on connect and on every change (one shared 1 s poll per process while streams are open), sends a comment heartbeat every 25 s, and ends when the session ends.
-- **Online roles** (store, dispatcher) invalidate TanStack Query caches by `entity.type`.
+- **Online roles** (store, dispatcher) invalidate TanStack Query caches when a feed row arrives. The Dispatcher invalidates by `entity.type`. The Store pulls `/changes` every 15 s and refreshes all of its queries on any new row, because its queries are few and each screen shows several entity types (ADR 0045).
 - **Field roles** refetch `GET /field/snapshot` when a relevant feed row arrives. Snapshot = `{ planVersion, serverTime, feedCursor, resetEpoch, scope data, config }`: for a driver, the vehicle's run (trips, stops, order lines, outlet details, contacts, dock types, ETAs, windows, reason-code lists); for a loader, the depot's trips for the date with orders, lines and stop sequences. It replaces the server-derived Dexie tables in one transaction and never touches the outbox.
 - `GET /changes` and the SSE hint also carry `resetEpoch` (ADR 0007).
 - The single `FeedCounter` row serialises all writing transactions. This is accepted at this scale (four roles, one depot-sized load) and the LISTEN/NOTIFY path in the deployment note is the way out.

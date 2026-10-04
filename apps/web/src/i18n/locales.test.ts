@@ -59,9 +59,13 @@ describe("locale files", () => {
         "loader/login",
         "shared/common",
         "shared/ui",
+        "store/deliveries",
         "store/login",
+        "store/notifications",
         "store/order",
+        "store/receipt",
         "store/shell",
+        "store/tracking",
       ].sort(),
     );
     // English is the source: plain strings, with no `{ text, review }` leaves. A key may still be called "review".

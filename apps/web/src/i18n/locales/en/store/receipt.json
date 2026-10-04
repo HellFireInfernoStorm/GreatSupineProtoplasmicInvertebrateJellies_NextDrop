@@ -1,0 +1,53 @@
+{
+  "receipt": {
+    "title": "Confirm receipt",
+    "back": "Order timeline",
+    "record": "Pre-filled from the driver's record",
+    "delivered": "Delivered {{time}} on the driver's phone",
+    "confirmed": "Confirmed {{time}} after sync",
+    "signed_zero": "Signed by {{name}}",
+    "signed_one": "Signed by {{name}} · {{count}} delivery photo",
+    "signed_other": "Signed by {{name}} · {{count}} delivery photos",
+    "trip": "Trip {{trip}} · stop {{seq}}",
+    "line": "Ordered {{ordered}} · Delivered {{delivered}}",
+    "youReceived": "You received",
+    "quantity": "Received quantity of {{product}}",
+    "short": "{{count}} short at the dock. {{expected}} of {{ordered}} was expected.",
+    "asDelivered": "Received as delivered",
+    "asCounted": "Confirm what I received",
+    "differs": "Your count differs from the driver's record. Report an issue as well, so the dispatcher sees it.",
+    "report": "Report an issue",
+    "sending": "Confirming",
+    "failed": {
+      "network": "The receipt was not sent: no connection. Try again.",
+      "rejected": "The receipt could not be confirmed. Check the order and try again."
+    }
+  },
+  "issue": {
+    "title": "Report an issue",
+    "back": "Order timeline",
+    "subtitle": "{{id}} · {{temp}}",
+    "subtitleDelivered": "{{id}} · {{temp}} · delivered {{time}}",
+    "what": "What is wrong?",
+    "kind": {
+      "SHORT": "Short",
+      "DAMAGED": "Damaged",
+      "WARM": "Warm on arrival",
+      "OTHER": "Something else"
+    },
+    "which": "Which item and how many?",
+    "item": "Item",
+    "wholeOrder": "The whole order",
+    "quantity": "How many of {{product}}",
+    "of": "of {{count}} delivered",
+    "note": "Note",
+    "notePlaceholder": "What happened (optional)",
+    "send": "Send to dispatcher",
+    "sending": "Sending",
+    "after": "The order is marked Disputed and the dispatcher sees your report next to the driver's proof of delivery.",
+    "failed": {
+      "network": "The report was not sent: no connection. Try again.",
+      "rejected": "The report could not be sent. Check the order and try again."
+    }
+  }
+}
