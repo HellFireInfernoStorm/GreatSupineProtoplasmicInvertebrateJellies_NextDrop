@@ -2,7 +2,7 @@ import { ACCOUNTS, DEPOTS } from "../support/accounts";
 import { STORY } from "../support/demo";
 import { expect, test } from "../support/fixtures";
 import { signIn, type RoleWindow } from "../support/signIn";
-import { publishPlanDeferring } from "../support/standIns";
+import { publishDraftDeferring } from "../support/standIns";
 
 // The reference judge walkthrough of agent-docs/spec/data/seed-and-demo.md §15.4: fourteen steps, in order, across
 // the four roles. Each test is one step and is titled with the step's wording. The README's numbered walkthrough
@@ -22,11 +22,13 @@ function orderId(text: string | null): string {
 
 test.describe("Judge walkthrough (§15.4)", () => {
   let store: RoleWindow;
+  let dispatcher: RoleWindow;
   /** The confirmation IDs from step 1. */
   const placed = { dry: "", chilled: "" };
 
   test.afterAll(async () => {
     await store?.context.close();
+    await dispatcher?.context.close();
   });
 
   test("1. Reset to before-cutoff. Store: sign in on a phone-width window, see the cutoff countdown (server time), place a dry and a chilled order for tomorrow; receive confirmation.", async ({
@@ -85,19 +87,81 @@ test.describe("Judge walkthrough (§15.4)", () => {
     await expect(page.getByText("Wed 30 Sep closes 16:00")).toBeVisible();
   });
 
-  // Waits on #46 (dispatcher D0-D2).
-  test.fixme("3. Dispatcher: open the queue; see demand exceed capacity; Propose plan; inspect trips and capacity bars.", async () => {});
+  test("3. Dispatcher: open the queue; see demand exceed capacity; Propose plan; inspect trips and capacity bars.", async ({
+    browser,
+  }) => {
+    dispatcher = await signIn(browser, ACCOUNTS.dispatcher, { viewport: "desktop" });
+    const { page } = dispatcher;
+    const main = page.getByRole("main");
 
-  // Waits on #46 (dispatcher D0-D2).
-  test.fixme("4. Attempt a rule-breaking move (e.g. chilled order onto an ambient truck): blocked with the reason. Make a valid edit.", async () => {});
+    // The peak day is Peliyagoda's. The dashboard opens on the account's first depot, so choose it. The selector
+    // follows the address bar while the page settles, hence the retry.
+    await expect(async () => {
+      await page.getByRole("combobox", { name: "Depot" }).selectOption(DEPOTS.peliyagoda);
+      await expect(page).toHaveURL(/depot=Peliyagoda/, { timeout: 2_000 });
+    }).toPass();
+
+    // The queue: the seeded peak day plus the two orders of step 1, and more van-only orders than the vans can
+    // take.
+    await page.getByRole("link", { name: "Order queue", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Order queue" })).toBeVisible();
+    await expect(main.getByText("Planning deliveries for Tue 29 Sep · Peliyagoda")).toBeVisible();
+    await expect(main.locator("section", { hasText: "Fresh 66 · Style 13 · Tech 9" }).locator("strong")).toHaveText(
+      "88",
+    );
+    const vanOnly = main.locator("section", { hasText: "Van-only orders" });
+    await expect(vanOnly.locator("strong")).toHaveText("6");
+    await expect(vanOnly).toContainText("2 available vans");
+
+    await page.getByRole("button", { name: "Propose plan" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Draft saved" })).toBeVisible({ timeout: 30_000 });
+
+    // The plan board: the fleet cannot carry everything, so six orders stay unassigned.
+    await page.getByRole("link", { name: "Plan board", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Plan board" })).toBeVisible();
+    await expect(main.getByText(/^\d+ trips · 82 of 88 orders planned · 6 unassigned/)).toBeVisible();
+    await expect(main.getByRole("heading", { name: "Unassigned · 6" })).toBeVisible();
+
+    // A trip and its capacity bars.
+    const trip = page.getByRole("article").first();
+    await expect(trip.getByRole("heading", { name: "T001 · Trip 1 of 2" })).toBeVisible();
+    for (const bar of ["Weight", "Volume", "Time budget", "Weekly fuel used"]) {
+      await expect(trip.getByRole("meter", { name: bar, exact: true })).toBeVisible();
+    }
+  });
+
+  test("4. Attempt a rule-breaking move (e.g. chilled order onto an ambient truck): blocked with the reason. Make a valid edit.", async () => {
+    const { page } = dispatcher;
+    const main = page.getByRole("main");
+    const review = main.locator("section").filter({
+      has: page.getByRole("heading", { name: "Attempted edit retained for review" }),
+    });
+
+    // The store's chilled order onto an ambient truck: the check names the rule, and the edit cannot be saved.
+    const ambient = page.getByRole("article").filter({ hasText: "· Ambient · Fresh" }).first();
+    const trip = /^T\d+/.exec((await ambient.getByRole("heading").textContent()) ?? "")?.[0];
+    expect(trip, "an ambient Fresh trip on the plan").toBeTruthy();
+    await page.getByRole("combobox", { name: `Move to… ${placed.chilled}` }).selectOption(trip!);
+    await expect(review.getByText(`Chilled orders need a reefer · ${trip}`)).toBeVisible();
+    await expect(review.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    await review.getByRole("button", { name: "Cancel" }).click();
+    await expect(review).toBeHidden();
+
+    // A valid edit: take the store's dry order off its trip. It passes every check and saves.
+    await page.getByRole("combobox", { name: `Move to… ${placed.dry}` }).selectOption("unassigned");
+    await expect(review.getByText("All available checks pass")).toBeVisible();
+    await review.getByRole("button", { name: "Save changes" }).click();
+    await expect(main.getByText(/^\d+ trips · 81 of 88 orders planned · 7 unassigned/)).toBeVisible();
+    await expect(main.getByRole("heading", { name: "Unassigned · 7" })).toBeVisible();
+  });
 
   // Waits on #49 (dispatcher D3).
   test.fixme("5. Review deferrals: reason codes pre-filled with unavoidable vs choice; outlets skipped yesterday pinned. Publish.", async () => {});
 
   test("6. Store: receives the deferral notice and ETA band.", async ({ baseURL }) => {
-    // Stand-in for steps 3 to 5 until #46 and #49 merge: the plan is published through the API, with the dry order
-    // deferred by the dispatcher's choice. Remove it when those steps are real.
-    await publishPlanDeferring(baseURL!, placed.dry);
+    // Stand-in for step 5 until #49 merges: the draft of steps 3 and 4 is published through the API, with the dry
+    // order the dispatcher took off its trip deferred by choice. Remove it when step 5 is real.
+    await publishDraftDeferring(baseURL!, placed.dry);
 
     const { page } = store;
     await page.goto("/store");

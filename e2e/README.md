@@ -8,9 +8,9 @@ pnpm e2e:install                 # once: Playwright's Chromium (needs sudo for s
 pnpm e2e                         # the walkthrough (twice) and the axe smoke checks
 ```
 
-| Variable | Default | Use |
-| --- | --- | --- |
-| `E2E_BASE_URL` | `http://localhost:8080` | The stack to test: another local port, or the public deployment. |
+| Variable              | Default                 | Use                                                                             |
+| --------------------- | ----------------------- | ------------------------------------------------------------------------------- |
+| `E2E_BASE_URL`        | `http://localhost:8080` | The stack to test: another local port, or the public deployment.                |
 | `E2E_BROWSER_CHANNEL` | (Playwright's Chromium) | `chrome` uses the installed Google Chrome, so `pnpm e2e:install` is not needed. |
 
 For a stack of your own beside the default one (`agent-docs/process/collisions.md`):
@@ -25,25 +25,25 @@ E2E_BASE_URL=http://localhost:8162 E2E_BROWSER_CHANNEL=chrome pnpm e2e
 
 ## What is here
 
-| Path | What it is |
-| --- | --- |
-| `tests/walkthrough.spec.ts` | The 14 steps of `seed-and-demo.md` §15.4, one test per step, in order. A step whose screens are not merged is `test.fixme`. |
-| `tests/accessibility.spec.ts` | The axe smoke check: each role's login screen and first screen, at the width the role is judged at. |
-| `support/fixtures.ts` | The `test` to import: it adds `demo` (reset, clock) and the two options that differ between the walkthrough's runs. |
-| `support/demo.ts`, `support/api.ts` | The demo endpoints, called as the dispatcher. |
-| `support/signIn.ts`, `support/accounts.ts`, `support/viewports.ts` | One signed-in window per role, at phone, tablet or desktop width. |
-| `support/offline.ts` | Going offline both ways: the in-app force-offline switch and the browser's offline mode. |
-| `support/axe.ts` | The accessibility assertion. |
-| `support/standIns.ts` | API stand-ins for steps that are still `fixme`, so later steps can already run. Delete each when its steps become real. |
+| Path                                                               | What it is                                                                                                                  |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `tests/walkthrough.spec.ts`                                        | The 14 steps of `seed-and-demo.md` §15.4, one test per step, in order. A step whose screens are not merged is `test.fixme`. |
+| `tests/accessibility.spec.ts`                                      | The axe smoke check: each role's login screen and first screen, at the width the role is judged at.                         |
+| `support/fixtures.ts`                                              | The `test` to import: it adds `demo` (reset, clock) and the two options that differ between the walkthrough's runs.         |
+| `support/demo.ts`, `support/api.ts`                                | The demo endpoints, called as the dispatcher.                                                                               |
+| `support/signIn.ts`, `support/accounts.ts`, `support/viewports.ts` | One signed-in window per role, at phone, tablet or desktop width.                                                           |
+| `support/offline.ts`                                               | Going offline both ways: the in-app force-offline switch and the browser's offline mode.                                    |
+| `support/axe.ts`                                                   | The accessibility assertion.                                                                                                |
+| `support/standIns.ts`                                              | API stand-ins for steps that are still `fixme`, so later steps can already run. Delete each when its steps become real.     |
 
 ## The two walkthrough runs
 
 The walkthrough runs as two Playwright projects, so that between them the acceptance criteria of #62 are covered:
 
-| Project | Loader width (step 7) | Driver goes offline by (step 9) |
-| --- | --- | --- |
-| `walkthrough-phone-force-offline` | phone | the in-app force-offline switch |
-| `walkthrough-tablet-browser-offline` | tablet | the browser's offline mode |
+| Project                              | Loader width (step 7) | Driver goes offline by (step 9) |
+| ------------------------------------ | --------------------- | ------------------------------- |
+| `walkthrough-phone-force-offline`    | phone                 | the in-app force-offline switch |
+| `walkthrough-tablet-browser-offline` | tablet                | the browser's offline mode      |
 
 The Driver is always at phone width. Tests run one at a time: there is one database and one demo clock.
 
