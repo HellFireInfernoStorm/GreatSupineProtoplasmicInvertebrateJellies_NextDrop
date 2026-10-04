@@ -1,62 +1,62 @@
 {
   "title": {
-    "text": "Dock trips",
+    "text": "පැටවීමේ ගමන්",
     "review": "draft"
   },
   "dock": {
-    "text": "Loading dock",
+    "text": "භාණ්ඩ පැටවීමේ ස්ථානය",
     "review": "draft"
   },
   "departsIn": {
-    "text": "in {{minutes}} min",
+    "text": "මිනිත්තු {{minutes}} කින්",
     "review": "draft"
   },
   "overdue": {
-    "text": "{{minutes}} min overdue",
+    "text": "මිනිත්තු {{minutes}} ක් ප්‍රමාදයි",
     "review": "draft"
   },
   "tripNumber": {
-    "text": "Trip {{number}}",
+    "text": "ගමන {{number}}",
     "review": "draft"
   },
   "stops": {
-    "text": "{{count}} stops",
+    "text": "නැවතුම් {{count}}",
     "review": "draft"
   },
   "orders": {
-    "text": "orders",
+    "text": "ඇණවුම්",
     "review": "draft"
   },
   "open": {
-    "text": "Open ›",
+    "text": "විවෘත කරන්න ›",
     "review": "draft"
   },
   "trips": {
-    "text": "‹ Trips",
+    "text": "‹ ගමන්",
     "review": "draft"
   },
   "checklist": {
-    "text": "‹ Checklist",
+    "text": "‹ පරීක්ෂණ ලැයිස්තුව",
     "review": "draft"
   },
   "checked": {
-    "text": "Checked",
+    "text": "පරීක්ෂා කළා",
     "review": "draft"
   },
   "checkedCount": {
-    "text": "{{count}} of {{total}} checked",
+    "text": "{{total}} න් {{count}} ක් පරීක්ෂා කළා",
     "review": "draft"
   },
   "weightLoaded": {
-    "text": "Weight loaded",
+    "text": "පැටවූ බර",
     "review": "draft"
   },
   "volumeLoaded": {
-    "text": "Volume loaded",
+    "text": "පැටවූ පරිමාව",
     "review": "draft"
   },
   "kg": {
-    "text": "kg",
+    "text": "කි.ග්‍රෑ.",
     "review": "draft"
   },
   "m3": {
@@ -64,339 +64,339 @@
     "review": "draft"
   },
   "loaded": {
-    "text": "Loaded",
+    "text": "පැටවූවා",
     "review": "draft"
   },
   "short": {
-    "text": "Short",
+    "text": "හිඟය",
     "review": "draft"
   },
   "damaged": {
-    "text": "Damaged",
+    "text": "හානි වූවා",
     "review": "draft"
   },
   "loadedUnits": {
-    "text": "{{count}} loaded",
+    "text": "{{count}} ක් පැටවූවා",
     "review": "draft"
   },
   "shortUnits": {
-    "text": "{{count}} short",
+    "text": "{{count}} ක් හිඟයි",
     "review": "draft"
   },
   "damagedUnits": {
-    "text": "{{count}} damaged",
+    "text": "{{count}} ක් හානි වී ඇත",
     "review": "draft"
   },
   "orderedUnits": {
-    "text": "{{count}} units ordered",
+    "text": "ඒකක {{count}} ක් ඇණවුම් කළා",
     "review": "draft"
   },
   "summaryUnits": {
-    "text": "{{loaded}} loaded · {{short}} short · {{damaged}} damaged",
+    "text": "{{loaded}} ක් පැටවූවා · {{short}} ක් හිඟයි · {{damaged}} ක් හානි වී ඇත",
     "review": "draft"
   },
   "waitingDispatch": {
-    "text": "Waiting on dispatcher",
+    "text": "බෙදාහැරීම් නිලධාරියා බලාපොරොත්තුවෙන්",
     "review": "draft"
   },
   "loadThisOrder": {
-    "text": "Load in this order — last stop first",
+    "text": "මෙම අනුපිළිවෙළට පටවන්න — අවසාන නැවතුම මුලින්",
     "review": "draft"
   },
   "loadInstruction": {
-    "text": "Position 1 goes in first, next to the cab. Stop 1 is delivered first.",
+    "text": "අංක 1 මුලින්ම රියදුරු කුටිය අසල පටවන්න. නැවතුම් අංක 1 මුලින් බෙදාහරින්න.",
     "review": "draft"
   },
   "cabFirst": {
-    "text": "CAB · loads first",
+    "text": "රියදුරු කුටිය · මුලින් පටවන්න",
     "review": "draft"
   },
   "rearDoors": {
-    "text": "REAR DOORS · last stop in first",
+    "text": "පසුපස දොරවල් · අවසාන නැවතුම මුලින් පටවන්න",
     "review": "draft"
   },
   "stopNumber": {
-    "text": "Stop {{number}}",
+    "text": "නැවතුම {{number}}",
     "review": "draft"
   },
   "checkEveryRow": {
-    "text": "Check every line before handing over.",
+    "text": "භාර දීමට පෙර සෑම පේළියක්ම පරීක්ෂා කරන්න.",
     "review": "draft"
   },
   "reviewReady": {
-    "text": "Review & mark ready ›",
+    "text": "පරීක්ෂා කර සූදානම් බව සලකුණු කරන්න ›",
     "review": "draft"
   },
   "markReady": {
-    "text": "Mark ready · {{trip}}",
+    "text": "සූදානම් බව සලකුණු කරන්න · {{trip}}",
     "review": "draft"
   },
   "readyInstruction": {
-    "text": "Confirm what is on the truck, then hand it to the driver.",
+    "text": "ලොරියේ ඇති භාණ්ඩ තහවුරු කර රියදුරුට භාර දෙන්න.",
     "review": "draft"
   },
   "holdReady": {
-    "text": "Hold to mark ready",
+    "text": "සූදානම් බව සලකුණු කිරීමට ඔබාගෙන සිටින්න",
     "review": "draft"
   },
   "handedOver": {
-    "text": "Handed over to driver",
+    "text": "රියදුරුට භාර දුන්නා",
     "review": "draft"
   },
   "uncheckedLines": {
-    "text": "{{count}} lines still unchecked",
+    "text": "පේළි {{count}} ක් තවම පරීක්ෂා කර නැත",
     "review": "draft"
   },
   "issues": {
-    "text": "Short and damaged items",
+    "text": "හිඟ සහ හානි වූ භාණ්ඩ",
     "review": "draft"
   },
   "undoWindow": {
-    "text": "Finishing the five-second Undo window.",
+    "text": "ආපසු හැරවීමට ඇති තත්පර පහ අවසන් වන තෙක් රැඳී සිටී.",
     "review": "draft"
   },
   "reportShort": {
-    "text": "Report short",
+    "text": "හිඟය වාර්තා කරන්න",
     "review": "draft"
   },
   "reportDamaged": {
-    "text": "Report damaged",
+    "text": "හානිය වාර්තා කරන්න",
     "review": "draft"
   },
   "quantity": {
-    "text": "How many are missing or damaged?",
+    "text": "භාණ්ඩ කීයක් හිඟද හෝ හානි වී ඇත්ද?",
     "review": "draft"
   },
   "reportRemainder": {
-    "text": "Sending this report also confirms the remaining units as loaded.",
+    "text": "මෙම වාර්තාව යැවීමෙන් ඉතිරි ඒකක පැටවූ බවත් තහවුරු වේ.",
     "review": "draft"
   },
   "all": {
-    "text": "All {{count}}",
+    "text": "සියලු {{count}}",
     "review": "draft"
   },
   "half": {
-    "text": "Half",
+    "text": "අඩක්",
     "review": "draft"
   },
   "why": {
-    "text": "Why?",
+    "text": "හේතුව කුමක්ද?",
     "review": "draft"
   },
   "takePhoto": {
-    "text": "Take photo",
+    "text": "ඡායාරූපයක් ගන්න",
     "review": "draft"
   },
   "photoRequired": {
-    "text": "Photo required for damaged goods.",
+    "text": "හානි වූ භාණ්ඩ සඳහා ඡායාරූපයක් අවශ්‍යයි.",
     "review": "draft"
   },
   "photoOptional": {
-    "text": "Photo optional for short goods.",
+    "text": "හිඟ භාණ්ඩ සඳහා ඡායාරූපය විකල්පයකි.",
     "review": "draft"
   },
   "photoEvidence": {
-    "text": "Loading evidence photo",
+    "text": "භාණ්ඩ පැටවීමේ සාක්ෂි ඡායාරූපය",
     "review": "draft"
   },
   "sendReport": {
-    "text": "Save report for dispatcher",
+    "text": "බෙදාහැරීම් නිලධාරියා සඳහා වාර්තාව සුරකින්න",
     "review": "draft"
   },
   "draftSaved": {
-    "text": "Saved on this device · Undo available for 5 seconds",
+    "text": "මෙම උපාංගයේ සුරැකුණා · තත්පර 5 ක් තුළ ආපසු හැරවිය හැක",
     "review": "draft"
   },
   "undo": {
-    "text": "Undo",
+    "text": "ආපසු හරවන්න",
     "review": "draft"
   },
   "staleDraft": {
-    "text": "Plan changed before this unsent report was recorded. Review it before continuing.",
+    "text": "නොයැවූ වාර්තාව සටහන් කිරීමට පෙර සැලැස්ම වෙනස් විය. ඉදිරියට යාමට පෙර පරීක්ෂා කරන්න.",
     "review": "draft"
   },
   "discardDraft": {
-    "text": "Discard unsent report",
+    "text": "නොයැවූ වාර්තාව ඉවත් කරන්න",
     "review": "draft"
   },
   "saved": {
-    "text": "Saved on this device",
+    "text": "මෙම උපාංගයේ සුරැකුණා",
     "review": "draft"
   },
   "confirmed": {
-    "text": "Confirmed after sync",
+    "text": "සමමුහුර්ත කිරීමෙන් පසු තහවුරු විය",
     "review": "draft"
   },
   "held": {
-    "text": "Needs dispatcher · saved record kept",
+    "text": "බෙදාහැරීම් නිලධාරියා අවශ්‍යයි · සුරැකි වාර්තාව තබා ඇත",
     "review": "draft"
   },
   "failed": {
-    "text": "Not accepted · check connection details",
+    "text": "පිළිගෙන නැත · සම්බන්ධතා විස්තර පරීක්ෂා කරන්න",
     "review": "draft"
   },
   "awaitingSnapshot": {
-    "text": "Received · waiting for updated plan",
+    "text": "ලැබුණා · යාවත්කාලීන සැලැස්ම බලාපොරොත්තුවෙන්",
     "review": "draft"
   },
   "recordedAt": {
-    "text": "Recorded {{time}}",
+    "text": "සටහන් කළේ {{time}}",
     "review": "draft"
   },
   "receivedAt": {
-    "text": "Received {{time}}",
+    "text": "ලැබුණේ {{time}}",
     "review": "draft"
   },
   "planChanged": {
-    "text": "Plan changed · review loading order",
+    "text": "සැලැස්ම වෙනස් විය · පැටවීමේ අනුපිළිවෙළ පරීක්ෂා කරන්න",
     "review": "draft"
   },
   "reviewPlan": {
-    "text": "Review plan",
+    "text": "සැලැස්ම පරීක්ෂා කරන්න",
     "review": "draft"
   },
   "reviewVersion": {
-    "text": "Current plan v{{version}} · load the last stop first.",
+    "text": "වත්මන් සැලැස්ම v{{version}} · අවසාන නැවතුම මුලින් පටවන්න.",
     "review": "draft"
   },
   "ackPending": {
-    "text": "Plan review saved · awaiting acceptance",
+    "text": "සැලැස්ම පරීක්ෂා කළ බව සුරැකුණා · පිළිගැනීම බලාපොරොත්තුවෙන්",
     "review": "draft"
   },
   "acceptPlan": {
-    "text": "Accept plan",
+    "text": "සැලැස්ම පිළිගන්න",
     "review": "draft"
   },
   "planNotPublished": {
-    "text": "Plan not published yet.",
+    "text": "සැලැස්ම තවම ප්‍රකාශයට පත් කර නැත.",
     "review": "draft"
   },
   "noTrips": {
-    "text": "No trips in this loading plan.",
+    "text": "මෙම පැටවීමේ සැලැස්මේ ගමන් නැත.",
     "review": "draft"
   },
   "noSnapshot": {
-    "text": "No loading plan saved on this device yet. Connect to download it.",
+    "text": "මෙම උපාංගයේ පැටවීමේ සැලැස්මක් තවම සුරැකී නැත. බාගත කිරීමට සම්බන්ධ වන්න.",
     "review": "draft"
   },
   "loading": {
-    "text": "Loading saved plan…",
+    "text": "සුරැකි සැලැස්ම පූරණය වෙමින්…",
     "review": "draft"
   },
   "offline": {
-    "text": "Offline · your work stays saved on this device",
+    "text": "අන්තර්ජාල සම්බන්ධතාව නැත · ඔබේ වැඩ මෙම උපාංගයේ සුරැකේ",
     "review": "draft"
   },
   "saveError": {
-    "text": "Could not save. Your existing work is kept. Try again.",
+    "text": "සුරැකීමට නොහැකි විය. පවතින වැඩ තබා ඇත. නැවත උත්සාහ කරන්න.",
     "review": "draft"
   },
   "connection": {
-    "text": "Connection & loader account",
+    "text": "සම්බන්ධතාව සහ පැටවුම්කරුගේ ගිණුම",
     "review": "draft"
   },
   "syncNow": {
-    "text": "Sync now",
+    "text": "දැන් සමමුහුර්ත කරන්න",
     "review": "draft"
   },
   "forceOffline": {
-    "text": "Simulate offline",
+    "text": "අන්තර්ජාල සම්බන්ධතාව නැති තත්ත්වය අනුකරණය කරන්න",
     "review": "draft"
   },
   "switchUser": {
-    "text": "Switch loader",
+    "text": "පැටවුම්කරු මාරු කරන්න",
     "review": "draft"
   },
   "switchUserNote": {
-    "text": "Each report is recorded under the signed-in loader. Sign out and use the PIN sign-in to switch.",
+    "text": "සෑම වාර්තාවක්ම පිවිසී සිටින පැටවුම්කරු යටතේ සටහන් වේ. මාරු කිරීමට පිටවී PIN මඟින් පිවිසෙන්න.",
     "review": "draft"
   },
   "signOutError": {
-    "text": "Could not sign out. Connect and try again.",
+    "text": "පිටවීමට නොහැකි විය. සම්බන්ධ වී නැවත උත්සාහ කරන්න.",
     "review": "draft"
   },
   "chilled": {
-    "text": "Chilled",
+    "text": "ශීත කළ",
     "review": "draft"
   },
   "dockType": {
     "street": {
-      "text": "Street",
+      "text": "වීථිය",
       "review": "draft"
     },
     "rear_dock": {
-      "text": "Rear dock",
+      "text": "පසුපස පැටවීමේ ස්ථානය",
       "review": "draft"
     },
     "mall_bay": {
-      "text": "Mall bay",
+      "text": "සාප්පු සංකීර්ණයේ පැටවීමේ ස්ථානය",
       "review": "draft"
     }
   },
   "resolution": {
     "SHIP_PARTIAL": {
-      "text": "Ship partial · approved",
+      "text": "කොටසක් යවන්න · අනුමතයි",
       "review": "draft"
     },
     "HOLD_TRIP": {
-      "text": "Hold trip · waiting on dispatcher",
+      "text": "ගමන රඳවා තබන්න · බෙදාහැරීම් නිලධාරියා බලාපොරොත්තුවෙන්",
       "review": "draft"
     },
     "BACKORDER": {
-      "text": "Backorder · approved",
+      "text": "පසුව සපයන්න · අනුමතයි",
       "review": "draft"
     }
   },
   "loadShort": {
     "STOCK_SHORT": {
-      "text": "Out of stock",
+      "text": "තොග නැත",
       "review": "draft"
     },
     "DAMAGED_AT_DOCK": {
-      "text": "Damaged at dock",
+      "text": "පැටවීමේ ස්ථානයේ හානි විය",
       "review": "draft"
     },
     "PICKING_ERROR": {
-      "text": "Picking error",
+      "text": "භාණ්ඩ තේරීමේ දෝෂයක්",
       "review": "draft"
     },
     "OTHER": {
-      "text": "Other",
+      "text": "වෙනත් හේතුවක්",
       "review": "draft"
     }
   },
   "loadDamaged": {
     "CRUSHED": {
-      "text": "Crushed / broken",
+      "text": "තැලී ඇත / කැඩී ඇත",
       "review": "draft"
     },
     "LEAKING": {
-      "text": "Leaking",
+      "text": "කාන්දු වෙයි",
       "review": "draft"
     },
     "OTHER": {
-      "text": "Other",
+      "text": "වෙනත් හේතුවක්",
       "review": "draft"
     },
     "TORN_PACKAGING": {
-      "text": "Torn packaging",
+      "text": "ඉරුණු ඇසුරුම",
       "review": "draft"
     },
     "CONTAMINATED": {
-      "text": "Contaminated",
+      "text": "අපවිත්‍ර වී ඇත",
       "review": "draft"
     }
   },
   "photoPending": {
-    "text": "Text received · photo waiting to sync",
+    "text": "විස්තර ලැබුණා · ඡායාරූපය සමමුහුර්ත වීමට බලා සිටී",
     "review": "draft"
   },
   "earliestFirst_one": {
-    "text": "{{count}} trip · earliest departure first",
+    "text": "ගමන් {{count}} ක් · මුලින් පිටත්වන ගමන පළමුව",
     "review": "draft"
   },
   "earliestFirst_other": {
-    "text": "{{count}} trips · earliest departure first",
+    "text": "ගමන් {{count}} ක් · මුලින් පිටත්වන ගමන පළමුව",
     "review": "draft"
   }
 }

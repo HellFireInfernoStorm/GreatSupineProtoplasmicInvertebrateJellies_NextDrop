@@ -237,7 +237,9 @@ Recorded decisions:
 
 > **TODO (#20):** list each tier S item that was not built. The authorization matrix test (#58) is built. Still open: capacity outlook (#55), remaining demo presets and panel (#56), load reversal (#60), fleet and breakdowns (#63), Sinhala and Tamil strings (#57), Web Push (#65).
 >
-> **TODO (#57):** native review is pending for Sinhala and Tamil strings. Every leaf in `apps/web/src/i18n/locales/{si,ta}/shared/ui.json` and the development gallery's `apps/web/src/ui/gallery/locales/{si,ta}.json` is marked `draft`; these translations are not yet native-reviewed. Existing login locale review states remain in their own files.
+### Draft Sinhala and Tamil strings (#22, #57)
+
+Loader and Driver have Sinhala/Tamil draft copy for every English key. The [remaining draft-string inventory](docs/field-locale-drafts.md) lists each key by locale and namespace. Thisal confirmed that no strings have been checked; none are marked reviewed. Core statuses, buttons and errors require native review before submission. Gallery translations also remain draft. The separate `field-locales` e2e project checks Tamil Loader dock screens at 360px without shortening the copy.
 
 The shared component gallery is available at `/dev/ui` when running the Vite development server. It includes all four role themes and English, Sinhala and Tamil controls. Its route, sample text and component chunk are excluded from production builds.
 
