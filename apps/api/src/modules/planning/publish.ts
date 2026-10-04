@@ -117,6 +117,9 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
       const data = draft.data as DraftData;
       const inputs = await loadDayInputs(tx, reference, input.depot, input.date);
       const plan = toRulesPlan(data, inputs);
+      const validation = validatePlan(plan, reference.ref, inputs.validation);
+      // Preserve ADR 0004's hard validation response for removing/moving pinned loaded cargo.
+      if (validation.violations.some((v) => v.code === "ORDER_ALREADY_LOADED")) throw validationFailed(validation);
       const illegalStop = lockedStopChange(
         inputs.validation.publishedStops ?? [],
         data.trips.flatMap((t) =>
@@ -129,7 +132,6 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
         ),
       );
       if (illegalStop) throw new ApiHttpError(409, "STOP_LOCKED", "errors.stopLocked", { orderId: illegalStop });
-      const validation = validatePlan(plan, reference.ref, inputs.validation);
       if (!validation.ok) throw validationFailed(validation);
 
       // 5. A reason for every unassigned confirmed order; a note for OTHER and for a repeat deferral.
