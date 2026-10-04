@@ -399,7 +399,14 @@ function withStatus(state: OrderState, event: OrderEvent, target: OrderStatus): 
       return { ...next, loaded: mergeLoaded(state.loaded, event.payload.lines ?? []) };
     case "LOAD_REVERSED": {
       const r = state.pendingReversal;
-      const afterReversal: OrderState = { ...next, pendingReversal: null, loaded: [] };
+      // Clear dock projections: the unload starts a new checklist cycle (ADR 0046). Timeline events stay.
+      const afterReversal: OrderState = {
+        ...next,
+        pendingReversal: null,
+        loaded: [],
+        short: [],
+        damaged: [],
+      };
       if (target === "DEFERRED") return { ...afterReversal, assignment: null, deferralCount: state.deferralCount + 1 };
       return { ...afterReversal, assignment: r?.next && !("deferred" in r.next) ? r.next : null };
     }

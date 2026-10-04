@@ -12,7 +12,8 @@ export const isDelivering = (type: string, payload: unknown) =>
 
 /**
  * Line quantities a field fact projects onto the order: `LOAD_CONFIRMED` sets loaded quantities, a `STOP_OUTCOME`
- * delivered ones. Shared by ingest and by an accepted held fact (ADR 0040).
+ * delivered ones, and `LOAD_REVERSED` clears loaded quantities so the next dock cycle starts unchecked (ADR 0046).
+ * Shared by ingest and by an accepted held fact (ADR 0040).
  */
 export async function projectFact(tx: Prisma.TransactionClient, order: OrderRecord, type: string, payload: unknown) {
   const fact = payload as FactLines;
@@ -20,6 +21,11 @@ export async function projectFact(tx: Prisma.TransactionClient, order: OrderReco
     for (const line of fact.lines ?? []) {
       if (line.qtyLoaded === undefined) continue;
       await tx.orderLine.update({ where: { id: line.lineId }, data: { qtyLoaded: line.qtyLoaded } });
+    }
+  }
+  if (type === "LOAD_REVERSED") {
+    for (const line of order.orderLine_orderId) {
+      await tx.orderLine.update({ where: { id: line.id }, data: { qtyLoaded: 0 } });
     }
   }
   if (type === "STOP_OUTCOME") {

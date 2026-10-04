@@ -17,7 +17,7 @@ Issue #52 requires Loader hand-over to stay blocked until every checklist row is
 
 2. **Shared gate.** `packages/rules` exports `tripChecklistReadiness` (and `orderChecklistReadiness`). It reports `incompleteLines` and `blockingShorts` (composed from unchanged `shortLinesBlockingReady`). `SHIP_PARTIAL` / `BACKORDER` do not block when the checklist is otherwise complete; unresolved and `HOLD_TRIP` still do.
 
-3. **Reducer.** `OrderState.loaded` records per-line quantities from `LOAD_CONFIRMED` and clears on `LOAD_REVERSED`. Callers may also pass authoritative `qtyLoaded` overrides (OrderLine / Dexie projection); the API always passes OrderLine values so clients cannot bypass by omitting confirms from a forged reduce.
+3. **Reducer and projection.** `OrderState.loaded` records per-line quantities from `LOAD_CONFIRMED`. On `LOAD_REVERSED`, the reducer clears `loaded`, `short` and `damaged` so the next dock cycle starts unchecked (timeline events remain append-only). The API's `projectFact` also resets every `OrderLine.qtyLoaded` to 0 on `LOAD_REVERSED`, because ingest always passes that column into the gate (never falls back to reducer state when the column is 0). Callers may still pass authoritative `qtyLoaded` overrides; the API always passes OrderLine values.
 
 4. **Enforce.** `TRIP_READY` ingest refuses with `ILLEGAL_TRANSITION` when `tripChecklistReadiness` is not ready, using every stop order's lines and reduced state.
 

@@ -269,10 +269,12 @@ describe("flags: short and damaged are not statuses", () => {
     expect(shortLinesBlockingReady(s)).toEqual([]);
   });
 
-  it("records LOAD_CONFIRMED line quantities and clears them on LOAD_REVERSED", () => {
+  it("records LOAD_CONFIRMED line quantities and clears dock projections on LOAD_REVERSED", () => {
     let s = run(
       placed(),
       planned(),
+      ev("LOAD_SHORT", { lines: [{ lineId: "L1", qtyShort: 2 }] }),
+      ev("LOAD_DAMAGED", { lines: [{ lineId: "L2", qty: 1 }] }),
       ev("LOAD_CONFIRMED", {
         lines: [
           { lineId: "L1", qtyLoaded: 8 },
@@ -285,9 +287,13 @@ describe("flags: short and damaged are not statuses", () => {
       { lineId: "L1", qtyLoaded: 8 },
       { lineId: "L2", qtyLoaded: 3 },
     ]);
+    expect(s.short).toHaveLength(1);
+    expect(s.damaged).toHaveLength(1);
     s = applyEvent(s, ev("LOAD_REVERSAL_REQUESTED", { to: "PLANNED", planVersion: 2 })).state;
     s = applyEvent(s, ev("LOAD_REVERSED", {})).state;
     expect(s.loaded).toEqual([]);
+    expect(s.short).toEqual([]);
+    expect(s.damaged).toEqual([]);
   });
 
   it("treats informational events as no-ops", () => {
@@ -389,6 +395,35 @@ describe("trip checklist readiness (ADR 0046)", () => {
       },
     ]);
     expect(readiness.ready).toBe(true);
+  });
+
+  it("treats a reversed order as unchecked when OrderLine qtyLoaded is reset to 0", () => {
+    const state = run(
+      placed(),
+      planned(),
+      ev("LOAD_CONFIRMED", {
+        lines: [
+          { lineId: "L1", qtyLoaded: 12 },
+          { lineId: "L2", qtyLoaded: 8 },
+        ],
+      }),
+      ev("LOAD_REVERSAL_REQUESTED", { to: "PLANNED", planVersion: 2 }),
+      ev("LOAD_REVERSED", {}),
+    );
+    expect(state.loaded).toEqual([]);
+    // Server always passes OrderLine.qtyLoaded (0 after projectFact on LOAD_REVERSED).
+    const readiness = tripChecklistReadiness([
+      {
+        orderId: ORDER,
+        lines: [
+          { lineId: "L1", qtyOrdered: 12, qtyLoaded: 0 },
+          { lineId: "L2", qtyOrdered: 8, qtyLoaded: 0 },
+        ],
+        state,
+      },
+    ]);
+    expect(readiness.ready).toBe(false);
+    expect(readiness.incompleteLines).toHaveLength(2);
   });
 
   it("aggregates every order on the trip and stays ready after offline event replay", () => {

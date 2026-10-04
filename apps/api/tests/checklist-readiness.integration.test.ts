@@ -276,4 +276,110 @@ describe.skipIf(!testDatabaseUrl)("TRIP_READY checklist readiness against Postgr
     expect(again.results[0].status).toBe("ACCEPTED");
     expect((await prisma.trip.findUniqueOrThrow({ where: { id: ids.trip } })).status).toBe("READY");
   });
+
+  it("refuses TRIP_READY after LOAD_REVERSED clears qtyLoaded (ADR 0046)", async () => {
+    // Fresh trip/order: the shared suite trip is already READY and must not delete events.
+    const baseTrip = await prisma.trip.findUniqueOrThrow({ where: { id: ids.trip } });
+    const baseOrder = await prisma.order.findUniqueOrThrow({ where: { id: ids.order } });
+    const milkProductId = (await prisma.orderLine.findUniqueOrThrow({ where: { id: ids.lineMilk } })).productId;
+
+    const trip = await prisma.trip.create({
+      data: {
+        displayId: "T115R",
+        tripNo: 2,
+        brand: "Fresh",
+        plannedDepart: 300,
+        plannedMinutes: 200,
+        km: 80,
+        litres: 15,
+        planningDayId: baseTrip.planningDayId,
+        vehicleId: baseTrip.vehicleId,
+        districtId: baseTrip.districtId,
+      },
+    });
+    const order = await prisma.order.create({
+      data: {
+        displayId: "ORD115R",
+        brand: "Fresh",
+        tempRequirement: "chilled",
+        requestedDate: new Date(DATE),
+        currentDate: new Date(DATE),
+        status: "PLANNED",
+        weightG: 500,
+        volumeL: 5,
+        idempotencyKey: randomUUID(),
+        outletId: baseOrder.outletId,
+        orderLine_orderId: {
+          create: [{ productId: milkProductId, qtyOrdered: 12, unitWeightKg: 12, unitVolumeM3: "0.02" }],
+        },
+      },
+      include: { orderLine_orderId: true },
+    });
+    const lineId = order.orderLine_orderId[0]!.id;
+    const server = {
+      source: "SERVER" as const,
+      actorRole: "DISPATCHER" as const,
+      actorUserId: ids.dispatcher,
+      orderId: order.id,
+    };
+    await prisma.orderEvent.create({
+      data: {
+        ...server,
+        type: "ORDER_PLACED",
+        capturedAt: clock,
+        payload: { requestedDate: DATE, lines: [{ lineId, qty: 12 }] },
+      },
+    });
+    await prisma.orderEvent.create({
+      data: {
+        ...server,
+        type: "ORDER_PLANNED",
+        capturedAt: clock,
+        payload: {
+          tripId: trip.id,
+          vehicleId: baseTrip.vehicleId,
+          seq: 1,
+          etaFrom: clock,
+          etaTo: clock,
+          planVersion: 1,
+        },
+      },
+    });
+    await prisma.tripStop.create({
+      data: {
+        tripId: trip.id,
+        seq: 1,
+        etaMin: 360,
+        windowOpen: 300,
+        windowClose: 480,
+        serviceMin: 15,
+        orderId: order.id,
+      },
+    });
+
+    expect(
+      (await push([ev("LOAD_CONFIRMED", { orderId: order.id }, { lines: [{ lineId, qtyLoaded: 12 }] })])).json()
+        .results[0].status,
+    ).toBe("ACCEPTED");
+    expect((await prisma.orderLine.findUniqueOrThrow({ where: { id: lineId } })).qtyLoaded).toBe(12);
+
+    await prisma.orderEvent.create({
+      data: {
+        ...server,
+        type: "LOAD_REVERSAL_REQUESTED",
+        capturedAt: clock,
+        payload: { orderId: order.id, to: "PLANNED", planVersion: 1 },
+      },
+    });
+    expect(
+      (await push([ev("LOAD_REVERSED", { orderId: order.id }, { orderId: order.id, lines: [] })])).json().results[0]
+        .status,
+    ).toBe("ACCEPTED");
+    expect((await prisma.orderLine.findUniqueOrThrow({ where: { id: lineId } })).qtyLoaded).toBe(0);
+    expect(await prisma.order.findUniqueOrThrow({ where: { id: order.id } }).then((o) => o.status)).toBe("PLANNED");
+
+    const blocked = (await push([ev("TRIP_READY", { tripId: trip.id }, { tripId: trip.id })])).json();
+    expect(blocked.results[0]).toMatchObject({ status: "REJECTED", code: "ILLEGAL_TRANSITION" });
+    expect((await prisma.trip.findUniqueOrThrow({ where: { id: trip.id } })).status).toBe("PLANNED");
+  });
 });

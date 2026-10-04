@@ -40,6 +40,7 @@ Conflict classification is a later issue (#54).
    - A repeated or late trip fact is recorded without moving the trip. A cancelled trip refuses both.
 6. **Projections.**
    - `LOAD_CONFIRMED` sets `qtyLoaded`.
+   - `LOAD_REVERSED` resets every line's `qtyLoaded` to 0 (ADR 0046).
    - `STOP_OUTCOME` sets `qtyDelivered` from its lines; a FULL outcome without lines delivers what was loaded (or ordered).
    - A delivering outcome sets `Order.confirmedAt` to the server's receipt time ("confirmed after sync", ADR 0032).
    - Accepted batches and heartbeats update the device's `lastSeenAt` (last heard). Heartbeats append no feed rows.

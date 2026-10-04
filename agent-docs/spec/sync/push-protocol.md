@@ -45,6 +45,6 @@ Ingest details (ADR 0034):
 - **Trip facts.**
   - `TRIP_READY` moves PLANNED to READY. It is refused while `rules.tripChecklistReadiness` reports incomplete checklist lines or dispatcher-blocking shorts (ADR 0046; shorts via `shortLinesBlockingReady`, ADR 0005).
   - `TRIP_DEPARTED` moves PLANNED or READY to DEPARTED and derives `ORDER_OUT_FOR_DELIVERY` for `rules.ordersGoingOut`.
-- **Line quantities.** `LOAD_CONFIRMED` sets loaded quantities. A delivering `STOP_OUTCOME` sets delivered quantities and the order's confirmed-after-sync time.
+- **Line quantities.** `LOAD_CONFIRMED` sets loaded quantities. `LOAD_REVERSED` resets them to 0 so the next dock cycle is unchecked (ADR 0046). A delivering `STOP_OUTCOME` sets delivered quantities and the order's confirmed-after-sync time.
 
 The result DTO is discriminated by status: ACCEPTED carries its serverEventId, HELD_CONFLICT carries conflictId, and REJECTED requires code and the original zero-based batch index. Only REJECTED permits clientEventId null, when the input ID is missing or invalid; preserve a valid ID even when another field is invalid. The client uses index to correlate such rejections to the submitted batch instead of silently retrying them. Non-rejected results require a valid UUID. DUPLICATE can include the original serverEventId/code. Every result has receivedAt; feedHead is a decimal string, preserving feed sequence precision. String cursor and result-detail conventions are part of the accepted #29 wire contracts.
