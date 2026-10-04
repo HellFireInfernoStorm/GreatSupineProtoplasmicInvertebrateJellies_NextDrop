@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router";
 import { addDays } from "@nextdrop/rules";
 import { localDate } from "@nextdrop/contracts";
@@ -38,7 +38,7 @@ function DispatcherFrame() {
   const { t } = useTranslation("dispatcher/planning");
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const now = useServerNow(60_000);
   const initialDate = addDays(
     new Intl.DateTimeFormat("en-CA", {
@@ -65,6 +65,14 @@ function DispatcherFrame() {
     setScope({ date: acceptedDate ?? scope.date, depot: acceptedDepot ?? scope.depot, link: linkedScope });
   const date = acceptedDate ?? scope.date;
   const depot = acceptedDepot ?? scope.depot;
+  // Keep the accepted workspace scope recoverable after navigation and a full reload.
+  useEffect(() => {
+    if (params.get("day") === date && params.get("depot") === depot) return;
+    const next = new URLSearchParams(params);
+    next.set("day", date);
+    next.set("depot", depot);
+    setParams(next, { replace: true });
+  }, [params, date, depot, setParams]);
   const [search, setSearch] = useState("");
   const [signingOut, setSigningOut] = useState(false);
   const [signOutFailed, setSignOutFailed] = useState(false);
@@ -163,8 +171,9 @@ function DispatcherFrame() {
                 <select
                   value={depot}
                   onChange={(e) => {
-                    setScope({ ...scope, date, depot: e.target.value });
-                    if (acceptedDepot) navigate(pathname);
+                    const next = new URLSearchParams(params);
+                    next.set("depot", e.target.value);
+                    setParams(next);
                   }}
                 >
                   {user.depots.map((value) => (
@@ -179,8 +188,9 @@ function DispatcherFrame() {
                   value={date}
                   onChange={(e) => {
                     if (localDate.safeParse(e.target.value).success) {
-                      setScope({ ...scope, date: e.target.value, depot });
-                      if (linkedDate) navigate(pathname);
+                      const next = new URLSearchParams(params);
+                      next.set("day", e.target.value);
+                      setParams(next);
                     }
                   }}
                 />
