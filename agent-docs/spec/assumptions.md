@@ -23,4 +23,4 @@ sources: guide §21
 | Priority order | section 4.7 | Lexicographic; weights in `RulesConfig` |
 | Walkthrough driver | Sampath, Kandy hill run (ADR 0008) | Ruwan S. (Peliyagoda) as extra account |
 
-The design reference is the latest version of the Figma file, not the 29 Sep snapshot (ADR 0015). The README lists departures from it, including the loader phone layout, Noto Sans Sinhala/Tamil fonts, list-based planning, the NextDrop name, m³ capacity and the Sampath story. Open item to settle (defaults above apply meanwhile): hosting choice (see open-questions C3). Web Push is optional and there is no SMS (ADR 0013); reference data may be published (ADR 0011).
+The design reference is the latest version of the Figma file, not the 29 Sep snapshot (ADR 0015). The README lists departures from it, including the loader phone layout, Noto Sans Sinhala/Tamil fonts, list-based planning, the NextDrop name, m³ capacity and the Sampath story. Public hosting is a DigitalOcean droplet (ADR 0051). Web Push is optional and there is no SMS (ADR 0013); reference data may be published (ADR 0011).

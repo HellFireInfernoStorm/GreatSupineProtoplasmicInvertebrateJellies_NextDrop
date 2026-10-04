@@ -60,7 +60,8 @@ services:
     command: ["python", "-c", "print('NextDrop solver sidecar is not built (ADR 0014); SOLVER_ENABLED stays false.')"]
     restart: "no"
 
-  # Public deployment: TLS in front of the app (deployment.md). Minimal for now; #33 finishes it on the chosen host.
+  # Public deployment: TLS in front of the app (deployment.md, ADR 0051). No Caddyfile is needed: reverse_proxy
+  # flushes text/event-stream at once (SSE is not buffered) and the app sets its own cache headers.
   caddy:
     profiles: ["public"]
     image: caddy:2
