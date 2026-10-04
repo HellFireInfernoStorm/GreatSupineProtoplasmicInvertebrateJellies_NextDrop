@@ -20,3 +20,7 @@ sources: guide §10
   - **Rejected:** becomes `rejected`, showing the dispatcher's note.
   - **Open or unknown:** stays held.
 - **Reset epoch** (ADR 0007): the snapshot and every `/changes` response carry `resetEpoch`. If it differs from `meta.resetEpoch`, the client discards the outbox and local order data, stores the new epoch and shows 'Demo data was reset by <role> at <time>' before refetching the snapshot.
+
+## Driver recovery gates (ADR 0050)
+
+“All synced” describes server receipt of text and proof, not dispatcher acceptance. Held facts keep Needs dispatch, their historical context and proof, and remain inert. Changed-plan review waits for queued work, covering snapshots for accepted events and context for held facts to reconcile; it may then show while received clashes await dispatch. Store PLAN_ACKNOWLEDGED receipts per user/run/epoch/version across pruning. Only an accepted acknowledgement with a covering snapshot permanently dismisses that version's review. Held/rejected acknowledgements remain visible.

@@ -20,6 +20,8 @@ runUsage(trips, vehicle, ref, ctx): RunUsage           // shared validator and U
 proposePlan(input, ref, cfg): AllocationResult        // trips, deferrals + explanations, stats, trace
 rankOrders(orders, cfg, { date, calendar }): RankedOrder[]   // priority keys (slip needs the calendar)
 explainDeferral(order, finalPlan, ref, cfg, ctx?): DeferralExplanation   // ctx: workshop and breakdown vehicles, fuel used, rank lookup
+validateStopOutcome(input): { codes, lines }         // driver quantities/proof policy (ADR 0050)
+isDriverStopTerminal(status): boolean               // blocks duplicate driver recording, including RECEIVED/CANCELLED
 applyEvent(state, event): { state, outcome }         // order reducer (section 5.5, ADR 0019)
 nextOperatingDate(date, calendar), operatingDateAfter(date, calendar), cutoffAt(date)   // calendar helpers
 deliveryDateFor(requestedDate, placedAt, calendar)    // date an order targets after rollover and cutoff (ADR 0018)

@@ -21,11 +21,15 @@ Screen inventory. The authoritative list and visuals are the live Figma file (AD
 - **Store:** sign-in; my deliveries; place order with the outlet brand's product catalogue (`/store/order`, the catalogue at `/store/order/items`; on phone, review at `/store/order/review` and the confirmation at `/store/order/placed`, ADR 0039); review and submit; order placed; deferral notice; order tracking (`/store/tracking`); an order's timeline and detail (`/store/orders/:id`); confirm receipt (`/store/orders/:id/receipt`) and report issue (`/store/orders/:id/issue`), pages on desktop too (ADR 0045); history (`/store/history`); notifications; the "late or lost?" sheet.
 - **Dispatcher:** sign-in with depot; dashboard (D0); order queue (D1); plan board (D2) with the add-trip modal in valid and blocked states; defer and publish (D3); Delivery Progress (D4, the live run monitor, route `/dispatch/runs`, with exceptions inbox and evidence detail); capacity outlook (D5); fleet and capacity; notifications popover; confirmation toasts.
 - **Loader:** PIN sign-in with language chips; trips by departure; loading checklist in reverse stop order; short and damaged sheets; ready and hand-over with hold-to-confirm; connection and plan-changed states.
-- **Driver:** PIN sign-in; today's run; stop detail; flag a problem; outcome and proof of delivery; sync, offline, reconnect, clash and plan-changed states; settings with sync diagnostics.
+- **Driver:** routes `/driver` (run), `/driver/stop/:stopId` (per-order stop), `/driver/sync` (recovery) and `/driver/settings` (language and diagnostics). PIN sign-in; today's run; stop detail; flag a problem; outcome and proof of delivery; sync, offline, reconnect, clash and plan-changed states; settings with sync diagnostics.
+
+## Driver recording and recovery (ADR 0050)
+
+Driver stop routes record each order separately within an adjacent-outlet group. The shared rules terminal check prevents another recording for DELIVERED, RECEIVED, FAILED, DISPUTED or CANCELLED, including on devices without a local receipt. A grouped card is done when every order is terminal or has a projected, durably saved outcome and proof. Held/rejected events alone never complete an order. Settings provide language and sync diagnostics; recovery uses actual queue and server states rather than a timed transition.
 
 ## 14.3 Conventions
 
-- **Outlet grouping** (ADR 0010): accounting stays per order, but Driver and Store views group adjacent stops of one outlet and trip into one card with expandable order rows. A card is done when all its orders are confirmed. Trip time still counts service time per order.
+- **Outlet grouping** (ADR 0010): accounting stays per order, but Driver and Store views group adjacent stops of one outlet and trip into one card with expandable order rows. A Driver card is done when every order is terminal or has a locally saved projected outcome and proof (ADR 0050); Store receipt confirmation remains per order. Trip time still counts service time per order.
 - **Brand ordering guidance** (ADR 0010): the store order screen shows the notice from `orderingGuidance(brand, date, calendar)` (Style weekly day, Fresh chilled days, Tech single items). It is a notice only and never blocks submission. The seed obeys the same rule except on purpose.
 - **Capacity in m³**: the capacity outlook and its axes use m³. Tonnes may appear as a secondary label.
 

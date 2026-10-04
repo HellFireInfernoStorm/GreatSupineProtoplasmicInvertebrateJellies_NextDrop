@@ -14,3 +14,4 @@ export * from "./trip-time";
 export * from "./validator";
 export * from "./ranking";
 export * from "./allocator";
+export * from "./stop-outcome";

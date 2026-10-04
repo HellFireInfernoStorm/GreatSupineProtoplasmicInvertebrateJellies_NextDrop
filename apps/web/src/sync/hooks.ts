@@ -8,6 +8,7 @@ import type { OutboxEntry, QueuedBlob } from "./database";
 
 export interface SyncDiagnostics {
   pendingCount: number;
+  confirmationCount: number;
   failedItems: (OutboxEntry | QueuedBlob)[];
   heldCount: number;
   heldItems: OutboxEntry[];
@@ -18,6 +19,7 @@ export function useSyncDiagnostics(): SyncDiagnostics {
   const { user } = useSession();
   const [state, setState] = useState<SyncDiagnostics>({
     pendingCount: 0,
+    confirmationCount: 0,
     failedItems: [],
     heldItems: [],
     heldCount: 0,
@@ -30,6 +32,7 @@ export function useSyncDiagnostics(): SyncDiagnostics {
       const events = await db.outbox
         .where("[actor.userId+state]")
         .anyOf(
+          [user.id, "acked"],
           [user.id, "pending"],
           [user.id, "sending"],
           [user.id, "held"],
@@ -42,6 +45,7 @@ export function useSyncDiagnostics(): SyncDiagnostics {
         .anyOf([user.id, "pending"], [user.id, "sending"], [user.id, "failed"])
         .toArray();
       return {
+        confirmationCount: events.filter((e) => e.state === "acked").length,
         pendingCount:
           events.filter(unconfirmed).length +
           blobs.filter((b) => b.state === "pending" || b.state === "sending").length,

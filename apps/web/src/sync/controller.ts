@@ -269,7 +269,7 @@ export class SyncController {
   }
 
   /**
-   * Ask the server for the outcome of every fact still held on this device (ADR 0042). It does not depend on
+   * Ask the server for the outcome of every fact still held on this device (ADR 0043). It does not depend on
    * `conflict_resolved` hints or the feed cursor, so missed hints and cold resumes recover the same way. Accepted
    * facts stay projected until a snapshot covers the boundary; rejected ones stay visible with the decision; open,
    * unknown or unreachable outcomes leave the fact held.
@@ -288,11 +288,30 @@ export class SyncController {
         return decided;
       }
       if (this.identity() !== userId) return decided;
+      if (response.resetEpoch !== undefined && (await this.repository.observeEpoch(response.resetEpoch))) {
+        await this.fetchSnapshot(userId);
+        return true;
+      }
       await db.transaction("rw", db.outbox, db.conflictsLocal, async () => {
         for (const item of response.items) {
-          if (item.state !== "RESOLVED" || !ids.includes(item.clientEventId)) continue;
+          if (!ids.includes(item.clientEventId)) continue;
           const row = await db.outbox.get(item.clientEventId);
           if (row?.state !== "held" || row.actor.userId !== userId) continue;
+          if (
+            item.context &&
+            item.context.fact.clientEventId === item.clientEventId &&
+            item.context.fact.actor.userId === userId
+          ) {
+            await db.conflictsLocal.put({
+              id: item.conflictId,
+              clientEventId: item.clientEventId,
+              userId,
+              kind: item.kind,
+              openedAt: item.openedAt,
+              context: item.context,
+            });
+          }
+          if (item.state !== "RESOLVED") continue;
           const resolution = {
             conflictId: item.conflictId,
             decision: item.resolution,
@@ -305,7 +324,14 @@ export class SyncController {
               ? { state: "acked", lastError: null, resolution, confirmationFeedHead: response.feedHead }
               : { state: "rejected", lastError: "CONFLICT_REJECTED", resolution },
           );
-          await db.conflictsLocal.put({ id: item.conflictId, clientEventId: item.clientEventId, userId, resolution });
+          const existing = await db.conflictsLocal.get(item.conflictId);
+          await db.conflictsLocal.put({
+            ...existing,
+            id: item.conflictId,
+            clientEventId: item.clientEventId,
+            userId,
+            resolution,
+          });
           decided = true;
         }
       });
