@@ -102,6 +102,7 @@
     "title_one": "{{count}} order placed",
     "title_other": "{{count}} orders placed",
     "subtitle": "Delivery {{day}}",
+    "subtitleMixed": "The orders have different delivery dates",
     "placedAt": "Placed",
     "outlet": "Outlet",
     "eta": "ETA window",

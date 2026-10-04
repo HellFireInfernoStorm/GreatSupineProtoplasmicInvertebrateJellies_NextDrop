@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate } from "react-router";
 import { useIsDesktop } from "../../../lib/layout";
@@ -10,11 +11,24 @@ import { PhoneScreen } from "../StoreLayout";
 import { draft, useDraft, type Order } from "./draft";
 import { LineList } from "./parts";
 
+/** The delivery date the orders share, or null when the server put them on different days. */
+function deliveryDay(orders: readonly Order[]): string | null {
+  const first = orders[0]!.currentDate;
+  return orders.every((order) => order.currentDate === first) ? first : null;
+}
+
+/** "Delivery Mon 5 Oct", or a line saying the dates differ; each order's card then shows its own. */
+function placedSubtitle(t: TFunction<"store/order">, orders: readonly Order[]): string {
+  const day = deliveryDay(orders);
+  return day ? t("placed.subtitle", { day: formatDay(dateInstant(day)) }) : t("placed.subtitleMixed");
+}
+
 /** The confirmation: each order's ID and status, when it was placed, and what is on it. */
 function PlacedDetails({ orders }: { orders: readonly Order[] }) {
   const { t } = useTranslation("store/order");
   const outlet = useOutlet().data;
   const first = orders[0]!;
+  const sameDate = deliveryDay(orders) !== null;
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-3">
@@ -28,6 +42,12 @@ function PlacedDetails({ orders }: { orders: readonly Order[] }) {
               {t(`summary.order.${order.tempRequirement}`)}
             </p>
             <p className="font-mono text-base font-semibold">{order.displayId}</p>
+            {/* Each order is dated by the server on its own, so the two can land on different days. */}
+            {!sameDate && (
+              <p className="text-xs font-semibold">
+                {t("placed.subtitle", { day: formatDay(dateInstant(order.currentDate)) })}
+              </p>
+            )}
             <div>
               <StatusPill status={order.status} />
             </div>
@@ -94,9 +114,7 @@ export function PlacedDialog() {
   return (
     <Modal open onClose={draft.dismissPlaced} title={t("placed.title", { count: orders.length })}>
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-muted">
-          {t("placed.subtitle", { day: formatDay(dateInstant(orders[0]!.currentDate)) })}
-        </p>
+        <p className="text-sm text-muted">{placedSubtitle(t, orders)}</p>
         <PlacedDetails orders={orders} />
         <div className="flex gap-3">
           <Button className="flex-1" icon={<Icon name="route" />} onClick={track}>
@@ -121,7 +139,7 @@ export function PlacedPage() {
   return (
     <PhoneScreen
       title={t("placed.title", { count: orders.length })}
-      subtitle={t("placed.subtitle", { day: formatDay(dateInstant(orders[0]!.currentDate)) })}
+      subtitle={placedSubtitle(t, orders)}
       footer={
         <div className="flex flex-col gap-2">
           <Button size="lg" className="w-full" icon={<Icon name="route" />} onClick={track}>
