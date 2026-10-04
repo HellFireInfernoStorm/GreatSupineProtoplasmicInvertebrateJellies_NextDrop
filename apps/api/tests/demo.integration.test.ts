@@ -208,6 +208,52 @@ describe.skipIf(!url)("demo module (PostgreSQL)", () => {
       ]);
     }, 60000);
 
+    it("discards field context on reset and returns the new epoch on a cold lookup", async () => {
+      const clientEventId = randomUUID();
+      const deviceId = randomUUID();
+      const login = () => signIn({ role: "LOADER", loginId: "LDR001", pin: DEMO_PIN, deviceId });
+      let field = await login();
+      const prisma = database.prisma!;
+      const user = await prisma.user.findUniqueOrThrow({ where: { loginId: "LDR001" } });
+      const order = await prisma.order.findFirstOrThrow();
+      const event = await prisma.orderEvent.create({
+        data: {
+          type: "LOAD_CONFIRMED",
+          source: "FIELD",
+          actorRole: "LOADER",
+          actorUserId: user.id,
+          orderId: order.id,
+          clientEventId,
+          deviceId,
+          deviceSeq: 0,
+          capturedAt: new Date(),
+          disposition: "HELD",
+          payload: { lines: [{ lineId: "reset-fixture-line", qtyLoaded: 1 }] },
+        },
+      });
+      await prisma.conflict.create({
+        data: { kind: "FACT_ON_REASSIGNED_STOP", heldEventId: event.id, openedBy: user.id },
+      });
+      const lookup = () =>
+        app.inject({
+          method: "POST",
+          url: "/api/sync/conflicts",
+          payload: { clientEventIds: [clientEventId], includeContext: true },
+          cookies: field.cookies,
+          headers: { [CSRF_HEADER]: field.csrf },
+        });
+      const before = await lookup();
+      expect(before.statusCode, before.body).toBe(200);
+      expect(before.json().items[0].context.fact.clientEventId).toBe(clientEventId);
+      const reset = await asDispatcher("POST", "/api/demo/reset", { preset: "before-cutoff" });
+      expect(reset.statusCode, reset.body).toBe(200);
+      field = await login();
+      const recovered = await lookup();
+      expect(recovered.statusCode, recovered.body).toBe(200);
+      expect(recovered.json()).toMatchObject({ items: [], resetEpoch: reset.json().resetEpoch });
+      expect(recovered.json().resetEpoch).toBe(before.json().resetEpoch + 1);
+    }, 60000);
+
     it("produces identical state when run twice, the epoch moving on by one each time", async () => {
       const first = await asDispatcher("POST", "/api/demo/reset", { preset: "before-cutoff" });
       const a = await storyState();

@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §9.5; issue 54, 97; ADR 0040, 0043
+sources: guide §9.5; issue 54, 97; ADR 0040, 0043, 0044
 ---
 
 # Recovery rules and conflict classification
@@ -42,3 +42,9 @@ The reporting device learns the decision from `POST /sync/conflicts` (ADR 0043):
 - **Item.** Each item has `conflictId`, `clientEventId`, `kind`, and `OPEN` or `RESOLVED` with the decision, the note and `resolvedAt`.
 - **Boundary.** The response's `feedHead` is the confirmation boundary for snapshot reconciliation.
 - **Recovery.** Conflicts are kept until a demo reset. The device asks on every pull, so missed hints and cold resumes recover.
+
+### Historical field conflict context (ADR 0044)
+
+`POST /api/sync/conflicts` accepts optional `includeContext: true`. This returns each owned held fact's original envelope and published stop/outlet, plus recorded order-specific removal, deferral or reassignment changes through conflict opening. Changes include before/after versions, publication time, minimal assignments and available deferral reason/note. Missing historical values are explicitly `null`; later replans do not rewrite the clash. Full plans and other users' facts are excluded. Legacy requests retain their existing response shape. Opted-in responses also carry `resetEpoch`, read coherently with history, outcomes and `feedHead`.
+
+Ownership follows the original fact, even after removal/reassignment and on another device for the same user. Lookup ignores feed cursor, so cold resume and missed hints recover context. History survives until demo reset; discard cached context when the epoch changes. Accepted outcomes still require a covering snapshot before pruning. See [ADR 0044](../../adr/0044-field-conflict-context.md).

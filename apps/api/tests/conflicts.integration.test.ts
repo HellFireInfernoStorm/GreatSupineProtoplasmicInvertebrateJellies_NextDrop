@@ -5,7 +5,7 @@ import { addDays, reduceOrder } from "@nextdrop/rules";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { PrismaClient } from "../src/generated/prisma/client";
 import { CSRF_HEADER, hashSecret, SESSION_COOKIE } from "../src/modules/auth";
-import { toRulesEvent } from "../src/modules/orders";
+import { toRulesEvent, toTripDto, tripInclude, type TripRecord } from "../src/modules/orders";
 import { buildServer, type App } from "../src/server";
 import { createSuiteDatabase, testDatabaseUrl, type SuiteDatabase } from "./support/suite-database";
 
@@ -160,7 +160,7 @@ describe.skipIf(!testDatabaseUrl)("sync conflicts against PostgreSQL", () => {
   });
 
   /** A trip's Kandy day with orders A, B and C planned on VEH039 (version 1), and its snapshot. */
-  async function scenario(): Promise<Scenario> {
+  async function scenario(legacyHistory = false): Promise<Scenario> {
     const date = addDays("2026-10-05", days++);
     const day = await prisma.planningDay.create({
       data: { depot: "Kandy", date: new Date(date), state: "PUBLISHED", currentVersion: 0 },
@@ -197,7 +197,7 @@ describe.skipIf(!testDatabaseUrl)("sync conflicts against PostgreSQL", () => {
       orders[key] = { id: order.id, lineId };
     }
     const sc: Scenario = { date, dayId: day.id, version: 0, trip, orders };
-    await publish(sc, { A: ids.veh039, B: ids.veh039, C: ids.veh039 });
+    await publish(sc, { A: ids.veh039, B: ids.veh039, C: ids.veh039 }, clock, legacyHistory);
     return sc;
   }
 
@@ -227,7 +227,12 @@ describe.skipIf(!testDatabaseUrl)("sync conflicts against PostgreSQL", () => {
    * ORDER_PLANNED / ORDER_DEFERRED events, the next PlanVersion with its trip snapshot, and PlanVersionChange rows.
    * `plan` maps an order to its vehicle, or "DEFER".
    */
-  async function publish(sc: Scenario, plan: Partial<Record<Key, string | "DEFER">>) {
+  async function publish(
+    sc: Scenario,
+    plan: Partial<Record<Key, string | "DEFER">>,
+    publishedAt = clock,
+    legacyHistory = false,
+  ) {
     const version = sc.version + 1;
     const changes: { orderId: string; tripId: string | null; change: "ADDED" | "MOVED_VEHICLE" | "DEFERRED" }[] = [];
     for (const [key, target] of Object.entries(plan) as [Key, string][]) {
@@ -260,7 +265,7 @@ describe.skipIf(!testDatabaseUrl)("sync conflicts against PostgreSQL", () => {
       if (stop?.trip.vehicleId === target) continue;
       const tripId = await tripOn(sc.dayId, target);
       if (stop) await prisma.tripStop.delete({ where: { id: stop.id } });
-      const seq = (await prisma.tripStop.count({ where: { tripId } })) + 1;
+      const seq = ((await prisma.tripStop.aggregate({ where: { tripId }, _max: { seq: true } }))._max.seq ?? 0) + 1;
       await prisma.tripStop.create({
         data: { tripId, seq, etaMin: 400 + seq * 20, windowOpen: 300, windowClose: 600, serviceMin: 15, orderId: id },
       });
@@ -283,7 +288,7 @@ describe.skipIf(!testDatabaseUrl)("sync conflicts against PostgreSQL", () => {
     }
     const trips = await prisma.trip.findMany({
       where: { planningDayId: sc.dayId },
-      include: { stops: { orderBy: { seq: "asc" } } },
+      include: tripInclude(),
     });
     const saved = await prisma.planVersion.create({
       data: {
@@ -292,13 +297,24 @@ describe.skipIf(!testDatabaseUrl)("sync conflicts against PostgreSQL", () => {
         draftRevision: version,
         publishedBy: ids.dispatcher,
         summary: {},
+        publishedAt,
         snapshot: {
-          trips: trips.map((t) => ({
-            id: t.id,
-            vehicleId: t.vehicleId,
-            stops: t.stops.map((s) => ({ id: s.id, order: { id: s.orderId } })),
-          })),
-          deferrals: [],
+          trips: trips.map((t) =>
+            legacyHistory
+              ? {
+                  id: t.id,
+                  vehicleId: t.vehicleId,
+                  stops: t.stops.map((stop) => ({ id: stop.id, order: { id: stop.orderId } })),
+                }
+              : toTripDto(t as unknown as TripRecord),
+          ),
+          deferrals: Object.entries(plan)
+            .filter(([, target]) => target === "DEFER")
+            .map(([key]) => ({
+              orderId: sc.orders[key as Key].id,
+              reasonCode: "TIME_BUDGET",
+              note: "Route shortened",
+            })),
         },
       },
     });
@@ -588,12 +604,17 @@ describe.skipIf(!testDatabaseUrl)("sync conflicts against PostgreSQL", () => {
     };
   }
 
-  describe("field outcomes of held facts (issue #97, ADR 0042)", () => {
-    const outcomes = (who: Who, clientEventIds: string[], headers: Record<string, string> = {}) =>
+  describe("field outcomes of held facts (issues #97/#117, ADRs 0043/0044)", () => {
+    const outcomes = (
+      who: Who,
+      clientEventIds: string[],
+      headers: Record<string, string> = {},
+      includeContext = false,
+    ) =>
       app.inject({
         method: "POST",
         url: "/api/sync/conflicts",
-        payload: { clientEventIds },
+        payload: { clientEventIds, ...(includeContext ? { includeContext: true } : {}) },
         cookies: { [SESSION_COOKIE]: sessions[who].cookie },
         headers: { [CSRF_HEADER]: sessions[who].csrf, ...headers },
       });
@@ -601,6 +622,69 @@ describe.skipIf(!testDatabaseUrl)("sync conflicts against PostgreSQL", () => {
       app.inject({ method: "GET", url, cookies: { [SESSION_COOKIE]: sessions[who].cookie } });
     type Item = { clientEventId: string; conflictId: string; state: string; resolution?: string; note?: string };
     const byEvent = (items: Item[]) => new Map(items.map((item) => [item.clientEventId, item]));
+
+    it("recovers historical context after removal and reassignment without exposing other orders", async () => {
+      for (const target of ["DEFER", ids.veh040]) {
+        const sc = await scenario();
+        const offline = [departed(sc, 1), ...delivery(sc, "A", 1)];
+        await publish(sc, { A: target });
+        const results = await push("sampath", offline);
+        const asked = offline.slice(1).map((e) => e.clientEventId);
+        const response = await outcomes("sampath2", asked, {}, true);
+        expect(response.statusCode, response.body).toBe(200);
+        const body = response.json();
+        expect(body.resetEpoch).toEqual(expect.any(Number));
+        expect(body.items).toHaveLength(3);
+        for (const item of body.items) {
+          expect(item.context.fact.clientEventId).toBe(item.clientEventId);
+          expect(item.context.fact.disposition).toBe("HELD");
+          expect(item.context.original).toMatchObject({
+            planVersion: 1,
+            tripId: sc.trip,
+            vehicleId: ids.veh039,
+            stop: { order: { id: sc.orders.A.id }, outlet: { id: ids.out1 } },
+          });
+          expect(item.context.changes).toHaveLength(1);
+          expect(item.context.changes[0].reasonCode).toBe(target === "DEFER" ? "TIME_BUDGET" : null);
+          expect(item.context.changes[0].note).toBe(target === "DEFER" ? "Route shortened" : null);
+          expect(item.context.changes[0]).toMatchObject({
+            fromVersion: 1,
+            toVersion: 2,
+            kind: target === "DEFER" ? "DEFERRED" : "MOVED_VEHICLE",
+          });
+          expect(JSON.stringify(item.context)).not.toContain(sc.orders.B.id);
+        }
+        expect((await outcomes("kumara", asked, {}, true)).json().items).toEqual([]);
+        expect((await outcomes("loader", asked, {}, true)).json().items).toEqual([]);
+        // Later plan versions cannot rewrite the clash context, even after its resolution.
+        await publish(sc, { A: "DEFER" }, new Date(clock.getTime() + 1000));
+        await resolve("nimal", results[2]!.conflictId!, "REJECT_FACT", "Check the proof");
+        const recovered = (await outcomes("sampath", asked, {}, true)).json();
+        expect(recovered.items.map((i: { context: unknown }) => i.context)).toEqual(
+          body.items.map((i: { context: unknown }) => i.context),
+        );
+      }
+    });
+
+    it("returns missing original history explicitly without inventing a reason for reassignment", async () => {
+      const sc = await scenario(true);
+      const offline = [departed(sc, 1), ...delivery(sc, "A", 1)];
+      await publish(sc, { A: ids.veh040 });
+      await push("sampath", offline);
+      const body = (
+        await outcomes(
+          "sampath",
+          offline.slice(1).map((e) => e.clientEventId),
+          {},
+          true,
+        )
+      ).json();
+      expect(body.items).toHaveLength(3);
+      for (const item of body.items) {
+        expect(item.context.original).toBeNull();
+        expect(item.context.changes[0]).toMatchObject({ kind: "MOVED_VEHICLE", reasonCode: null, note: null });
+      }
+    });
 
     it("returns only the caller's own held facts, decided or not, with a covering confirmation boundary", async () => {
       const sc = await scenario();

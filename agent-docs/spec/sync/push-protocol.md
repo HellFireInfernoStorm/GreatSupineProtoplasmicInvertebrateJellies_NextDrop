@@ -48,3 +48,5 @@ Ingest details (ADR 0034):
 - **Line quantities.** `LOAD_CONFIRMED` sets loaded quantities. A delivering `STOP_OUTCOME` sets delivered quantities and the order's confirmed-after-sync time.
 
 The result DTO is discriminated by status: ACCEPTED carries its serverEventId, HELD_CONFLICT carries conflictId, and REJECTED requires code and the original zero-based batch index. Only REJECTED permits clientEventId null, when the input ID is missing or invalid; preserve a valid ID even when another field is invalid. The client uses index to correlate such rejections to the submitted batch instead of silently retrying them. Non-rejected results require a valid UUID. DUPLICATE can include the original serverEventId/code. Every result has receivedAt; feedHead is a decimal string, preserving feed sequence precision. String cursor and result-detail conventions are part of the accepted #29 wire contracts.
+
+For opt-in historical context on held facts, see [conflict context recovery](recovery-and-conflicts.md#historical-field-conflict-context-adr-0044) (ADR 0044).
