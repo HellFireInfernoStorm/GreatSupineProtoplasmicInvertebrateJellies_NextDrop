@@ -1,7 +1,14 @@
 import Dexie, { type EntityTable } from "dexie";
-import type { ApiDto, ClientEvent, FieldSnapshot, OrderDto, TripDto } from "@nextdrop/contracts";
+import type { ApiDto, ClientEvent, ConflictResolution, FieldSnapshot, OrderDto, TripDto } from "@nextdrop/contracts";
 
 export type OutboxState = "pending" | "sending" | "acked" | "held" | "rejected" | "failed";
+/** The dispatcher's decision on a held fact, as the server reported it (ADR 0042). */
+export interface HeldResolution {
+  conflictId: string;
+  decision: ConflictResolution;
+  note: string | null;
+  resolvedAt: string;
+}
 export type OutboxEntry = ClientEvent & {
   state: OutboxState;
   attempts: number;
@@ -9,6 +16,7 @@ export type OutboxEntry = ClientEvent & {
   blobRefs: string[];
   confirmedAt?: string;
   confirmationFeedHead?: string;
+  resolution?: HeldResolution;
 };
 export interface QueuedBlob {
   clientBlobId: string;
@@ -31,7 +39,10 @@ export class OfflineDatabase extends Dexie {
   orders!: EntityTable<OrderDto, "id">;
   outlets!: EntityTable<ApiDto<"outlet">, "id">;
   contacts!: EntityTable<{ id: string; contact: ApiDto<"contact"> }, "id">;
-  conflictsLocal!: EntityTable<{ id: string; clientEventId: string; userId: string }, "id">;
+  conflictsLocal!: EntityTable<
+    { id: string; clientEventId: string; userId: string; resolution?: HeldResolution },
+    "id"
+  >;
   meta!: EntityTable<Metadata, "key">;
 
   constructor(name = "nextdrop-field") {

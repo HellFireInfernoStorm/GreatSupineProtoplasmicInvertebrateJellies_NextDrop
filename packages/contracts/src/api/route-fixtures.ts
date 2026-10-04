@@ -133,6 +133,10 @@ export const apiRouteFixtures = {
     responses: { 200: f.blobResponse, 413: tooLarge },
   },
   heartbeat: { request: { headers, body: f.heartbeatRequest }, responses: { 200: f.heartbeatResponse } },
+  fieldConflicts: {
+    request: { headers, body: f.fieldConflictsRequest },
+    responses: { 200: f.fieldConflictsResponse },
+  },
   changes: { request: { query: f.changesQuery }, responses: { 200: f.changesResponse } },
   stream: { request: { query: f.streamQuery }, responses: { 200: f.streamHint } },
   notifications: { request: { query: f.notificationsQuery }, responses: { 200: f.notificationsResponse } },

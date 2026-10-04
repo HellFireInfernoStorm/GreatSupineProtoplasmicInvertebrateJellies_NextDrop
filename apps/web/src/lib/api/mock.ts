@@ -10,6 +10,7 @@ import {
   type HumanRole,
 } from "@nextdrop/contracts";
 import { isFieldRole } from "../fieldRoles";
+import { mockStoreRespond } from "./mockStore";
 import { readStored, writeStored } from "../storage";
 import type { RawResponse, Transport } from "./types";
 
@@ -131,5 +132,5 @@ export function mockRespond(name: ApiRouteName, body: unknown, nowMs: number = D
 
 export const mockTransport: Transport = async (request) => {
   await new Promise((resolve) => setTimeout(resolve, LATENCY_MS));
-  return mockRespond(request.name, request.body);
+  return mockStoreRespond(request, Date.now()) ?? mockRespond(request.name, request.body);
 };

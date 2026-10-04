@@ -48,9 +48,9 @@ export const apiVariantFixtures = {
   exception: {
     ACK: { type: "ACK", tripId: f.trip.id, planVersion: 1, actor: f.clientEvent.actor, at: f.clientEvent.capturedAt },
     CONFLICT: f.exception,
-    ISSUE: { type: "ISSUE", issue: f.issue },
+    ISSUE: { type: "ISSUE", issue: f.issue, evidence: [] },
     SHORT: { type: "SHORT", orderId: f.order.id, lineId: f.orderLine.id, qtyShort: 1, resolution: null },
-    DAMAGED: { type: "DAMAGED", orderId: f.order.id, lineId: f.orderLine.id, qty: 1 },
+    DAMAGED: { type: "DAMAGED", orderId: f.order.id, lineId: f.orderLine.id, qty: 1, evidence: [] },
     FAILED: { type: "FAILED", order: { ...f.order, status: "FAILED" } },
     PROBLEM: {
       type: "PROBLEM",
@@ -59,6 +59,7 @@ export const apiVariantFixtures = {
       tripId: f.trip.id,
       kind: "VEHICLE_PROBLEM",
       note: "Mock breakdown",
+      evidence: [],
     },
   },
 } satisfies VariantFixtures;
@@ -69,6 +70,19 @@ export const apiConflictFixtures = {
   tripLevel: { ...f.conflict, kind: "ILLEGAL_TRANSITION", orderId: null, tripId: f.trip.id },
   resolved: { ...f.conflict, state: "RESOLVED", resolution: "ACCEPT_FACT", resolvedAt: f.clientEvent.capturedAt },
 } satisfies Record<"orderLevel" | "tripLevel" | "resolved", ApiDtoInput<"conflict">>;
+
+/** A held fact's outcome as the field device sees it: still open, accepted or rejected (ADR 0042). */
+export const apiFieldConflictFixtures = {
+  open: {
+    conflictId: f.conflict.id,
+    clientEventId: f.clientEvent.clientEventId,
+    kind: f.conflict.kind,
+    openedAt: f.conflict.openedAt,
+    state: "OPEN",
+  },
+  accepted: { ...f.fieldConflict, resolution: "ACCEPT_FACT", note: null },
+  rejected: f.fieldConflict,
+} satisfies Record<"open" | "accepted" | "rejected", ApiDtoInput<"fieldConflict">>;
 
 /** All short outcomes, including the one-line next-operating-day backorder. */
 export const apiShortResolutionFixtures = {

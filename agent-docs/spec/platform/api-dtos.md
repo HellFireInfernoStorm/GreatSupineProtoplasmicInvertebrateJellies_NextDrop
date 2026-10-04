@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §12; issues 29, 78, 110; accepted ADRs 0024, 0026, 0038
+sources: guide §12; issues 29, 59, 78, 110; accepted ADRs 0024, 0026, 0038, 0041
 ---
 
 # API wire DTOs
@@ -83,7 +83,7 @@ Validate takes `{ data }` and returns `ValidationResult`. Publish takes `{ revis
 
 Hard validation fails with 422 `{ code: VALIDATION_FAILED, message_key, params, requestId, validation: ValidationResult }`. Missing deferral reasons use the same 422 structure with `MISSING_DEFERRAL_REASON`; the API must include the associated validation information. Locked stops use 409 `STOP_LOCKED`; stale revisions use 409 `REVISION_CONFLICT`. Warnings alone remain successful. Rules perform the checks; Zod does not reproduce them.
 
-Runs wraps vehicle, trips, progress counts, separate last-heard/last-sync times, pending count, late risk and the documented state vocabulary, plus server time. Exceptions are discriminated ACK, CONFLICT, ISSUE, SHORT, DAMAGED, FAILED or PROBLEM rows. ACK is `{ type: ACK, tripId, planVersion, actor, at }`, projected from PLAN_ACKNOWLEDGED subject.tripId, payload.planVersion, actor and capturedAt to match the design's Ack inbox row. Conflict.orderId is required nullable for trip-level conflicts; tripId and resolution are also required nullable. `apiConflictFixtures` exports order-level, trip-level and resolved examples. Fleet wraps date and vehicle/availability pairs. Read availability is `{ status, reason, note, changedAt }`, with required nullable reason/note/changedAt; a never-changed available vehicle has all three null. PUT takes `{ changes: [availability payloads without sourceEventId] }`. Outlook takes depot/from/weeks and returns weekly brand demand/chilled/capacity in litres. Outlet history returns `{ items, total, nextCursor }`; pass non-null nextCursor as the next after query, and null means completion.
+Runs wraps vehicle, trips, progress counts, separate last-heard/last-sync times, pending count, late risk and the documented state vocabulary, plus server time. Exceptions are discriminated ACK, CONFLICT, ISSUE, SHORT, DAMAGED, FAILED or PROBLEM rows. CONFLICT, ISSUE, DAMAGED and PROBLEM rows carry `evidence`, the blob IDs of their photos and signatures, readable through `GET /blobs/:id` (ADR 0041). ACK is `{ type: ACK, tripId, planVersion, actor, at }`, projected from PLAN_ACKNOWLEDGED subject.tripId, payload.planVersion, actor and capturedAt to match the design's Ack inbox row. Conflict.orderId is required nullable for trip-level conflicts; tripId and resolution are also required nullable. `apiConflictFixtures` exports order-level, trip-level and resolved examples. Fleet wraps date and vehicle/availability pairs. Read availability is `{ status, reason, note, changedAt }`, with required nullable reason/note/changedAt; a never-changed available vehicle has all three null. PUT takes `{ changes: [availability payloads without sourceEventId] }`. Outlook takes depot/from/weeks and returns weekly brand demand/chilled/capacity in litres. Outlet history returns `{ items, total, nextCursor }`; pass non-null nextCursor as the next after query, and null means completion.
 
 ### Dispatcher dock commands (ADR 0026)
 

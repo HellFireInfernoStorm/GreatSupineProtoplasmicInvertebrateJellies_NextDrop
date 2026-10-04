@@ -52,10 +52,24 @@ describe("locale files", () => {
   });
   it("has English for every namespace, as plain strings", () => {
     expect(Object.keys(english).sort()).toEqual(
-      ["dispatcher/login", "driver/login", "loader/login", "shared/common", "shared/ui", "store/login"].sort(),
+      [
+        "dispatcher/login",
+        "driver/login",
+        "loader/login",
+        "shared/common",
+        "shared/ui",
+        "store/login",
+        "store/order",
+        "store/shell",
+      ].sort(),
     );
-    for (const tree of Object.values(english)) {
-      expect(JSON.stringify(tree)).not.toContain('"review"');
+    // English is the source: plain strings, with no `{ text, review }` leaves. A key may still be called "review".
+    const hasReviewState = (tree: LocaleTree): boolean =>
+      Object.values(tree).some(
+        (value) => typeof value !== "string" && (isReviewedString(value) || hasReviewState(value)),
+      );
+    for (const [namespace, tree] of Object.entries(english)) {
+      expect(hasReviewState(tree), namespace).toBe(false);
     }
   });
 
