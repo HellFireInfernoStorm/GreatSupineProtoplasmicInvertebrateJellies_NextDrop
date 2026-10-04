@@ -33,7 +33,7 @@ export function orderUnits(order: Order): { ordered: number; expected: number; s
 
 /**
  * How far along an order is, from 0 to 1. The server gives a store only its own stop of a trip, so the bar follows the
- * order's own stages and not the run's stop count (ADR 0040).
+ * order's own stages and not the run's stop count (ADR 0041).
  */
 const STAGE: Partial<Record<Order["status"], number>> = {
   PLANNED: 0.25,

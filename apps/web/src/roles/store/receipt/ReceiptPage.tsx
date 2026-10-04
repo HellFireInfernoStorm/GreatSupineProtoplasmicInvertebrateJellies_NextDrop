@@ -58,7 +58,7 @@ function DriverRecord({ detail }: { detail: OrderDetail }) {
 
 /**
  * S3 Confirm receipt: per-line steppers pre-filled from the driver's record. Phone: Figma `235:944`. Desktop draws
- * it as a dialog (`234:803`); the build gives it a page of its own (ADR 0040).
+ * it as a dialog (`234:803`); the build gives it a page of its own (ADR 0041).
  */
 export function ReceiptPage() {
   const { t } = useTranslation("store/receipt");
