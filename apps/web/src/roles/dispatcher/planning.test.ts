@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { ApiDto } from "@nextdrop/contracts";
-import { moveOrder, addTrip, emptyDraft, toPlan, makeReference, evaluate, validationContext } from "./planning";
+import {
+  moveOrder,
+  addTrip,
+  emptyDraft,
+  toPlan,
+  makeReference,
+  evaluate,
+  validationContext,
+  lockedDraftChange,
+} from "./planning";
 import { apiFixtures } from "@nextdrop/contracts";
 import { sequenceStops } from "@nextdrop/rules";
 
@@ -104,6 +113,33 @@ describe("rules adapter", () => {
     const result = evaluate(data, orders, orders[0]!.currentDate, reference, new Set());
     expect(result.violations.filter((v) => v.code === "WINDOW_MISSED")).toEqual([]);
     expect(sequenceStops(result.plan.trips[0]!, reference.ref).map((o) => o.id)).toEqual([vehicle, a, b]);
+    const loadedContext = {
+      publishedStops: [vehicle, a, b].map((orderId, index) => ({
+        orderId,
+        vehicleId: "VEH039",
+        tripNo: 1,
+        seq: index + 1,
+        locked: true,
+        departed: false,
+      })),
+    };
+    const loaded = evaluate(
+      data,
+      orders.map((o) => ({ ...o, status: "LOADED" as const })),
+      orders[0]!.currentDate,
+      reference,
+      new Set(),
+      loadedContext,
+    );
+    expect(loaded.lockedOrderId).toBeNull();
+    expect(lockedDraftChange(loaded.plan, reference, loadedContext)).toBeNull();
+    expect(
+      lockedDraftChange(
+        toPlan(moveOrder(data, a, null), orders, orders[0]!.currentDate, reference, loadedContext),
+        reference,
+        loadedContext,
+      ),
+    ).toBe(a);
     const context = {
       publishedStops: [{ orderId: a, vehicleId: "VEH039", tripNo: 1, seq: 1, locked: false, departed: true }],
     };

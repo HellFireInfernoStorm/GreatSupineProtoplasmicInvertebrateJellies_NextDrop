@@ -662,5 +662,14 @@ describe.skipIf(!url)("publish transaction (PostgreSQL)", () => {
       { orderId: ids[1], seq: 1 },
       { orderId: ids[0], seq: 2 },
     ]);
+    await prisma.order.updateMany({ where: { id: { in: ids } }, data: { status: "LOADED" } });
+    const unchanged = await saveDraft(saved.revision, data, "Kandy", date);
+    const republished = await call("POST", day("/publish", "Kandy", date), { revision: unchanged.revision });
+    expect(republished.statusCode, republished.body).toBe(200);
+    expect((republished.json() as ApiDto<"publishResponse">).plan.trips[0]!.stops.map((s) => s.order.id)).toEqual([
+      ids[1],
+      ids[0],
+    ]);
+    expect(await prisma.order.count({ where: { id: { in: ids }, status: "LOADED" } })).toBe(2);
   }, 60000);
 });

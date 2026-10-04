@@ -6,6 +6,7 @@ import {
   validatePlan,
   lockedStopChange,
   preserveDraftOrder,
+  stopPlacements,
   validateTrip,
   type Plan,
   type ValidationContext,
@@ -133,23 +134,13 @@ export function evaluate(
   const trips = new Map(
     plan.trips.map((trip) => [trip.ref, validateTrip(trip, reference.ref, { ...ctx, date, siblingTrips: plan.trips })]),
   );
-  const lockedOrderId = lockedDraftChange(data, reference, context);
+  const lockedOrderId = lockedDraftChange(plan, reference, context);
   return { ...whole, ok: whole.ok && lockedOrderId === null, lockedOrderId, trips, plan };
 }
 
-/** Menu filtering needs only placement locks, without recalculating schedules or capacity for every option. */
-export function lockedDraftChange(data: DraftData, reference: BrowserReference, context: ValidationContext) {
-  return lockedStopChange(
-    context.publishedStops ?? [],
-    data.trips.flatMap((t) =>
-      t.orderIds.map((orderId, index) => ({
-        orderId,
-        vehicleId: reference.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId,
-        tripNo: t.tripNo,
-        seq: index + 1,
-      })),
-    ),
-  );
+/** Menu filtering checks sequenced placements without recalculating schedules or capacity. */
+export function lockedDraftChange(plan: Plan, reference: BrowserReference, context: ValidationContext) {
+  return lockedStopChange(context.publishedStops ?? [], stopPlacements(plan, reference.ref));
 }
 
 /** Only wire UUIDs enter the browser; rules context consistently uses reference display IDs. */

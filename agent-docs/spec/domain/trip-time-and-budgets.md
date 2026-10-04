@@ -33,5 +33,5 @@ A vehicle may run one Fresh and one Style trip, each checked against its own bud
 
 `km(trip) = depot_to_district_km * (return ? 2 : 1) + inter_stop_km * (n - 1)`; `litres = km / km_per_l`, rounded up to the whole millilitre (ADR 0020). Weekly use per vehicle is the sum over non-cancelled published trips in the ISO week (Monday reset, matching `calendar.csv iso_year/iso_week`). Computed as a query/view, not a separate mutable ledger. The draft validator receives "fuel already used this week excluding this day's published trips".
 
-Dispatcher drafts preserve their orderIds sequence in validation/display schedules only on trips with a departed published stop on the same vehicle and trip number; all other trips use the default window ordering. This enables departed later-stop resequencing while retaining relative locked-stop order (ADR 0053).
+Dispatcher drafts preserve their orderIds sequence in validation/display schedules only on trips with a departed published stop on the same vehicle and trip number; all other trips use the default window ordering. This enables departed later-stop resequencing while retaining relative locked-stop order (ADR 0053). Lock comparisons use the same delivery sequence as validation/display schedules and persisted stop seq, so loading an undeparted trip does not turn its insertion order into an illegal edit.
 

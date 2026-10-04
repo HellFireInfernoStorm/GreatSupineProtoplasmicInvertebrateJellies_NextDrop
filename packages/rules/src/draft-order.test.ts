@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeRunSchedule, sequenceStops } from "./etas";
-import { preserveDraftOrder, type PublishedStop } from "./planning-locks";
+import { lockedStopChange, preserveDraftOrder, stopPlacements, type PublishedStop } from "./planning-locks";
 import { order, trip } from "./test-support/orders";
 import { loadReferenceData } from "./test-support/reference-csv";
 import { validatePlan } from "./validator";
@@ -48,5 +48,27 @@ describe("dispatcher draft ordering", () => {
     }
     // Even removing the trip's last published order from a draft must not erase its departed state.
     expect(preserveDraftOrder({ vehicleId: draft.vehicleId, tripNo: draft.tripNo }, [published])).toBe(true);
+  });
+  it("compares loaded undeparted locks with delivery sequence rather than insertion order", () => {
+    const current = ["EARLY", "L1", "L2"].map((orderId, index) => ({
+      ...published,
+      orderId,
+      seq: index + 1,
+      locked: true,
+      departed: false,
+    }));
+    const planTrip = { ...draft, preserveOrder: preserveDraftOrder(draft, current) };
+    const placements = stopPlacements({ trips: [planTrip] }, ref);
+    expect(placements.map((stop) => [stop.orderId, stop.seq])).toEqual([
+      ["EARLY", 1],
+      ["L1", 2],
+      ["L2", 3],
+    ]);
+    expect(lockedStopChange(current, placements)).toBeNull();
+    expect(lockedStopChange(current, stopPlacements({ trips: [{ ...planTrip, tripNo: 2 }] }, ref))).toBe("EARLY");
+    const invalid = { ...planTrip, orders: [order("UNKNOWN", "missing")] };
+    expect(stopPlacements({ trips: [invalid] }, ref)).toEqual([
+      { orderId: "UNKNOWN", vehicleId: "VEH039", tripNo: 1, seq: 1 },
+    ]);
   });
 });
