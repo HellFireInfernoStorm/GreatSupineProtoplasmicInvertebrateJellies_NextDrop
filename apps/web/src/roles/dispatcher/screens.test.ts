@@ -11,6 +11,55 @@ import { makeReference, validationContext } from "./planning";
 import "../../i18n";
 
 describe("dispatcher screen data", () => {
+  it("offers Unassigned for a planned stop before a pinned loaded stop", () => {
+    const planned = { ...apiFixtures.order, status: "PLANNED" as const };
+    const loaded = { ...planned, id: "01930b7e-0000-7000-8000-000000000098", status: "LOADED" as const };
+    const reference = makeReference([apiFixtures.outlet], [apiFixtures.vehicle], [apiFixtures.calendarDay]);
+    const context = validationContext(
+      {
+        ...apiFixtures.planningContext,
+        publishedStops: [planned, loaded].map((order, index) => ({
+          orderId: order.id,
+          vehicleId: apiFixtures.vehicle.id,
+          tripNo: 1,
+          seq: index + 1,
+          locked: index === 1,
+          departed: false,
+        })),
+        loadedOrders: [{ orderId: loaded.id, vehicleId: apiFixtures.vehicle.id, tripNo: 1, reversalRequested: false }],
+      },
+      reference,
+    );
+    const html = renderToStaticMarkup(
+      createElement(
+        MemoryRouter,
+        {},
+        createElement(PlanBoard, {
+          data: {
+            trips: [{ ref: "T001", vehicleId: apiFixtures.vehicle.id, tripNo: 1, orderIds: [planned.id, loaded.id] }],
+            unassignedOrderIds: [],
+            deferrals: [],
+          },
+          orders: [planned, loaded],
+          outlets: [apiFixtures.outlet],
+          vehicles: [apiFixtures.vehicle],
+          reference,
+          context,
+          unavailable: new Set<string>(),
+          date: planned.currentDate,
+          disabled: false,
+          busy: false,
+          onSave: async () => true,
+          onEditingChange: () => {},
+        }),
+      ),
+    );
+    const menus = html.match(/<select[\s\S]*?<\/select>/g)!;
+    expect(menus).toHaveLength(2);
+    expect(menus[0]).not.toContain('disabled=""');
+    expect(menus[0]).toContain('value="unassigned"');
+    expect(menus[1]).toContain('disabled=""');
+  });
   it("shows departed stops, disables reported cards and permits only safe later-stop destinations", () => {
     const reported = { ...apiFixtures.order, status: "DELIVERED" as const };
     const later = {
