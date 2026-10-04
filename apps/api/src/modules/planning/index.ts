@@ -19,6 +19,6 @@ export async function registerPlanning(app: FastifyInstance, deps: { prisma: Pri
     prisma: deps.prisma,
     clock: deps.clock,
     reference: createReferenceSource(deps.prisma),
-    notifier: createNotifier(),
+    notifier: createNotifier(deps.clock.now),
   });
 }

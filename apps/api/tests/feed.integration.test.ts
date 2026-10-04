@@ -309,7 +309,7 @@ describe.skipIf(!testDatabaseUrl)("change feed and notifications against Postgre
   });
 
   describe("notifications", () => {
-    const notifier = createNotifier();
+    const notifier = createNotifier(() => new Date());
     const notify = (input: Parameters<typeof notifier.notify>[1]) =>
       prisma.$transaction(async (tx) => {
         const feed = await notifier.notify(tx, input);

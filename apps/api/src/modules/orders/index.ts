@@ -26,6 +26,11 @@ export async function registerOrders(app: FastifyInstance, deps: { prisma: Prism
   // Without a database (ops-only test servers) the store routes are not registered.
   if (!deps.prisma) return;
   const calendar = createCalendarSource(deps.prisma);
-  const commands = createOrderCommands({ prisma: deps.prisma, now: deps.now, calendar, notifier: createNotifier() });
+  const commands = createOrderCommands({
+    prisma: deps.prisma,
+    now: deps.now,
+    calendar,
+    notifier: createNotifier(deps.now),
+  });
   await app.register(orderRoutes, { prisma: deps.prisma, now: deps.now, calendar, commands });
 }

@@ -100,7 +100,7 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
       prisma,
       schema: database?.schema ?? "public",
       clock,
-      notifier: createNotifier(),
+      notifier: createNotifier(clock.now),
       ...(dependencies.demoRateLimit ? { rateLimit: dependencies.demoRateLimit } : {}),
     });
   }
