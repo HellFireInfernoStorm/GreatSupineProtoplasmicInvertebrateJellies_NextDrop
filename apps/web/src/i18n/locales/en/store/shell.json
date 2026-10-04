@@ -1,0 +1,21 @@
+{
+  "navLabel": "Store",
+  "role": "Store manager",
+  "nav": {
+    "deliveries": "My deliveries",
+    "products": "Products",
+    "order": "Place order",
+    "tracking": "Order tracking",
+    "track": "Track",
+    "history": "Order history",
+    "historyShort": "History"
+  },
+  "outletLine": "{{id}} · {{district}} district",
+  "notifications": "Notifications",
+  "cutoffPill": {
+    "open": "{{day}} order closes in",
+    "closed": "{{day}} orders are closed"
+  },
+  "signOut": "Sign out",
+  "signOutFailed": "You are still signed in: the server could not be reached. Check the connection and try again."
+}
