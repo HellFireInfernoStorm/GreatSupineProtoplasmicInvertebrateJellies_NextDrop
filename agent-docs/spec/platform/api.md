@@ -16,7 +16,7 @@ Schemas, route registration metadata and exported mock fixtures live in `package
 | Reference | `GET /ref/{outlets,vehicles,products,calendar,reasons}` | all (scoped) |
 | Store | `GET /store/cutoff`, `GET /store/deliveries`, `POST /store/orders` (idempotency key), `GET /store/orders`, `GET /store/orders/:id`, `POST /store/orders/:id/cancel`, `POST /store/orders/:id/receipt`, `POST /store/orders/:id/issues`, `GET /store/notifications`, `POST /store/notifications/read` | store |
 | Dispatch | `GET /dispatch/days/:date` (state, queue, demand vs capacity), `POST .../propose`, `GET/PUT .../draft`, `POST .../validate`, `POST .../publish`, `GET .../versions`, `GET /dispatch/runs`, `GET /dispatch/exceptions`, `POST /dispatch/conflicts/:id/resolve`, `POST /dispatch/issues/:id/resolve`, `POST /dispatch/orders/:id/shorts/:lineId/resolve`, `POST /dispatch/orders/:id/reversal`, `GET/PUT /dispatch/fleet`, `GET /dispatch/outlook`, `GET /dispatch/outlets/:id/history` | dispatcher |
-| Field | `GET /field/snapshot`, `POST /sync/events`, `PUT /sync/blobs/:id`, `POST /sync/heartbeat`, `POST /sync/conflicts` (ADR 0043) | loader, driver |
+| Field | `GET /field/snapshot`, `POST /sync/events`, `PUT /sync/blobs/:id`, `POST /sync/heartbeat`, `POST /sync/conflicts` (optional `includeContext`; ADRs 0043, 0044; [context recovery](../sync/recovery-and-conflicts.md#historical-field-conflict-context-adr-0044)) | loader, driver |
 | Blobs | `GET /blobs/:id` (bytes) | depot dispatcher, outlet store, uploader (ADR 0035) |
 | Feed | `GET /changes`, `GET /stream` (SSE) | all (audience-filtered) |
 | Notifications | `GET /notifications`, `POST /notifications/read` | all |
@@ -26,20 +26,3 @@ Schemas, route registration metadata and exported mock fixtures live in `package
 `/api/readyz` returns `{ status, checks: { database, migrations } }`: 200 with `status: ok` only when a DB query succeeds and all migration files shipped with the app have completed matching-checksum entries in `_prisma_migrations`. Missing runtime migration files, failed/pending migrations and unavailable/unconfigured databases return 503 with `status: unavailable`. Rolled-back attempts do not count as applied. `/api/healthz` reports process liveness independently. The production image must include `apps/api/prisma/migrations` alongside the API source (ADR 0023).
 
 The lifecycle-managed application Prisma client is available as app.prisma without a readiness query-time limit. A private probe client applies 2s connection/query/statement limits only to readiness checks. Its migration query explicitly uses the configured database schema, independent of the connection's default search path. Closing the server disconnects both clients.
-
-### Historical field conflict context (ADR 0044)
-
-`POST /api/sync/conflicts` accepts optional `includeContext: true`. This returns
-each owned held fact's original envelope and published stop/outlet, plus recorded
-order-specific removal, deferral or reassignment changes through conflict opening.
-Changes include before/after versions, publication time, minimal assignments and
-available deferral reason/note. Missing historical values are explicitly `null`;
-later replans do not rewrite the clash. Full plans and other users' facts are excluded.
-Legacy requests retain their existing response shape. Opted-in responses also carry
-`resetEpoch`, read coherently with history, outcomes and `feedHead`.
-
-Ownership follows the original fact, even after removal/reassignment and on another
-device for the same user. Lookup ignores feed cursor, so cold resume and missed hints
-recover context. History survives until demo reset; discard cached context when the
-epoch changes. Accepted outcomes still require a covering snapshot before pruning.
-See [ADR 0044](../../adr/0044-field-conflict-context.md).

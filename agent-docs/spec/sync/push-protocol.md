@@ -49,19 +49,4 @@ Ingest details (ADR 0034):
 
 The result DTO is discriminated by status: ACCEPTED carries its serverEventId, HELD_CONFLICT carries conflictId, and REJECTED requires code and the original zero-based batch index. Only REJECTED permits clientEventId null, when the input ID is missing or invalid; preserve a valid ID even when another field is invalid. The client uses index to correlate such rejections to the submitted batch instead of silently retrying them. Non-rejected results require a valid UUID. DUPLICATE can include the original serverEventId/code. Every result has receivedAt; feedHead is a decimal string, preserving feed sequence precision. String cursor and result-detail conventions are part of the accepted #29 wire contracts.
 
-### Historical field conflict context (ADR 0044)
-
-`POST /api/sync/conflicts` accepts optional `includeContext: true`. This returns
-each owned held fact's original envelope and published stop/outlet, plus recorded
-order-specific removal, deferral or reassignment changes through conflict opening.
-Changes include before/after versions, publication time, minimal assignments and
-available deferral reason/note. Missing historical values are explicitly `null`;
-later replans do not rewrite the clash. Full plans and other users' facts are excluded.
-Legacy requests retain their existing response shape. Opted-in responses also carry
-`resetEpoch`, read coherently with history, outcomes and `feedHead`.
-
-Ownership follows the original fact, even after removal/reassignment and on another
-device for the same user. Lookup ignores feed cursor, so cold resume and missed hints
-recover context. History survives until demo reset; discard cached context when the
-epoch changes. Accepted outcomes still require a covering snapshot before pruning.
-See [ADR 0044](../../adr/0044-field-conflict-context.md).
+For opt-in historical context on held facts, see [conflict context recovery](recovery-and-conflicts.md#historical-field-conflict-context-adr-0044) (ADR 0044).
