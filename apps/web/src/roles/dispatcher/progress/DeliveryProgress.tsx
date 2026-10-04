@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import { Banner, Button, Toast } from "../../../ui";
 import { Pill } from "../../../ui/StatusPill";
 import { useServerNow } from "../../../lib/clock";
 import { formatTime } from "../../../lib/time";
+import { readStored, writeStored } from "../../../lib/storage";
 import { exceptionsQuery, runsQuery } from "../data";
 import { Evidence, type Decision } from "./Evidence";
 import {
@@ -24,10 +25,11 @@ import {
   minutesSince,
   nextStop,
   progressPercent,
+  rememberPlaces,
+  stopIndex,
   silent,
   sortExceptions,
   sortRuns,
-  stopIndex,
   summarise,
   tabOf,
   tripIndex,
@@ -48,6 +50,19 @@ function subscribeOnline(onChange: () => void) {
   };
 }
 
+const PLACES_KEY = "nextdrop.dispatch.places";
+function recalled(depot: string): Map<string, StopPlace> {
+  try {
+    const raw = readStored(`${PLACES_KEY}.${depot}`, "session");
+    return new Map(raw ? (JSON.parse(raw) as [string, StopPlace][]) : []);
+  } catch {
+    return new Map();
+  }
+}
+function keep(depot: string, places: ReadonlyMap<string, StopPlace>) {
+  writeStored(`${PLACES_KEY}.${depot}`, JSON.stringify([...places]), "session");
+}
+
 const formatClose = (minute: number) =>
   `${String(Math.floor(minute / 60) % 24).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
 
@@ -65,15 +80,14 @@ export function DeliveryProgress({ depot }: { depot: string }) {
   const link = { exception: params.get("exception"), order: params.get("order"), trip: params.get("trip") };
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
 
-  // Orders the dispatcher has seen on today's runs. A stop cancelled by a plan change leaves the runs, but its clash
-  // still has to name the order and its delivery times.
-  const [memory, setMemory] = useState<{ data: unknown; places: Map<string, StopPlace> }>({
-    data: null,
-    places: new Map(),
-  });
-  if (runs.data && memory.data !== runs.data)
-    setMemory({ data: runs.data, places: new Map([...memory.places, ...stopIndex(runs.data.items)]) });
+  // Orders the dispatcher has seen on today's runs, kept for the tab's session (see `rememberPlaces`).
+  const [memory, setMemory] = useState(() => ({ data: null as unknown, places: recalled(depot) }));
+  if (runs.data && memory.data !== runs.data) {
+    const remembered = rememberPlaces(memory.places, runs.data.items);
+    setMemory({ data: runs.data, places: remembered });
+  }
   const places = memory.places;
+  useEffect(() => keep(depot, places), [depot, places]);
   const trips = tripIndex(runs.data?.items ?? []);
 
   const items = sortExceptions(exceptions.data?.items ?? []);
@@ -90,6 +104,7 @@ export function DeliveryProgress({ depot }: { depot: string }) {
   const counts = countByTab(items);
   const open = items.filter(actionable).length;
 
+  const live = stopIndex(runs.data?.items ?? []);
   const placeOf = (item: Exception | null): StopPlace | null => {
     if (!item) return null;
     const orderId = exceptionOrderId(item);
@@ -187,6 +202,7 @@ export function DeliveryProgress({ depot }: { depot: string }) {
         <Evidence
           item={current}
           place={placeOf(current)}
+          stale={!!current && !live.has(exceptionOrderId(current) ?? "")}
           tripLabel={tripLabelOf(current)}
           depot={depot}
           online={online}

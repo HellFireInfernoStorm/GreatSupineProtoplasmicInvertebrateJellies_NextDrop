@@ -249,3 +249,21 @@ export function tripIndex(runs: readonly Run[]): Map<string, { run: Run; trip: T
   for (const run of runs) for (const trip of run.trips) index.set(trip.id, { run, trip });
   return index;
 }
+
+/** A stop place without the rest of its run and trip, small enough to remember for the session. */
+export function slimPlace(place: StopPlace): StopPlace {
+  return { run: { ...place.run, trips: [] }, trip: { ...place.trip, stops: [] }, stop: place.stop };
+}
+
+/**
+ * Remember where orders sat on today's runs. A stop the dispatcher cancels leaves the runs, but its sync clash still
+ * has to name the order and its delivery times, after a reload too. Newer runs replace older entries.
+ */
+export function rememberPlaces(
+  remembered: ReadonlyMap<string, StopPlace>,
+  runs: readonly Run[],
+): Map<string, StopPlace> {
+  const next = new Map(remembered);
+  for (const [orderId, place] of stopIndex(runs)) next.set(orderId, slimPlace(place));
+  return next;
+}

@@ -13,6 +13,8 @@ export type Decision = "ACCEPT_FACT" | "REJECT_FACT" | "CREDIT" | "ADD_TO_RUN" |
 interface Props {
   item: Exception | null;
   place: StopPlace | null;
+  /** The order is no longer on today's runs: its status and stop are as last seen. */
+  stale?: boolean;
   tripLabel: string | null;
   depot: string;
   online: boolean;
@@ -74,7 +76,7 @@ function EvidenceColumn({
   );
 }
 
-export function Evidence({ item, place, tripLabel, depot, online, onResolved }: Props) {
+export function Evidence({ item, place, stale = false, tripLabel, depot, online, onResolved }: Props) {
   const { t } = useTranslation("dispatcher/runs");
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState<Decision | null>(null);
@@ -183,7 +185,7 @@ export function Evidence({ item, place, tripLabel, depot, online, onResolved }: 
       t("detail.rows.shortValue", { qty: item.qtyShort, line: line?.name ?? item.lineId }),
     ]);
   if (item.type === "PROBLEM" && item.note) rows.push([t("detail.rows.note"), item.note]);
-  if (place)
+  if (place && !stale)
     rows.push([t("detail.rows.stop"), t("detail.rows.stopValue", { seq: place.stop.seq, trip: place.trip.displayId })]);
 
   return (
@@ -205,7 +207,7 @@ export function Evidence({ item, place, tripLabel, depot, online, onResolved }: 
             })}
           </p>
         )}
-        {order && <StatusPill status={order.status} />}
+        {order && !stale && <StatusPill status={order.status} />}
       </header>
 
       {item.type === "CONFLICT" && (

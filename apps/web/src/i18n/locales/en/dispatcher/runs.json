@@ -111,7 +111,7 @@
     "failedTitle": "Failed stop · {{order}}",
     "problemTitle": "Driver flag · {{order}}",
     "ackTitle": "Plan acknowledged · {{trip}}",
-    "noOrder": "no order",
+    "noOrder": "stop no longer on a run",
     "planChange": "Plan change",
     "planChangeBody": "{{kind}}. The clash opened at {{time}}, when the driver's phone synced.",
     "planChangeNote": "Dispatcher note: {{note}}",
