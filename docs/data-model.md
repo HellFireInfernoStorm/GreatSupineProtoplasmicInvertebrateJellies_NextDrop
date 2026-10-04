@@ -1,6 +1,6 @@
 # Data model
 
-How NextDrop stores and connects its data. The schema is `apps/api/prisma/schema.prisma` (PostgreSQL 16, Prisma 7), and `agent-docs/spec/data/model.md` describes every model. The diagram below shows every table and every foreign key, with each table's keys and a few identifying columns. **TODO (before submission):** run `pnpm docs:erd` so the diagram matches the final schema.
+How NextDrop stores and connects its data. The schema is `apps/api/prisma/schema.prisma` (PostgreSQL 16, Prisma 7), and `agent-docs/spec/data/model.md` describes every model. The diagram below shows every table and every foreign key, with each table's keys and a few identifying columns. It was regenerated with `pnpm docs:erd` against the schema on `main` (4 Oct 2026): 31 models, 43 foreign keys.
 
 ## Model groups
 
