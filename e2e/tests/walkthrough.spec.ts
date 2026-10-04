@@ -2,9 +2,8 @@ import type { Page } from "@playwright/test";
 import { ACCOUNTS, DEPOTS } from "../support/accounts";
 import { STORY } from "../support/demo";
 import { expect, test } from "../support/fixtures";
-import { goOffline } from "../support/offline";
+import { goOffline, goOnline } from "../support/offline";
 import { signIn, type RoleWindow } from "../support/signIn";
-import { publishDraftDeferring, publishKandyPlan } from "../support/standIns";
 
 // The reference judge walkthrough of agent-docs/spec/data/seed-and-demo.md §15.4: fourteen steps, in order, across
 // the four roles. Each test is one step and is titled with the step's wording. The README's numbered walkthrough
@@ -48,10 +47,75 @@ async function deliverNextStop(page: Page, stop: number, outlet: string): Promis
   await expect(page.getByRole("heading", { name: "Today's run" })).toBeVisible();
 }
 
+/**
+ * The Kandy Loader loads the hill trip on the dock screens: open the trip, check every line in the order shown
+ * (last stop first), report one case of biscuits short, wait for the dispatcher's decision on it, then hold to mark
+ * the trip ready. It is step 7 without "accept the plan".
+ */
+async function loadHillTrip(loader: Page, dispatcher: Page): Promise<void> {
+  await expect(loader.getByRole("heading", { name: "Dock trips" })).toBeVisible();
+  await loader.getByRole("link", { name: "Open ›" }).first().click();
+  await expect(loader.getByRole("heading", { name: "Load in this order — last stop first" })).toBeVisible();
+  await expect(loader.getByText("Nuwara Eliya · Trip 1")).toBeVisible();
+
+  // Reverse stop order: the last stop goes in first, next to the cab.
+  await expect(loader.getByRole("complementary").getByRole("listitem")).toHaveText([
+    "OUT107 · Stop 5",
+    "OUT106 · Stop 4",
+    "OUT104 · Stop 3",
+    "OUT104 · Stop 2",
+    "OUT105 · Stop 1",
+  ]);
+
+  // Every line is checked as loaded, except the biscuits for the hill store: one case is short.
+  const lines = loader.locator(".loader-line");
+  await expect(lines).toHaveCount(11);
+  for (let index = 0; index < 11; index += 1) {
+    const line = lines.nth(index);
+    if ((await line.textContent())?.includes("Biscuits, case of 36")) {
+      await line.getByRole("button", { name: "Short" }).click();
+      await loader.getByRole("button", { name: "Out of stock" }).click();
+      await loader.getByRole("button", { name: "Save report for dispatcher" }).click();
+      await expect(line).toContainText("1 short");
+    } else {
+      await line.getByRole("button", { name: "Loaded" }).click();
+      await expect(line).toContainText("Checked");
+    }
+  }
+  await expect(loader.getByText("5 of 5 checked")).toBeVisible();
+
+  // The shortfall holds the trip at the dock until the dispatcher decides.
+  await loader.getByRole("link", { name: /^Review & mark ready/ }).click();
+  await expect(loader.getByText("Biscuits, case of 36 · 1 short · Waiting on dispatcher")).toBeVisible();
+  const hold = loader.getByRole("button", { name: /^Hold to mark ready/ });
+  await expect(hold).toBeDisabled();
+
+  await dispatcher.getByRole("link", { name: "Delivery Progress", exact: true }).click();
+  await dispatcher.getByRole("tab", { name: /^Shortfalls/ }).click();
+  await dispatcher.getByRole("button", { name: /Short 1 of Biscuits, case of 36/ }).click();
+  const decision = dispatcher.getByRole("region", { name: /^Short at the dock/ });
+  await expect(decision.getByRole("radio", { name: /^Ship partial/ })).toBeChecked();
+  await decision.getByRole("button", { name: "Confirm decision" }).click();
+  await expect(dispatcher.getByRole("status").filter({ hasText: "ships partial" })).toBeVisible();
+
+  // The decision reaches the dock, and the Loader hands the truck over by holding the button.
+  await expect(loader.getByText("Biscuits, case of 36 · 1 short · Ship partial · approved")).toBeVisible();
+  await expect(hold).toBeEnabled();
+  const button = await hold.boundingBox();
+  if (!button) throw new Error("The hold-to-mark-ready button is not on screen");
+  await loader.mouse.move(button.x + button.width / 2, button.y + button.height / 2);
+  await loader.mouse.down();
+  await loader.waitForTimeout(1_600);
+  await loader.mouse.up();
+  await expect(loader.getByText("Handed over to driver")).toBeVisible();
+}
+
 test.describe("Judge walkthrough (§15.4)", () => {
   let store: RoleWindow;
   let dispatcher: RoleWindow;
   let driver: RoleWindow;
+  let loader: RoleWindow;
+  let hillStore: RoleWindow;
   /** The confirmation IDs from step 1. */
   const placed = { dry: "", chilled: "" };
 
@@ -59,6 +123,8 @@ test.describe("Judge walkthrough (§15.4)", () => {
     await store?.context.close();
     await dispatcher?.context.close();
     await driver?.context.close();
+    await loader?.context.close();
+    await hillStore?.context.close();
   });
 
   test("1. Reset to before-cutoff. Store: sign in on a phone-width window, see the cutoff countdown (server time), place a dry and a chilled order for tomorrow; receive confirmation.", async ({
@@ -188,14 +254,53 @@ test.describe("Judge walkthrough (§15.4)", () => {
     await expect(main.getByRole("heading", { name: "Unassigned · 7" })).toBeVisible();
   });
 
-  // Waits on #49 (dispatcher D3).
-  test.fixme("5. Review deferrals: reason codes pre-filled with unavoidable vs choice; outlets skipped yesterday pinned. Publish.", async () => {});
+  test("5. Review deferrals: reason codes pre-filled with unavoidable vs choice; outlets skipped yesterday pinned. Publish.", async () => {
+    const { page } = dispatcher;
+    const main = page.getByRole("main");
+    const publish = main.getByRole("complementary").filter({
+      has: page.getByRole("heading", { name: "Publish Tue 29 Sep plan" }),
+    });
+    await page.getByRole("link", { name: /Review deferrals & publish/ }).click();
+    await expect(page.getByRole("heading", { name: "Defer & publish" })).toBeVisible();
 
-  test("6. Store: receives the deferral notice and ETA band.", async ({ baseURL }) => {
-    // Stand-in for step 5 until #49 merges: the draft of steps 3 and 4 is published through the API, with the dry
-    // order the dispatcher took off its trip deferred by choice. Remove it when step 5 is real.
-    await publishDraftDeferring(baseURL!, placed.dry);
+    // Outlets skipped on the previous run are pinned first. This plan serves every one of them.
+    await expect(main.getByRole("heading", { name: "Previously deferred · prioritised first" })).toBeVisible();
+    await expect(main.getByText(/^\d+ now planned · 0 deferred again$/)).toBeVisible();
 
+    // The six orders the fleet could not carry have their reason filled in, and are marked unavoidable.
+    const unavoidable = main.getByRole("row").filter({ hasText: "Unavoidable · available pool exhausted" });
+    await expect(unavoidable).toHaveCount(6);
+    await expect(unavoidable.first().getByRole("combobox").locator("option:checked")).toHaveText(/\S/);
+    await expect(unavoidable.first().getByRole("cell", { name: "Ready" })).toBeVisible();
+
+    // The order the dispatcher took off its trip in step 4 is a choice, and a choice needs a justification.
+    const choice = main.getByRole("row").filter({ hasText: placed.dry });
+    await expect(choice).toContainText("Choice · a feasible slot existed");
+    await expect(
+      choice.getByRole("combobox", { name: `Reason for ${placed.dry}` }).locator("option:checked"),
+    ).toHaveText("Other");
+    await expect(publish.getByText("6 of 7 reasons set")).toBeVisible();
+    await expect(publish.getByRole("button", { name: "Publish plan" })).toBeDisabled();
+    await choice.getByRole("textbox").fill("Store agreed to take the dry order with Wednesday's run");
+    await expect(publish.getByText("7 of 7 reasons set")).toBeVisible();
+
+    await publish.getByRole("button", { name: "Publish plan" }).click();
+    await expect(main.getByRole("listitem").getByText(/Version 1 · 81 served · 7 deferred · \d+ trips/)).toBeVisible();
+
+    // The field steps follow the Kandy hill trip (§15.5), so the dispatcher switches depot and publishes that plan
+    // too: every Kandy order fits, nothing is deferred.
+    await page.getByRole("combobox", { name: "Depot" }).selectOption(DEPOTS.kandy);
+    await expect(page).toHaveURL(/depot=Kandy/);
+    await page.getByRole("link", { name: "Plan board", exact: true }).click();
+    await page.getByRole("button", { name: "Propose plan" }).click();
+    await expect(main.getByText(/^\d+ trips · 8 of 8 orders planned · 0 unassigned/)).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("link", { name: /Review deferrals & publish/ }).click();
+    await expect(main.getByText("Every order is assigned to a trip.")).toBeVisible();
+    await publish.getByRole("button", { name: "Publish plan" }).click();
+    await expect(main.getByRole("listitem").getByText(/Version 1 · 8 served · 0 deferred · \d+ trips/)).toBeVisible();
+  });
+
+  test("6. Store: receives the deferral notice and ETA band.", async () => {
     const { page } = store;
     await page.goto("/store");
 
@@ -230,14 +335,23 @@ test.describe("Judge walkthrough (§15.4)", () => {
     ).toBeVisible();
   });
 
-  // Waits on #52 (loader L1-L3). Runs at the project's Loader width: phone in one run, tablet in the other.
+  // The Loader's screens are merged (#52), and `loadHillTrip` does every part of this step but the first: "accept
+  // the plan". The Loader app asks for a plan to be accepted only when a changed plan reaches a device that has
+  // already seen one; the first published plan needs no acceptance, so the step cannot be done as §15.4 words it.
+  // To be settled with the Loader's owner. Until then step 8 calls loadHillTrip as a stand-in.
   test.fixme("7. Loader (phone and tablet widths): accept the plan; open the trip; load in reverse stop order; flag a shortfall; hold-to-mark ready.", async () => {});
 
-  test("8. Driver: start the run; deliver a stop with proof of delivery.", async ({ browser, demo, baseURL }) => {
-    // Stand-ins until #49 and #52 merge. The field steps run on the Kandy hill trip (§15.5): its plan is published
-    // through the API, and the trip leaves as planned, without the Loader's step 7 (a departure takes planned
-    // orders out, ADR 0019). The clock moves to the delivery morning through the API: no control in the app (#56).
-    await publishKandyPlan(baseURL!);
+  test("8. Driver: start the run; deliver a stop with proof of delivery.", async ({
+    browser,
+    demo,
+    loaderViewport,
+  }) => {
+    // Stand-in for step 7: before the truck leaves, the Kandy Loader loads it through the dock screens, at the
+    // project's Loader width (phone in one run, tablet in the other). The clock moves through the API, first to the
+    // loading hour and then to the departure: the app has no clock control (#56).
+    await demo.setClock(STORY.deliveryDay, "02:45");
+    loader = await signIn(browser, ACCOUNTS.kandyLoader, { viewport: loaderViewport });
+    await loadHillTrip(loader.page, dispatcher.page);
     await demo.setClock(STORY.deliveryDay, "03:25");
 
     driver = await signIn(browser, ACCOUNTS.driver, { viewport: "phone" });
@@ -274,8 +388,9 @@ test.describe("Judge walkthrough (§15.4)", () => {
     await expect(page.getByText("3/4")).toBeVisible();
   });
 
-  // D4 is merged (#128), but no screen edits or cancels a stop of a trip that has left: the plan board drops a
-  // departed trip's stops, and publishing a changed plan waits on #49. Tried on the stack on 4 Oct.
+  // Waits on #145 (PR #152): no screen yet edits or cancels a stop of a trip that has left. The plan board drops a
+  // departed trip's stops. D4's "no signal" also needs device last-heard times cleared by the demo reset: they
+  // survive it today, so the state shows on a first run only.
   test.fixme("10. Dispatcher edits a later stop and cancels a stop the driver already delivered offline. D4 shows the vehicle as no signal / last heard.", async () => {});
 
   // The Driver screens are merged (#53). Waits on the plan change and the cancelled stop of step 10.
@@ -284,11 +399,65 @@ test.describe("Judge walkthrough (§15.4)", () => {
   // The exceptions inbox is merged (#128). Waits on the clash that steps 10 and 11 make.
   test.fixme("12. Dispatcher exceptions inbox shows the clash with the POD photo; resolve it.", async () => {});
 
-  // The screens are merged (#44), and steps 8 and 9 deliver at the hill store. Waits on the Loader's step 7 (#52):
-  // without it nothing is recorded as loaded, so the store is told to expect 0 units and the receipt has nothing to
-  // confirm. It also needs the Driver back online (step 11).
-  test.fixme("13. Store: sees delivered (double timestamp), confirms receipt of one order, reports a shortage on another.", async () => {});
+  test("13. Store: sees delivered (double timestamp), confirms receipt of one order, reports a shortage on another.", async ({
+    browser,
+    demo,
+    offlineMode,
+  }) => {
+    // The run goes on: the clock moves forward through the API, as the app has no clock control (#56).
+    await demo.setClock(STORY.deliveryDay, "06:45");
 
-  // Dispute resolution is merged (#128). Waits on the dispute that step 13 opens and on #55 (capacity outlook).
+    // Ishara, the hill store's manager, on a phone. The driver has been out of coverage since stop 1, so nothing
+    // can be confirmed yet. The "No signal" state itself is not asserted: the server takes the last time any of
+    // the driver's devices was heard, device rows survive a demo reset, and so it only shows on a first run.
+    hillStore = await signIn(browser, ACCOUNTS.hillStore, { viewport: "phone" });
+    const { page } = hillStore;
+    await expect(page.getByText("Trip T043 · you are stop 2")).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Confirm/ })).toBeDisabled();
+
+    // Stand-in for the reconnect of step 11, which is still fixme: the Driver's phone comes back and syncs.
+    await goOnline(driver, offlineMode);
+    await expect(
+      driver.page.getByText(/^ORD10412 · Delivered \d{2}:\d{2} · confirmed \d{2}:\d{2} after sync$/),
+    ).toBeVisible({ timeout: 30_000 });
+
+    // The store sees the delivery with both times: on the driver's phone, and when it reached the server.
+    await page.reload();
+    await expect(page.getByText(/Delivered \d{2}:\d{2} on the driver's phone/)).toBeVisible();
+    await expect(page.getByText(/Confirmed \d{2}:\d{2} after sync/)).toBeVisible();
+
+    // The chilled order came in full: confirm it with the counts pre-filled from the driver's record.
+    await page.getByRole("button", { name: "Confirm delivery" }).click();
+    await expect(page.getByRole("heading", { name: "Confirm receipt" })).toBeVisible();
+    await expect(page.getByText("ORD10412 · Chilled")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Pre-filled from the driver's record" })).toBeVisible();
+    await expect(page.getByText("Signed by Nadeesha")).toBeVisible();
+    await expect(page.getByRole("spinbutton", { name: /Received quantity of Eggs/ })).toHaveValue("8");
+    await expect(page.getByRole("spinbutton", { name: /Received quantity of Fresh milk/ })).toHaveValue("12");
+    await page.getByRole("button", { name: "Received as delivered" }).click();
+    await expect(page.getByRole("heading", { name: "Order timeline" })).toBeVisible();
+    await expect(page.getByText("ORD10412 · Chilled · OUT104")).toBeVisible();
+    await expect(page.getByText("20 units received")).toBeVisible();
+    await expect(page.getByText("8 ordered · 8 delivered · 8 received")).toBeVisible();
+
+    // The dry order: the store counts one case of tea fewer than the driver recorded, and reports the shortage.
+    await page.goto("/store");
+    await page.getByRole("link", { name: /^Dry · ORD10468/ }).click();
+    await expect(page.getByText("ORD10468 · Dry · OUT104")).toBeVisible();
+    await page.getByRole("button", { name: "Report an issue" }).click();
+    await expect(page.getByRole("heading", { name: "Report an issue" })).toBeVisible();
+    await page.getByRole("radio", { name: "Short" }).check();
+    await page.getByRole("combobox", { name: "Item" }).selectOption({ label: "Tea, case of 24 × 400 g · case" });
+    await expect(page.getByRole("spinbutton", { name: /^How many of Tea/ })).toHaveValue("1");
+    await expect(page.getByText("of 6 delivered")).toBeVisible();
+    await page.getByRole("button", { name: "Send to dispatcher" }).click();
+
+    // The order is now disputed, and the report is on its timeline for the dispatcher to resolve in step 14.
+    await expect(page.getByRole("heading", { name: "Order timeline" })).toBeVisible();
+    await expect(page.getByText("ORD10468 · Dry · OUT104")).toBeVisible();
+    await expect(page.getByText("Disputed", { exact: true }).first()).toBeVisible();
+  });
+
+  // Step 13 now opens the dispute, and D4 can resolve it (#128). Waits on #55 (PR #150) for the capacity outlook.
   test.fixme("14. Dispatcher resolves the dispute; opens the capacity outlook.", async () => {});
 });

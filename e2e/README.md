@@ -34,7 +34,6 @@ E2E_BASE_URL=http://localhost:8162 E2E_BROWSER_CHANNEL=chrome pnpm e2e
 | `support/signIn.ts`, `support/accounts.ts`, `support/viewports.ts` | One signed-in window per role, at phone, tablet or desktop width.                                                           |
 | `support/offline.ts`                                               | Going offline both ways: the in-app force-offline switch and the browser's offline mode.                                    |
 | `support/axe.ts`                                                   | The accessibility assertion.                                                                                                |
-| `support/standIns.ts`                                              | API stand-ins for steps that are still `fixme`, so later steps can already run. Delete each when its steps become real.     |
 
 ## The two walkthrough runs
 
@@ -51,5 +50,5 @@ The Driver is always at phone width. Tests run one at a time: there is one datab
 
 1. Replace `test.fixme(...)` with `test(...)`. Keep the title: it is the step's wording in §15.4 and in the root README.
 2. Open the role's window with `signIn` in the first step that needs it, and keep it in the `describe` scope for later steps.
-3. Delete any stand-in in `support/standIns.ts` that the step replaces.
+3. Remove any stand-in the step replaces: a later step that does an earlier fixme step's work says so in a comment.
 4. If the step fails because the feature does not match §15.4, comment on the feature's issue. Do not weaken the step.
