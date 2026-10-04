@@ -22,6 +22,39 @@ import type { Reference } from "./reference";
 
 type DraftData = ApiDto<"draftData">;
 
+/** The same context as server validation, scoped to this depot and serialized with UUID wire identities. */
+export function toPlanningContext(inputs: DayInputs): ApiDto<"planningContext"> {
+  const { ref, ids } = inputs.reference;
+  const vehicles = [...ref.vehicles.values()].filter((vehicle) => vehicle.depot === inputs.depot);
+  const vehicleUuid = (display: string) => {
+    const uuid = ids.vehicleUuid.get(display);
+    if (!uuid) throw new Error(`Unknown vehicle mapping: ${display}`);
+    return uuid;
+  };
+  const orders = new Map(inputs.allocation.orders.map((order) => [order.id, order]));
+  const service = new Map(inputs.queue.map((order) => [order.outletId, orders.get(order.id)!]));
+  const allowedOrders = new Set(inputs.queue.map((order) => order.id));
+  return {
+    vehicleFuel: vehicles.map((vehicle) => ({
+      vehicleId: vehicleUuid(vehicle.id),
+      usedOtherDaysThisWeekMl: inputs.validation.fuelUsedThisWeekMl?.get(vehicle.id) ?? 0,
+    })),
+    outletService: [...service].map(([outletId, order]) => ({
+      outletId,
+      daysSinceLastServed: order.daysSinceLastServed,
+      deferredLastRun: order.deferredYesterday,
+    })),
+    loadedOrders: [...(inputs.validation.loadedOrders ?? [])]
+      .filter(([orderId]) => allowedOrders.has(orderId))
+      .map(([orderId, pin]) => ({
+        orderId,
+        vehicleId: vehicleUuid(pin.vehicleId),
+        tripNo: pin.tripNo as 1 | 2,
+        reversalRequested: pin.reversalRequested,
+      })),
+  };
+}
+
 /** Statuses an order can be planned from (validator PLANNABLE): the day's confirmed queue. */
 export const QUEUE_STATUSES = ["ORDERED", "PLANNED", "DEFERRED", "FAILED", "LOADED"] as const;
 

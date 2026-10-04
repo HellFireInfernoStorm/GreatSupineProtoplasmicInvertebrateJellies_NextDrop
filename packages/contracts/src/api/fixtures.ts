@@ -170,9 +170,15 @@ const feedItem = {
   version: 1,
   at: MOCK_TIME,
 } satisfies ApiDtoInput<"feedItem">;
+const planningContext = {
+  vehicleFuel: [{ vehicleId: r.vehicle.id, usedOtherDaysThisWeekMl: 15000 }],
+  outletService: [{ outletId: r.outlet.id, daysSinceLastServed: 2, deferredLastRun: false }],
+  loadedOrders: [],
+} satisfies ApiDtoInput<"planningContext">;
 
 /** Synthetic, deterministic examples for web mocks. These are not seed/account truth. */
 export const apiFixtures = {
+  planningContext,
   ...r,
   apiError: error,
   violation,
@@ -223,6 +229,7 @@ export const apiFixtures = {
   orderHistoryResponse: { items: [r.order], total: 1, nextCursor: null },
   dayQuery: { depot: "Peliyagoda" },
   dayResponse: {
+    planningContext,
     date: MOCK_DATE,
     depot: "Peliyagoda",
     state: "PUBLISHED",

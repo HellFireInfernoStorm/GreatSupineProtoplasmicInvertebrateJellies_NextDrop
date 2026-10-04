@@ -16,3 +16,5 @@ sources: guide §8, §8.1
 6. **Publish** (atomic, below). Publishing notifies the loader, driver and store managers.
 
 Manual-only planning is also valid: the dispatcher can start from an empty draft and the same validator guards every move.
+
+The scoped day response includes `planningContext` from the server day-input loader: per-vehicle weekly fuel used on other published, non-cancelled days (excluding the selected day), queued-outlet service age and previous-run deferral state, and queued LOADED-order vehicle/trip-number pins with pending reversal state. The UI passes this context into both shared validators, displays weekly fuel and service age, and still calls server validation before each save. The context may change after it is fetched; it never replaces revision checks or server revalidation.
