@@ -1,31 +1,15 @@
-import type { ApiDto } from "@nextdrop/contracts";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { callApi } from "../../../lib/api";
+import { advance, FEED_LIMIT as LIMIT } from "../../../lib/feed";
 import { queryClient } from "../../../lib/queryClient";
 
 // The Store's pull of the change feed (spec/sync/change-feed.md). The Store is an online role: it keeps no local copy,
 // so a feed row only tells it that what it shows is stale, and it reads the screens' queries again.
 
-const LIMIT = 200;
+export { advance };
+
 const POLL_MS = 15_000;
-
-type Changes = ApiDto<"changesResponse">;
-
-/**
- * Where to pull from next, and whether anything changed. The first answer only sets the starting point: what
- * happened before the screen opened is already in what the screen loaded.
- */
-export function advance(
-  cursor: string | null,
-  response: Pick<Changes, "items" | "head">,
-  limit: number = LIMIT,
-): { cursor: string; changed: boolean } {
-  if (cursor === null) return { cursor: response.head, changed: false };
-  // Fewer rows than the limit means caught up: jump to the head. Otherwise carry on from the last row.
-  const next = response.items.length < limit ? response.head : response.items.at(-1)!.seq;
-  return { cursor: next, changed: response.items.length > 0 && next !== cursor };
-}
 
 /** Mounted once in the Store frame: refreshes every Store query when the feed has a new row for this outlet. */
 export function useStoreFeed(): void {

@@ -11,6 +11,8 @@ import { Logo } from "../../ui/Logo";
 import { Button } from "../../ui";
 import { Notifications } from "./Notifications";
 import { Workspace } from "./Workspace";
+import { DeliveryProgress } from "./progress/DeliveryProgress";
+import { useDispatchFeed } from "./feed";
 import "./dispatcher.css";
 
 const nav = ["dashboard", "queue", "plan", "defer", "runs", "outlook", "fleet", "settings"] as const;
@@ -40,6 +42,8 @@ function DispatcherFrame() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const now = useServerNow(60_000);
+  // Live updates for every dispatcher screen, D4 above all (spec/sync/change-feed.md).
+  useDispatchFeed();
   const initialDate = addDays(
     new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Colombo",
@@ -77,6 +81,8 @@ function DispatcherFrame() {
   const [signingOut, setSigningOut] = useState(false);
   const [signOutFailed, setSignOutFailed] = useState(false);
   const page = pathname.split("/")[2] || "dashboard";
+  // D4 watches today's runs, whatever planning day the workspace shows.
+  const live = page === "runs";
   const hour = Number(
     new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Colombo", hour: "2-digit", hourCycle: "h23" }).format(now),
   );
@@ -163,7 +169,7 @@ function DispatcherFrame() {
                     })
                   : t(`nav.${page}`, { defaultValue: t("nav.dashboard") })}
               </h1>
-              <p>{t("planningFor", { date: formatDay(`${date}T12:00:00+05:30`), depot })}</p>
+              {!live && <p>{t("planningFor", { date: formatDay(`${date}T12:00:00+05:30`), depot })}</p>}
             </div>
             <div className="dispatch-controls">
               <label>
@@ -181,7 +187,7 @@ function DispatcherFrame() {
                   ))}
                 </select>
               </label>
-              <label>
+              <label hidden={live}>
                 {t("date")}
                 <input
                   type="date"
@@ -197,7 +203,11 @@ function DispatcherFrame() {
               </label>
             </div>
           </header>
-          <Workspace key={`${depot}|${date}`} depot={depot} date={date} />
+          {live ? (
+            <DeliveryProgress key={depot} depot={depot} />
+          ) : (
+            <Workspace key={`${depot}|${date}`} depot={depot} date={date} />
+          )}
         </main>
       </div>
     </div>
