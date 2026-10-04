@@ -122,3 +122,6 @@ Health returns `{ status: 'ok' }`. Readiness preserves the existing API producer
 Business errors are `{ code, message_key, params, requestId }`; params is a scalar map. Shared error codes retain existing sync codes and add UNAUTHENTICATED, INVALID_CREDENTIALS, NOT_FOUND, REVISION_CONFLICT, VALIDATION_FAILED, RATE_LIMITED, PAYLOAD_TOO_LARGE and INTERNAL_ERROR for API boundaries. The 422 validation extension is explicit above.
 
 Tests parse every named DTO and every route fixture through the public exports, comparing complete populated output. An independent endpoint inventory checks route coverage. Compile-time checks verify rules compatibility and discriminated event/login/snapshot/result variants. The role table feeds later API authorization tests; #29 does not implement or verify ownership authorization.
+
+Planning context additionally returns publishedStops[{orderId,vehicleId,tripNo,seq,locked,departed}] for all current non-cancelled trip stops in the scoped day, including progressed orders retained in the day queue. seq is 1-based. The additive field is optional for compatibility with earlier responses. Server checks remain authoritative (ADR 0053).
+

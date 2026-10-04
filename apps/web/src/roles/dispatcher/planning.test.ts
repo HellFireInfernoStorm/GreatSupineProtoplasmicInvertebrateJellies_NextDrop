@@ -99,3 +99,26 @@ describe("rules adapter", () => {
     expect(result.ok).toBe(false);
   });
 });
+
+it("keeps published UUID stop locks through the browser rules adapter", () => {
+  const order = { ...apiFixtures.order, status: "OUT_FOR_DELIVERY" as const };
+  const ref = makeReference([apiFixtures.outlet], [apiFixtures.vehicle], [apiFixtures.calendarDay]);
+  const ctx = validationContext(
+    {
+      ...apiFixtures.planningContext,
+      publishedStops: [
+        { orderId: order.id, vehicleId: apiFixtures.vehicle.id, tripNo: 1, seq: 1, locked: true, departed: true },
+      ],
+    },
+    ref,
+  );
+  const current = {
+    trips: [{ ref: "T001", vehicleId: apiFixtures.vehicle.id, tripNo: 1 as const, orderIds: [order.id] }],
+    unassignedOrderIds: [],
+    deferrals: [],
+  };
+  expect(evaluate(current, [order], order.currentDate, ref, new Set(), ctx).lockedOrderId).toBeNull();
+  expect(
+    evaluate(moveOrder(current, order.id, null), [order], order.currentDate, ref, new Set(), ctx).lockedOrderId,
+  ).toBe(order.id);
+});

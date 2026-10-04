@@ -32,3 +32,6 @@ A vehicle may run one Fresh and one Style trip, each checked against its own bud
 ## 4.5 Fuel
 
 `km(trip) = depot_to_district_km * (return ? 2 : 1) + inter_stop_km * (n - 1)`; `litres = km / km_per_l`, rounded up to the whole millilitre (ADR 0020). Weekly use per vehicle is the sum over non-cancelled published trips in the ISO week (Monday reset, matching `calendar.csv iso_year/iso_week`). Computed as a query/view, not a separate mutable ledger. The draft validator receives "fuel already used this week excluding this day's published trips".
+
+Explicit dispatcher drafts preserve their orderIds sequence in validation/display schedules; allocator proposals use the default window ordering. This enables later-stop resequencing while retaining locked positions (ADR 0053).
+

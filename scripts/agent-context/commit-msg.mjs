@@ -1,8 +1,9 @@
 // commit-msg hook: the subject line must exist and be short. Nothing else is enforced.
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { config } from "./lib.mjs";
 
-const file = process.argv[2];
+const file = process.argv[2] ?? execFileSync("git", ["rev-parse", "--git-path", "COMMIT_EDITMSG"], { encoding: "utf8" }).trim();
 if (!file) {
   console.error("usage: commit-msg.mjs <message-file>");
   process.exit(2);

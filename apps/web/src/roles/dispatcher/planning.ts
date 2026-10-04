@@ -4,6 +4,7 @@ import {
   districtTravelFromRow,
   serviceAllowanceFromRow,
   validatePlan,
+  lockedStopChange,
   validateTrip,
   type Plan,
   type ValidationContext,
@@ -96,6 +97,7 @@ export function toPlan(data: DraftData, orders: readonly Order[], date: string, 
     orders: mapped,
     deferrals: data.deferrals,
     trips: data.trips.map((t) => ({
+      preserveOrder: true,
       ...t,
       vehicleId: reference.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId,
       orders: t.orderIds.map(
@@ -121,7 +123,23 @@ export function evaluate(
   const trips = new Map(
     plan.trips.map((trip) => [trip.ref, validateTrip(trip, reference.ref, { ...ctx, date, siblingTrips: plan.trips })]),
   );
-  return { ...whole, trips, plan };
+  const lockedOrderId = lockedDraftChange(data, reference, context);
+  return { ...whole, ok: whole.ok && lockedOrderId === null, lockedOrderId, trips, plan };
+}
+
+/** Menu filtering needs only placement locks, without recalculating schedules or capacity for every option. */
+export function lockedDraftChange(data: DraftData, reference: BrowserReference, context: ValidationContext) {
+  return lockedStopChange(
+    context.publishedStops ?? [],
+    data.trips.flatMap((t) =>
+      t.orderIds.map((orderId, index) => ({
+        orderId,
+        vehicleId: reference.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId,
+        tripNo: t.tripNo,
+        seq: index + 1,
+      })),
+    ),
+  );
 }
 
 /** Only wire UUIDs enter the browser; rules context consistently uses reference display IDs. */
@@ -129,6 +147,7 @@ export function validationContext(context: ApiDto<"planningContext">, reference:
   const vehicle = (id: string) => reference.vehicleDisplay.get(id) ?? id;
   const outlet = (id: string) => reference.outletDisplay.get(id) ?? id;
   return {
+    publishedStops: context.publishedStops?.map((s) => ({ ...s, vehicleId: vehicle(s.vehicleId) })),
     fuelUsedThisWeekMl: new Map(
       context.vehicleFuel.map((item) => [vehicle(item.vehicleId), item.usedOtherDaysThisWeekMl]),
     ),

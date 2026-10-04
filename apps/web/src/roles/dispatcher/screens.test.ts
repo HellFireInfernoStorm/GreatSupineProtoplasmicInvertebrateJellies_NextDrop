@@ -6,9 +6,72 @@ import { apiFixtures } from "@nextdrop/contracts";
 import { Dashboard } from "./Dashboard";
 import { ValidationChecks } from "./ValidationChecks";
 import { OrderQueue } from "./OrderQueue";
+import { PlanBoard } from "./PlanBoard";
+import { makeReference, validationContext } from "./planning";
 import "../../i18n";
 
 describe("dispatcher screen data", () => {
+  it("shows departed stops, disables reported cards and permits only safe later-stop destinations", () => {
+    const reported = { ...apiFixtures.order, status: "DELIVERED" as const };
+    const later = {
+      ...reported,
+      id: "01930b7e-0000-7000-8000-000000000098",
+      displayId: "ORDLATER",
+      status: "OUT_FOR_DELIVERY" as const,
+    };
+    const otherVehicle = { ...apiFixtures.vehicle, id: "01930b7e-0000-7000-8000-000000000099", displayId: "VEH002" };
+    const vehicles = [apiFixtures.vehicle, otherVehicle];
+    const reference = makeReference([apiFixtures.outlet], vehicles, [apiFixtures.calendarDay]);
+    const context = validationContext(
+      {
+        ...apiFixtures.planningContext,
+        publishedStops: [reported, later].map((order, index) => ({
+          orderId: order.id,
+          vehicleId: apiFixtures.vehicle.id,
+          tripNo: 1,
+          seq: index + 1,
+          locked: index === 0,
+          departed: true,
+        })),
+      },
+      reference,
+    );
+    const html = renderToStaticMarkup(
+      createElement(
+        MemoryRouter,
+        {},
+        createElement(PlanBoard, {
+          data: {
+            trips: [
+              { ref: "T001", vehicleId: apiFixtures.vehicle.id, tripNo: 1, orderIds: [reported.id, later.id] },
+              { ref: "T002", vehicleId: otherVehicle.id, tripNo: 1, orderIds: [] },
+            ],
+            unassignedOrderIds: [],
+            deferrals: [],
+          },
+          orders: [reported, later],
+          outlets: [apiFixtures.outlet],
+          vehicles,
+          reference,
+          context,
+          unavailable: new Set<string>(),
+          date: reported.currentDate,
+          disabled: false,
+          busy: false,
+          onSave: async () => true,
+          onEditingChange: () => {},
+        }),
+      ),
+    );
+    const menus = html.match(/<select[\s\S]*?<\/select>/g)!;
+    expect(menus).toHaveLength(2);
+    expect(html).toContain("Locked");
+    expect(menus[0]).toContain('disabled=""');
+    expect(menus[1]).not.toContain('disabled=""');
+    expect(menus[1]).toContain('value="T001"');
+    expect(menus[1]).toContain('value="unassigned"');
+    expect(menus[1]).not.toContain('value="T002"');
+  });
   it("shows previous-run deferral separately from lifetime order history", () => {
     const html = renderToStaticMarkup(
       createElement(

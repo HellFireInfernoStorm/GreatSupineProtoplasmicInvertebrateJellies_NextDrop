@@ -17,7 +17,7 @@ import {
   type ValidationContext,
 } from "@nextdrop/rules";
 import type { Prisma } from "../../generated/prisma/client";
-import { dateOnly, localDateOf, orderInclude, toOrderDto, type OrderRecord } from "../orders";
+import { dateOnly, localDateOf, orderInclude, toOrderDto, inEffect, type OrderRecord } from "../orders";
 import type { Reference } from "./reference";
 
 type DraftData = ApiDto<"draftData">;
@@ -35,6 +35,11 @@ export function toPlanningContext(inputs: DayInputs): ApiDto<"planningContext"> 
   const service = new Map(inputs.queue.map((order) => [order.outletId, orders.get(order.id)!]));
   const allowedOrders = new Set(inputs.queue.map((order) => order.id));
   return {
+    publishedStops: inputs.validation.publishedStops?.map((s) => ({
+      ...s,
+      tripNo: s.tripNo as 1 | 2,
+      vehicleId: vehicleUuid(s.vehicleId),
+    })),
     vehicleFuel: vehicles.map((vehicle) => ({
       vehicleId: vehicleUuid(vehicle.id),
       usedOtherDaysThisWeekMl: inputs.validation.fuelUsedThisWeekMl?.get(vehicle.id) ?? 0,
@@ -79,7 +84,15 @@ export async function loadDayInputs(
   const { ids } = reference;
   const day = dateOnly(date);
   const queue = await prisma.order.findMany({
-    where: { currentDate: day, status: { in: [...QUEUE_STATUSES] }, outlet: { depot } },
+    where: {
+      outlet: { depot },
+      OR: [
+        { currentDate: day, status: { in: [...QUEUE_STATUSES] } },
+        {
+          tripStop_orderId: { some: { tripStatus: { not: "CANCELLED" }, trip: { planningDay: { depot, date: day } } } },
+        },
+      ],
+    },
     include: orderInclude,
     orderBy: { displayId: "asc" },
   });
@@ -129,6 +142,25 @@ export async function loadDayInputs(
     services.filter((s) => s.deferredLastRun).map((s) => ids.outletDisplay.get(s.outletId) ?? s.outletId),
   );
   const pending = new Map(queue.map((o) => [o.id, toOrderDto(o).pendingReversal]));
+  const currentStops = await prisma.tripStop.findMany({
+    where: { tripStatus: { not: "CANCELLED" }, trip: { planningDay: { depot, date: day } } },
+    include: { trip: { select: { vehicleId: true, tripNo: true, status: true } } },
+  });
+  const byId = new Map(queue.map((o) => [o.id, o]));
+  const publishedStops = currentStops.map((s) => {
+    const events = byId.get(s.orderId)!.orderEvent_orderId;
+    const effective = inEffect(events);
+    const facts = events.some((e) => ["STOP_ARRIVED", "STOP_OUTCOME", "POD_CAPTURED"].includes(e.type) && effective(e));
+    const loaded = byId.get(s.orderId)!.status === "LOADED" && pending.get(s.orderId) == null;
+    return {
+      orderId: s.orderId,
+      vehicleId: vehicle(s.trip.vehicleId),
+      tripNo: s.trip.tripNo,
+      seq: s.seq,
+      locked: facts || loaded || s.trip.status === "COMPLETE",
+      departed: s.trip.status === "DEPARTED" || s.trip.status === "COMPLETE",
+    };
+  });
   const loadedOrders = new Map<string, LoadedPin>(
     loadedStops.map((s) => [
       s.orderId,
@@ -146,7 +178,14 @@ export async function loadDayInputs(
     reference,
     queue,
     allocation: { date, depot, orders, unavailableVehicleIds, breakdownVehicleIds, fuelUsedThisWeekMl },
-    validation: { date, unavailableVehicleIds, fuelUsedThisWeekMl, deferredLastRunOutletIds, loadedOrders },
+    validation: {
+      date,
+      unavailableVehicleIds,
+      fuelUsedThisWeekMl,
+      deferredLastRunOutletIds,
+      loadedOrders,
+      publishedStops,
+    },
   };
 }
 
@@ -182,6 +221,7 @@ export function toRulesPlan(data: DraftData, inputs: DayInputs): Plan {
   return {
     date: inputs.date,
     trips: data.trips.map((t) => ({
+      preserveOrder: true,
       ref: t.ref,
       vehicleId: inputs.reference.ids.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId,
       tripNo: t.tripNo,

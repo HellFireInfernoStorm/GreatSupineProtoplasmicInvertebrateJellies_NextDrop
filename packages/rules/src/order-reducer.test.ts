@@ -71,7 +71,7 @@ describe("transition table (order-reducer.md, ADR 0004, ADR 0019)", () => {
       DEFERRED: ["PLANNED", "CANCELLED"],
       PLANNED: ["LOADED", "DEFERRED", "PLANNED", "OUT_FOR_DELIVERY"],
       LOADED: ["OUT_FOR_DELIVERY", "PLANNED", "DEFERRED"],
-      OUT_FOR_DELIVERY: ["DELIVERED", "FAILED"],
+      OUT_FOR_DELIVERY: ["DELIVERED", "FAILED", "DEFERRED"],
       FAILED: ["DEFERRED", "PLANNED"],
       DELIVERED: ["RECEIVED", "DISPUTED"],
       DISPUTED: ["RECEIVED"],
@@ -680,5 +680,22 @@ describe("properties", () => {
         }
       }),
     );
+  });
+});
+
+describe("in-flight plan decisions (ADR 0053)", () => {
+  it("resequences on the same trip without regressing status", () => {
+    const state = run(placed(), planned(), departed());
+    const changed = applyEvent(
+      state,
+      ev("ORDER_PLANNED", { tripId: "T1", vehicleId: "VEH001", seq: 2, planVersion: 2 }),
+    );
+    expect(changed.state.status).toBe("OUT_FOR_DELIVERY");
+    expect(changed.state.assignment).toMatchObject({ seq: 2, planVersion: 2 });
+  });
+  it("defers an unreported in-flight stop and clears its assignment", () => {
+    const state = run(placed(), planned(), departed(), deferred());
+    expect(state.status).toBe("DEFERRED");
+    expect(state.assignment).toBeNull();
   });
 });

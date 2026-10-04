@@ -51,9 +51,11 @@
   "attention": "Attention required",
   "workshop": "{{vehicle}} in the workshop",
   "workshopDetail": "Unavailable for planning",
-  "unassignedAttention": "{{count}} unassigned orders need a decision",
+  "unassignedAttention_one": "{{count}} unassigned order needs a decision",
+  "unassignedAttention_other": "{{count}} unassigned orders need a decision",
   "reviewUnassigned": "Review unassigned orders",
-  "exceptions": "{{count}} delivery exceptions",
+  "exceptions_one": "{{count}} delivery exception",
+  "exceptions_other": "{{count}} delivery exceptions",
   "noneAttention": "No attention items reported.",
   "order": "Order",
   "outlet": "Outlet",
@@ -229,5 +231,22 @@
   "saveChanges": "Save changes",
   "loadingState": "Loaded order assignments",
   "repeatDeferral": "Previous-run deferrals",
-  "skippedPrevious": "Skipped previous run"
+  "skippedPrevious": "Skipped previous run",
+  "stopLocked": "Locked · field fact or pinned load",
+  "outlookView": {
+    "loading": "Loading the outlook…",
+    "error": "The outlook could not be loaded.",
+    "empty": "No demand history for this depot yet.",
+    "chartLabel": "Weekly demand in m³ against a fleet capacity of {{capacity}} m³",
+    "axis": "m³ per week",
+    "barTitle": "{{week}}: {{demand}} m³",
+    "capacityLine": "Fleet capacity {{capacity}} m³",
+    "caption": "Weekly demand across brands. Seeded history, then a four-week moving average. The dashed line is the depot's weekly fleet volume.",
+    "tableCaption": "Weekly demand and capacity (m³)",
+    "week": "Week",
+    "demand": "Demand (m³)",
+    "chilled": "Chilled (m³)",
+    "capacity": "Capacity (m³)",
+    "utilisation": "Use of capacity"
+  }
 }

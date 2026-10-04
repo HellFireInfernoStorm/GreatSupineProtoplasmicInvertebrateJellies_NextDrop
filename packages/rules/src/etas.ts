@@ -59,6 +59,7 @@ export function effectiveWindow(outlet: Outlet): TimeWindow | null {
 
 /** Stops in delivery order: earliest window close first, then district, then order id. */
 export function sequenceStops(trip: PlanTrip, ref: Pick<ReferenceData, "outlets">): PlanOrder[] {
+  if (trip.preserveOrder) return [...trip.orders];
   const keyed = trip.orders.map((order) => {
     const outlet = outletOf(order, ref);
     return { order, close: effectiveWindow(outlet)?.close ?? -1, district: outlet.district };

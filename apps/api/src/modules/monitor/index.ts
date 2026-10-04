@@ -2,6 +2,8 @@
 import {
   ackResponseSchema,
   dayQuerySchema,
+  outlookQuerySchema,
+  outlookResponseSchema,
   exceptionsResponseSchema,
   idParamsSchema,
   mutationHeadersSchema,
@@ -17,6 +19,7 @@ import { createCalendarSource } from "../orders";
 import type { ResourceResolver } from "../policy";
 import { listExceptions } from "./exceptions";
 import { createIssues, type Issues } from "./issues";
+import { listOutlook } from "./outlook";
 import { listRuns } from "./runs";
 
 export { runState, vehicleSignals, type RunSignal } from "./runs";
@@ -48,6 +51,18 @@ interface MonitorDependencies {
 
 const monitorRoutes: FastifyPluginAsyncZod<MonitorDependencies> = async (app, deps) => {
   const { prisma } = deps;
+
+  app.get(
+    "/api/dispatch/outlook",
+    {
+      schema: { querystring: outlookQuerySchema, response: { 200: outlookResponseSchema } },
+      config: { policy: { action: "outlook", resourceResolver: depotQuery } },
+    },
+    async (request) => {
+      const { depot, from, weeks } = request.query;
+      return { items: await listOutlook(prisma, depot, from, weeks), serverTime: deps.now().toISOString() };
+    },
+  );
 
   app.get(
     "/api/dispatch/runs",

@@ -9,6 +9,7 @@ import type { OrderStatus } from "./order-reducer";
 import type { PlanOrder, PlanTrip } from "./plan";
 import type { Outlet, ReferenceData, Vehicle } from "./reference";
 import type { Millilitres } from "./units";
+import type { PublishedStop } from "./planning-locks";
 
 export const HARD_CODES = [
   "WEIGHT_CAP_EXCEEDED",
@@ -76,6 +77,8 @@ export interface Plan {
 }
 
 export interface ValidationContext {
+  /** Current published placements; retain in-flight/finished cargo without allocating it again. */
+  readonly publishedStops?: readonly PublishedStop[];
   readonly cfg?: RulesConfig;
   /** Vehicles `IN_WORKSHOP` on the plan's date, whatever the reason (ADR 0017). */
   readonly unavailableVehicleIds?: ReadonlySet<string>;
@@ -151,7 +154,7 @@ export function validatePlan(plan: Plan, ref: ReferenceData, ctx: ValidationCont
         });
     }
     checkTripCount(out, vehicleId, trips, cfg);
-    const usable = trips.map((t) => checkTripOrders(out, t, vehicle, plan.date, ref, known));
+    const usable = trips.map((t) => checkTripOrders(out, t, vehicle, plan.date, ref, known, ctx));
     checkRun(out, vehicle, usable, plan.date, ref, ctx, cfg);
   }
 
@@ -205,6 +208,7 @@ function checkTripOrders(
   date: LocalDate,
   ref: ReferenceData,
   known: ReadonlySet<string> | null,
+  ctx: ValidationContext,
 ): PlanTrip {
   const where = { tripRef: trip.ref, vehicleId: vehicle.id };
   const located: { order: PlanOrder; outlet: Outlet }[] = [];
@@ -215,7 +219,10 @@ function checkTripOrders(
       if (!outlet) continue;
     }
     located.push({ order, outlet });
-    if (order.deliveryDate !== date || (order.status !== undefined && !PLANNABLE.has(order.status))) {
+    const retained = ctx.publishedStops?.some(
+      (s) => s.orderId === order.id && s.vehicleId === trip.vehicleId && s.tripNo === trip.tripNo,
+    );
+    if (order.deliveryDate !== date || (order.status !== undefined && !PLANNABLE.has(order.status) && !retained)) {
       out.add("ORDER_NOT_CONFIRMED", where, [order.id], {
         deliveryDate: order.deliveryDate,
         planDate: date,
