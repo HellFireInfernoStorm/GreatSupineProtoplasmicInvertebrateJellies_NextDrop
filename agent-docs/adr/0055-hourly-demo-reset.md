@@ -33,4 +33,5 @@ Drafts are refused while a day is still open for orders (`errors.dayNotPlannable
 - Whenever judges arrive, the demo is within an hour of the story day, with the Dispatcher's queue ready to plan.
 - A judge mid-walkthrough loses their progress on the hour. The reset banner (ADR 0007) shows it, and field devices discard queued work through the reset epoch. Once the demo panel ships (#56), judges can reset themselves, and `DEMO_RESET_HOURLY=false` turns the hourly job off.
 - Walkthrough step 1 (a store order before Tuesday's cutoff) needs `before-cutoff`. The hourly default skips past it, so Dilini's step-1 orders are already placed.
+- Amended 2026-10-04 (#56): the default preset is `plan-published`, which also proposes and publishes the stock plan for both depots, so the Loader and the Driver have trips.
 - Spec edits in this PR: `spec/platform/deployment.md` (redeploy, demo reset, hourly reset, environment). ADR 0054 carries an amendment note.
