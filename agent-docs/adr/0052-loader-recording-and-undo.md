@@ -17,7 +17,7 @@ Show one action set per order line within the reverse-stop checklist. A Short or
 
 Plan review shows the current loading order, saves `PLAN_ACKNOWLEDGED`, and remains pending until acceptance and a covering snapshot. Do not invent an added/removed diff or a dispatcher-seen status from a version number or server receipt. Loader switching uses the existing authenticated PIN flow. The single-column phone layout follows ADR 0002.
 
-The Loader snapshot has no vehicle display name, driver contact or vehicle capacities. Show the supplied trip identity, district, departure and measured loaded weight/volume, with capacity unavailable; never invent those missing values. English is complete. Sinhala/Tamil namespace leaves retain explicit draft English copy pending their separate tier-S translation task, as scoped in #52.
+The Loader snapshot has no vehicle display name, driver contact or vehicle capacities. Show the supplied trip identity, district, departure and measured loaded weight/volume, with capacity unavailable; never invent those missing values. English is complete. Sinhala/Tamil namespace leaves contain translated draft copy from #57; native review remains pending.
 
 ## Alternatives considered
 

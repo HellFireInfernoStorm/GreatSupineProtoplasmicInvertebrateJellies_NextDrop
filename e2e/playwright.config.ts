@@ -38,6 +38,7 @@ export default defineConfig<object, WalkthroughOptions>({
       use: { loaderViewport: "tablet", offlineMode: "browser" },
     },
     { name: "accessibility", testMatch: "accessibility.spec.ts" },
+    { name: "field-locales", testMatch: "field-locales.spec.ts" },
     { name: "repeat-deferral", testMatch: "repeat-deferral.spec.ts" },
   ],
 });

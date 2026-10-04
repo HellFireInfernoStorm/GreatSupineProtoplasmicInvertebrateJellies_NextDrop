@@ -1,62 +1,62 @@
 {
   "title": {
-    "text": "Dock trips",
+    "text": "ஏற்றுமுனை பயணங்கள்",
     "review": "draft"
   },
   "dock": {
-    "text": "Loading dock",
+    "text": "சரக்கு ஏற்றும் முனை",
     "review": "draft"
   },
   "departsIn": {
-    "text": "in {{minutes}} min",
+    "text": "{{minutes}} நிமிடங்களில்",
     "review": "draft"
   },
   "overdue": {
-    "text": "{{minutes}} min overdue",
+    "text": "{{minutes}} நிமிடங்கள் தாமதம்",
     "review": "draft"
   },
   "tripNumber": {
-    "text": "Trip {{number}}",
+    "text": "பயணம் {{number}}",
     "review": "draft"
   },
   "stops": {
-    "text": "{{count}} stops",
+    "text": "{{count}} நிறுத்தங்கள்",
     "review": "draft"
   },
   "orders": {
-    "text": "orders",
+    "text": "ஆர்டர்கள்",
     "review": "draft"
   },
   "open": {
-    "text": "Open ›",
+    "text": "திறக்கவும் ›",
     "review": "draft"
   },
   "trips": {
-    "text": "‹ Trips",
+    "text": "‹ பயணங்கள்",
     "review": "draft"
   },
   "checklist": {
-    "text": "‹ Checklist",
+    "text": "‹ சரிபார்ப்புப் பட்டியல்",
     "review": "draft"
   },
   "checked": {
-    "text": "Checked",
+    "text": "சரிபார்க்கப்பட்டது",
     "review": "draft"
   },
   "checkedCount": {
-    "text": "{{count}} of {{total}} checked",
+    "text": "{{total}} இல் {{count}} சரிபார்க்கப்பட்டன",
     "review": "draft"
   },
   "weightLoaded": {
-    "text": "Weight loaded",
+    "text": "ஏற்றிய எடை",
     "review": "draft"
   },
   "volumeLoaded": {
-    "text": "Volume loaded",
+    "text": "ஏற்றிய கனவளவு",
     "review": "draft"
   },
   "kg": {
-    "text": "kg",
+    "text": "கிலோ",
     "review": "draft"
   },
   "m3": {
@@ -64,339 +64,339 @@
     "review": "draft"
   },
   "loaded": {
-    "text": "Loaded",
+    "text": "ஏற்றப்பட்டது",
     "review": "draft"
   },
   "short": {
-    "text": "Short",
+    "text": "பற்றாக்குறை",
     "review": "draft"
   },
   "damaged": {
-    "text": "Damaged",
+    "text": "சேதமடைந்தது",
     "review": "draft"
   },
   "loadedUnits": {
-    "text": "{{count}} loaded",
+    "text": "{{count}} ஏற்றப்பட்டன",
     "review": "draft"
   },
   "shortUnits": {
-    "text": "{{count}} short",
+    "text": "{{count}} பற்றாக்குறை",
     "review": "draft"
   },
   "damagedUnits": {
-    "text": "{{count}} damaged",
+    "text": "{{count}} சேதமடைந்தன",
     "review": "draft"
   },
   "orderedUnits": {
-    "text": "{{count}} units ordered",
+    "text": "{{count}} அலகுகள் ஆர்டர் செய்யப்பட்டன",
     "review": "draft"
   },
   "summaryUnits": {
-    "text": "{{loaded}} loaded · {{short}} short · {{damaged}} damaged",
+    "text": "{{loaded}} ஏற்றப்பட்டன · {{short}} பற்றாக்குறை · {{damaged}} சேதமடைந்தன",
     "review": "draft"
   },
   "waitingDispatch": {
-    "text": "Waiting on dispatcher",
+    "text": "அனுப்பீட்டாளருக்காகக் காத்திருக்கிறது",
     "review": "draft"
   },
   "loadThisOrder": {
-    "text": "Load in this order — last stop first",
+    "text": "இந்த வரிசையில் ஏற்றவும் — கடைசி நிறுத்தம் முதலில்",
     "review": "draft"
   },
   "loadInstruction": {
-    "text": "Position 1 goes in first, next to the cab. Stop 1 is delivered first.",
+    "text": "இடம் 1 முதலில், ஓட்டுநர் அறைக்கு அருகில் ஏற்றப்படும். நிறுத்தம் 1 முதலில் விநியோகிக்கப்படும்.",
     "review": "draft"
   },
   "cabFirst": {
-    "text": "CAB · loads first",
+    "text": "ஓட்டுநர் அறை · முதலில் ஏற்றவும்",
     "review": "draft"
   },
   "rearDoors": {
-    "text": "REAR DOORS · last stop in first",
+    "text": "பின்புறக் கதவுகள் · கடைசி நிறுத்தத்தை முதலில் ஏற்றவும்",
     "review": "draft"
   },
   "stopNumber": {
-    "text": "Stop {{number}}",
+    "text": "நிறுத்தம் {{number}}",
     "review": "draft"
   },
   "checkEveryRow": {
-    "text": "Check every line before handing over.",
+    "text": "ஒப்படைக்கும் முன் ஒவ்வொரு வரியையும் சரிபார்க்கவும்.",
     "review": "draft"
   },
   "reviewReady": {
-    "text": "Review & mark ready ›",
+    "text": "சரிபார்த்து தயாரெனக் குறிக்கவும் ›",
     "review": "draft"
   },
   "markReady": {
-    "text": "Mark ready · {{trip}}",
+    "text": "தயாரெனக் குறிக்கவும் · {{trip}}",
     "review": "draft"
   },
   "readyInstruction": {
-    "text": "Confirm what is on the truck, then hand it to the driver.",
+    "text": "லாரியில் உள்ளவற்றை உறுதிசெய்து ஓட்டுநரிடம் ஒப்படைக்கவும்.",
     "review": "draft"
   },
   "holdReady": {
-    "text": "Hold to mark ready",
+    "text": "தயாரெனக் குறிக்க அழுத்திப் பிடிக்கவும்",
     "review": "draft"
   },
   "handedOver": {
-    "text": "Handed over to driver",
+    "text": "ஓட்டுநரிடம் ஒப்படைக்கப்பட்டது",
     "review": "draft"
   },
   "uncheckedLines": {
-    "text": "{{count}} lines still unchecked",
+    "text": "{{count}} வரிகள் இன்னும் சரிபார்க்கப்படவில்லை",
     "review": "draft"
   },
   "issues": {
-    "text": "Short and damaged items",
+    "text": "பற்றாக்குறை மற்றும் சேதமடைந்த பொருட்கள்",
     "review": "draft"
   },
   "undoWindow": {
-    "text": "Finishing the five-second Undo window.",
+    "text": "செயல்தவிர்ப்பதற்கான ஐந்து வினாடிகள் முடியும் வரை காத்திருக்கிறது.",
     "review": "draft"
   },
   "reportShort": {
-    "text": "Report short",
+    "text": "பற்றாக்குறையைப் பதிவு செய்யவும்",
     "review": "draft"
   },
   "reportDamaged": {
-    "text": "Report damaged",
+    "text": "சேதத்தைப் பதிவு செய்யவும்",
     "review": "draft"
   },
   "quantity": {
-    "text": "How many are missing or damaged?",
+    "text": "எத்தனை பொருட்கள் குறைகின்றன அல்லது சேதமடைந்துள்ளன?",
     "review": "draft"
   },
   "reportRemainder": {
-    "text": "Sending this report also confirms the remaining units as loaded.",
+    "text": "இந்த அறிக்கையை அனுப்புவது மீதமுள்ள அலகுகள் ஏற்றப்பட்டதையும் உறுதிசெய்கிறது.",
     "review": "draft"
   },
   "all": {
-    "text": "All {{count}}",
+    "text": "அனைத்து {{count}}",
     "review": "draft"
   },
   "half": {
-    "text": "Half",
+    "text": "பாதி",
     "review": "draft"
   },
   "why": {
-    "text": "Why?",
+    "text": "காரணம் என்ன?",
     "review": "draft"
   },
   "takePhoto": {
-    "text": "Take photo",
+    "text": "புகைப்படம் எடுக்கவும்",
     "review": "draft"
   },
   "photoRequired": {
-    "text": "Photo required for damaged goods.",
+    "text": "சேதமடைந்த பொருட்களுக்கு புகைப்படம் கட்டாயம்.",
     "review": "draft"
   },
   "photoOptional": {
-    "text": "Photo optional for short goods.",
+    "text": "பற்றாக்குறைக்கு புகைப்படம் விருப்பத்திற்குரியது.",
     "review": "draft"
   },
   "photoEvidence": {
-    "text": "Loading evidence photo",
+    "text": "சரக்கு ஏற்றியதற்கான சான்றுப் புகைப்படம்",
     "review": "draft"
   },
   "sendReport": {
-    "text": "Save report for dispatcher",
+    "text": "அனுப்பீட்டாளருக்கான அறிக்கையைச் சேமிக்கவும்",
     "review": "draft"
   },
   "draftSaved": {
-    "text": "Saved on this device · Undo available for 5 seconds",
+    "text": "இந்தச் சாதனத்தில் சேமிக்கப்பட்டது · 5 வினாடிகளுக்குள் செயல்தவிர்க்கலாம்",
     "review": "draft"
   },
   "undo": {
-    "text": "Undo",
+    "text": "செயல்தவிர்க்கவும்",
     "review": "draft"
   },
   "staleDraft": {
-    "text": "Plan changed before this unsent report was recorded. Review it before continuing.",
+    "text": "அனுப்பப்படாத அறிக்கை பதிவாகும் முன் திட்டம் மாறியது. தொடரும் முன் சரிபார்க்கவும்.",
     "review": "draft"
   },
   "discardDraft": {
-    "text": "Discard unsent report",
+    "text": "அனுப்பப்படாத அறிக்கையை நீக்கவும்",
     "review": "draft"
   },
   "saved": {
-    "text": "Saved on this device",
+    "text": "இந்தச் சாதனத்தில் சேமிக்கப்பட்டது",
     "review": "draft"
   },
   "confirmed": {
-    "text": "Confirmed after sync",
+    "text": "ஒத்திசைவுக்குப் பிறகு உறுதிசெய்யப்பட்டது",
     "review": "draft"
   },
   "held": {
-    "text": "Needs dispatcher · saved record kept",
+    "text": "அனுப்பீட்டாளர் தேவை · சேமித்த பதிவு பாதுகாக்கப்பட்டுள்ளது",
     "review": "draft"
   },
   "failed": {
-    "text": "Not accepted · check connection details",
+    "text": "ஏற்கப்படவில்லை · இணைப்பு விவரங்களைச் சரிபார்க்கவும்",
     "review": "draft"
   },
   "awaitingSnapshot": {
-    "text": "Received · waiting for updated plan",
+    "text": "பெறப்பட்டது · புதுப்பித்த திட்டத்திற்காகக் காத்திருக்கிறது",
     "review": "draft"
   },
   "recordedAt": {
-    "text": "Recorded {{time}}",
+    "text": "பதிவு செய்தது {{time}}",
     "review": "draft"
   },
   "receivedAt": {
-    "text": "Received {{time}}",
+    "text": "பெறப்பட்டது {{time}}",
     "review": "draft"
   },
   "planChanged": {
-    "text": "Plan changed · review loading order",
+    "text": "திட்டம் மாறியது · ஏற்றும் வரிசையைச் சரிபார்க்கவும்",
     "review": "draft"
   },
   "reviewPlan": {
-    "text": "Review plan",
+    "text": "திட்டத்தைச் சரிபார்க்கவும்",
     "review": "draft"
   },
   "reviewVersion": {
-    "text": "Current plan v{{version}} · load the last stop first.",
+    "text": "தற்போதைய திட்டம் v{{version}} · கடைசி நிறுத்தத்தை முதலில் ஏற்றவும்.",
     "review": "draft"
   },
   "ackPending": {
-    "text": "Plan review saved · awaiting acceptance",
+    "text": "திட்டச் சரிபார்ப்பு சேமிக்கப்பட்டது · ஏற்புக்காகக் காத்திருக்கிறது",
     "review": "draft"
   },
   "acceptPlan": {
-    "text": "Accept plan",
+    "text": "திட்டத்தை ஏற்கவும்",
     "review": "draft"
   },
   "planNotPublished": {
-    "text": "Plan not published yet.",
+    "text": "திட்டம் இன்னும் வெளியிடப்படவில்லை.",
     "review": "draft"
   },
   "noTrips": {
-    "text": "No trips in this loading plan.",
+    "text": "இந்த ஏற்றும் திட்டத்தில் பயணங்கள் இல்லை.",
     "review": "draft"
   },
   "noSnapshot": {
-    "text": "No loading plan saved on this device yet. Connect to download it.",
+    "text": "இந்தச் சாதனத்தில் ஏற்றும் திட்டம் இன்னும் சேமிக்கப்படவில்லை. பதிவிறக்க இணைக்கவும்.",
     "review": "draft"
   },
   "loading": {
-    "text": "Loading saved plan…",
+    "text": "சேமித்த திட்டம் ஏற்றப்படுகிறது…",
     "review": "draft"
   },
   "offline": {
-    "text": "Offline · your work stays saved on this device",
+    "text": "இணைப்பில்லை · உங்கள் வேலை இந்தச் சாதனத்தில் சேமிக்கப்படும்",
     "review": "draft"
   },
   "saveError": {
-    "text": "Could not save. Your existing work is kept. Try again.",
+    "text": "சேமிக்க முடியவில்லை. ஏற்கெனவே செய்த வேலை பாதுகாக்கப்பட்டுள்ளது. மீண்டும் முயலவும்.",
     "review": "draft"
   },
   "connection": {
-    "text": "Connection & loader account",
+    "text": "இணைப்பு மற்றும் ஏற்றுநர் கணக்கு",
     "review": "draft"
   },
   "syncNow": {
-    "text": "Sync now",
+    "text": "இப்போது ஒத்திசைக்கவும்",
     "review": "draft"
   },
   "forceOffline": {
-    "text": "Simulate offline",
+    "text": "இணைப்பில்லா நிலையைச் சோதிக்கவும்",
     "review": "draft"
   },
   "switchUser": {
-    "text": "Switch loader",
+    "text": "ஏற்றுநரை மாற்றவும்",
     "review": "draft"
   },
   "switchUserNote": {
-    "text": "Each report is recorded under the signed-in loader. Sign out and use the PIN sign-in to switch.",
+    "text": "ஒவ்வொரு அறிக்கையும் உள்நுழைந்த ஏற்றுநரின் பெயரில் பதிவாகும். மாற்ற வெளியேறி PIN மூலம் உள்நுழையவும்.",
     "review": "draft"
   },
   "signOutError": {
-    "text": "Could not sign out. Connect and try again.",
+    "text": "வெளியேற முடியவில்லை. இணைத்து மீண்டும் முயலவும்.",
     "review": "draft"
   },
   "chilled": {
-    "text": "Chilled",
+    "text": "குளிரூட்டப்பட்டது",
     "review": "draft"
   },
   "dockType": {
     "street": {
-      "text": "Street",
+      "text": "தெரு",
       "review": "draft"
     },
     "rear_dock": {
-      "text": "Rear dock",
+      "text": "பின்புற ஏற்றுமுனை",
       "review": "draft"
     },
     "mall_bay": {
-      "text": "Mall bay",
+      "text": "வணிக வளாக ஏற்றுமுனை",
       "review": "draft"
     }
   },
   "resolution": {
     "SHIP_PARTIAL": {
-      "text": "Ship partial · approved",
+      "text": "பகுதியை அனுப்பவும் · அனுமதிக்கப்பட்டது",
       "review": "draft"
     },
     "HOLD_TRIP": {
-      "text": "Hold trip · waiting on dispatcher",
+      "text": "பயணத்தை நிறுத்திவைக்கவும் · அனுப்பீட்டாளருக்காகக் காத்திருக்கிறது",
       "review": "draft"
     },
     "BACKORDER": {
-      "text": "Backorder · approved",
+      "text": "பின்னர் வழங்கவும் · அனுமதிக்கப்பட்டது",
       "review": "draft"
     }
   },
   "loadShort": {
     "STOCK_SHORT": {
-      "text": "Out of stock",
+      "text": "கையிருப்பு இல்லை",
       "review": "draft"
     },
     "DAMAGED_AT_DOCK": {
-      "text": "Damaged at dock",
+      "text": "ஏற்றுமுனையில் சேதமடைந்தது",
       "review": "draft"
     },
     "PICKING_ERROR": {
-      "text": "Picking error",
+      "text": "பொருள் எடுப்பதில் பிழை",
       "review": "draft"
     },
     "OTHER": {
-      "text": "Other",
+      "text": "வேறு காரணம்",
       "review": "draft"
     }
   },
   "loadDamaged": {
     "CRUSHED": {
-      "text": "Crushed / broken",
+      "text": "நசுங்கியது / உடைந்தது",
       "review": "draft"
     },
     "LEAKING": {
-      "text": "Leaking",
+      "text": "கசிகிறது",
       "review": "draft"
     },
     "OTHER": {
-      "text": "Other",
+      "text": "வேறு காரணம்",
       "review": "draft"
     },
     "TORN_PACKAGING": {
-      "text": "Torn packaging",
+      "text": "கிழிந்த பொதி",
       "review": "draft"
     },
     "CONTAMINATED": {
-      "text": "Contaminated",
+      "text": "மாசடைந்தது",
       "review": "draft"
     }
   },
   "photoPending": {
-    "text": "Text received · photo waiting to sync",
+    "text": "விவரம் பெறப்பட்டது · புகைப்படம் ஒத்திசைவுக்காகக் காத்திருக்கிறது",
     "review": "draft"
   },
   "earliestFirst_one": {
-    "text": "{{count}} trip · earliest departure first",
+    "text": "{{count}} பயணம் · முதலில் புறப்படுவது முன்னால்",
     "review": "draft"
   },
   "earliestFirst_other": {
-    "text": "{{count}} trips · earliest departure first",
+    "text": "{{count}} பயணங்கள் · முதலில் புறப்படுவது முன்னால்",
     "review": "draft"
   }
 }

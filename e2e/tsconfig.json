@@ -1,7 +1,8 @@
 {
   "extends": "@nextdrop/config/tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["support", "tests", "*.config.ts"]
 }
