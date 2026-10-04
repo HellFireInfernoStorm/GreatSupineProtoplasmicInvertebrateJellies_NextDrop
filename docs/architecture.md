@@ -70,19 +70,31 @@ dependency-cruiser enforces these rules (`pnpm deps:check`, `.dependency-cruiser
 
 ## Build status
 
-As of 3 Oct 2026. **TODO (before submission):** refresh this table.
+As of 4 Oct 2026, 17:00. "Built" means merged to `main`. **TODO (before submission):** refresh this table.
 
 | Part | Status |
 | --- | --- |
 | `packages/rules`: calendar, units, cutoff, trip time, ETA, fuel, validator, ranking, allocator, order reducer | Built, with unit and property tests |
-| `packages/contracts`: event envelope and catalogue, API DTOs, route table | Built (v1) |
+| `packages/contracts`: event envelope and catalogue, API DTOs, route table | Built (v1; `LOAD_DAMAGED` is v2 with an upcaster, #114) |
 | Database: Prisma schema, first migration with hand-written SQL, readiness check | Built |
+| Seed: reference data, seeded accounts, the Peliyagoda peak day, the Kandy story fixtures | Built (#30) |
 | API: server, `/api/healthz`, `/api/readyz` | Built |
-| API: auth (login, sessions, CSRF, lockout) and policy (`can()`, `scoped()`) | Built (#35) |
+| API: auth (login, sessions, CSRF, lockout) and policy (`can()`, `scoped()`), with authorization matrix tests | Built (#35, #58) |
+| API: store orders (cutoff, place, track, cancel, receipt, issues) and reference data | Built (#42, #110) |
+| API: planning (day, propose, draft, validate, fleet), publish and plan versions, dock shortfalls | Built (#45, #48, #51) |
+| API: change feed, SSE hint and notifications | Built (#41) |
+| API: field snapshot, sync ingest, heartbeat and blob upload | Built (#47, #50) |
+| API: sync conflicts (classification, held facts, resolution, outcomes for field devices) | Built (#54, #97, #117) |
+| API: run monitor, exceptions inbox and dispute resolution | Built (#59) |
+| API: server clock, planning-day tick and demo reset (`before-cutoff` preset) | Built (#38). Other presets and the demo panel: planned (#56) |
+| Web: routes, login and the four role shells | Built (#36) |
+| Web: shared component kit | Built (#39) |
+| Web: offline core (IndexedDB storage, outbox, sync, session recovery) | Built (#40) |
+| Web: Store app (place order, my deliveries, tracking, timeline, receipt, issues, history, notifications) | Built (#43, #44) |
+| Web: Dispatcher app | Dashboard, queue and plan board in review (#46). Deferral review and publish (#49), delivery progress and inbox (#61), capacity outlook (#55): planned |
+| Web: Loader and Driver apps | Planned (#52, #53) |
 | Story fixture picker (`pnpm seed:pick-fixtures`) | Built |
-| CI: typecheck, lint, boundaries, unit and integration tests, build, `docker compose up` smoke | Built (#26), with a Compose smoke job (#87) |
-| Web: routes, login and the four role shells | In progress (#36) |
-| API modules: orders, planning, sync, feed, notify, demo, monitor | Planned (#38, #41, #42, #45, #47, #48, #54, #59) |
-| Offline core, Loader and Driver apps | Planned (#40, #52, #53) |
 | Docker Compose, Dockerfile, `.env.example` | Built (#31) |
-| Seed, public deployment | Planned (#30, #33) |
+| CI: typecheck, lint, boundaries, unit and integration tests, build, `docker compose up` smoke | Built (#26, #87) |
+| Playwright walkthrough test | Planned (#62) |
+| Public deployment | Planned (#33, #67) |
