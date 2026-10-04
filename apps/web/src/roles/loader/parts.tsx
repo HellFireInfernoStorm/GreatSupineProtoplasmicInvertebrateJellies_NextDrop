@@ -61,7 +61,17 @@ export function Frame({ data, children, footer }: { data: LoaderData; children: 
           {data.snapshot?.scope.depot ?? t("dock")}
         </Link>
         <time dateTime={now.toISOString()}>{formatTime(now)}</time>
-        <Link className="loader-sync" data-offline={activity.offline} to="/loader/connection">
+        <Link
+          className="loader-sync"
+          data-warning={
+            activity.offline ||
+            reauth ||
+            !!activity.error ||
+            diagnostics.heldCount > 0 ||
+            diagnostics.failedItems.length > 0
+          }
+          to="/loader/connection"
+        >
           {common(
             activity.offline
               ? "sync.offline"

@@ -358,7 +358,7 @@
   font-size: 18px;
   font-weight: 600;
 }
-.loader-sync[data-offline="true"] {
+.loader-sync[data-warning="true"] {
   color: var(--nd-warn-fg);
 }
 .loader-sync small {
