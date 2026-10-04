@@ -251,7 +251,7 @@ flowchart TB
     S[Store manager] --- D[Dispatcher] --- L[Loader] --- R[Driver]
   end
   subgraph API["Modular monolith API (apps/api, Fastify)"]
-    M["orders · planning · sync · feed · notify · auth · jobs · demo · monitor"]
+    M["reference · orders · planning · shortfalls · field · conflicts · blobs<br/>feed · notifications · auth · policy · monitor · jobs · demo"]
   end
   Rules["packages/rules<br/>validator · allocator · trip time · fuel · reducer"]
   Contracts["packages/contracts<br/>zod DTOs · event envelope · error codes"]
