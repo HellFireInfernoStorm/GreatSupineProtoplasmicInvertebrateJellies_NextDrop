@@ -25,7 +25,7 @@ NextDrop links ordering, planning, loading, delivery and receipt in one responsi
 
 | | |
 | --- | --- |
-| Public URL | https://146.190.92.202.sslip.io (a DigitalOcean droplet, ADR 0051) |
+| Public URL | https://nextdrop.duckdns.org (a DigitalOcean droplet, ADR 0051) |
 | Repository | This monorepo |
 | Demo video | Not linked here; submitted through the submission form (#64). |
 
@@ -148,7 +148,7 @@ Compose also reads `APP_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_D
 The public URL runs the same Compose stack on one DigitalOcean droplet, with Caddy in front (ADR 0051):
 
 - **Droplet:** 2 GB RAM, 1 shared vCPU, SGP1, Ubuntu 24.04.
-- **Hostname:** `146.190.92.202.sslip.io`. sslip.io resolves it to the droplet's IP, and Caddy gets a Let's Encrypt certificate for it.
+- **Hostname:** `nextdrop.duckdns.org`, a free DuckDNS name pointing at the Reserved IP `137.184.250.211`. Caddy gets a Let's Encrypt certificate for it.
 - **Firewall:** a DigitalOcean Cloud Firewall allows only ports 22, 80 and 443. Docker bypasses `ufw`, and `app` publishes 8080.
 
 To set up a new droplet, paste [`docker/droplet-init.sh`](docker/droplet-init.sh) into **User data** when you create it. The script:
@@ -156,7 +156,7 @@ To set up a new droplet, paste [`docker/droplet-init.sh`](docker/droplet-init.sh
 1. adds swap;
 2. installs Docker;
 3. clones this repository to `/opt/nextdrop`;
-4. writes `.env` with `COMPOSE_PROFILES=public`, the sslip.io hostname, generated secrets and `DEMO_MODE=true`;
+4. writes `.env` with `COMPOSE_PROFILES=public`, the hostname, generated secrets and `DEMO_MODE=true`. The hostname is `DOMAIN` from the top of the script, or `<ip>.sslip.io` when `DOMAIN` is empty;
 5. starts the stack.
 
 To redeploy, run this over SSH. The seed is idempotent, so the demo state survives a redeploy (ADR 0030).
@@ -170,7 +170,7 @@ Other tasks on the droplet:
 | Task | Command |
 | --- | --- |
 | Follow the logs | `docker compose logs -f --tail=200 app` |
-| Check health | `curl https://146.190.92.202.sslip.io/api/readyz` |
+| Check health | `curl https://nextdrop.duckdns.org/api/readyz` |
 | Back up the database | `docker compose exec -T db pg_dump -U nextdrop nextdrop \| gzip > ~/nextdrop-$(date +%F-%H%M).sql.gz` |
 
 ### Checks
