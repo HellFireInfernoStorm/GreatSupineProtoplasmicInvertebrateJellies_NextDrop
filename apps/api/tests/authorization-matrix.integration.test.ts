@@ -275,6 +275,7 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
         ]);
       } else if (route.responses[200] === "reasonsResponse") {
         expect(response.json().loadShort.length).toBeGreaterThan(0);
+        expect(response.json().loadDamaged.length).toBeGreaterThan(0);
       } else if (visibleReference[route.responses[200] ?? ""]) {
         const expected = visibleReference[route.responses[200]!]![role].map((key) => referenceIds[key]);
         expect(response.json().items.map((item: { id: string }) => item.id)).toEqual(expected);

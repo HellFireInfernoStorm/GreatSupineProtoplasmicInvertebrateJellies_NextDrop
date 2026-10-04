@@ -60,7 +60,7 @@ Conflict classification is a later issue (#54).
    - The loader's `reversals` are LOADED orders with a pending reversal.
    - Reason lists:
      - deferral and problem codes come from rules and contracts
-     - the load-short and stop-outcome codes are the build's own (the design draws the chips without listing them), each with the i18n key `<list>.<code>`
+     - the load-short, load-damaged and stop-outcome codes are the build's own (the design draws the chips without listing them), each with the i18n key `<list>.<code>` (load-damaged catalogue in ADR 0041)
 
 ## Alternatives considered
 

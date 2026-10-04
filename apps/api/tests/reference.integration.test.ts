@@ -173,6 +173,13 @@ describe.skipIf(!testDatabaseUrl)("reference API over the seed", () => {
     // Sunday is not an operating day (spec/rules-core).
     expect(days[0]!.isOperating).toBe(false);
     const reasons = await get("store", "/api/ref/reasons");
+    expect(reasons.loadDamaged).toEqual([
+      { code: "CRUSHED", message_key: "loadDamaged.CRUSHED" },
+      { code: "LEAKING", message_key: "loadDamaged.LEAKING" },
+      { code: "TORN_PACKAGING", message_key: "loadDamaged.TORN_PACKAGING" },
+      { code: "CONTAMINATED", message_key: "loadDamaged.CONTAMINATED" },
+      { code: "OTHER", message_key: "loadDamaged.OTHER" },
+    ]);
     for (const who of ["dispatcher", "loader", "driver"] as const) {
       expect(await items(who, range)).toEqual(days);
       expect(await get(who, "/api/ref/reasons")).toEqual(reasons);

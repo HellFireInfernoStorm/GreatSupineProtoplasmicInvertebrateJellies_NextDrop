@@ -22,13 +22,14 @@ const reasons = {
   deferral: [{ code: "TIME_BUDGET", message_key: "reasons.TIME_BUDGET" }],
   problems: [{ code: "VEHICLE_PROBLEM", message_key: "problems.VEHICLE_PROBLEM" }],
   loadShort: [{ code: "STOCK_SHORT", message_key: "loadShort.STOCK_SHORT" }],
+  loadDamaged: [{ code: "CRUSHED", message_key: "loadDamaged.CRUSHED" }],
   stopOutcome: [{ code: "VEHICLE_BREAKDOWN", message_key: "stopOutcome.VEHICLE_BREAKDOWN" }],
 } satisfies ApiDtoInput<"reasonsResponse">;
 const clientEvent = {
   clientEventId: MOCK_ID,
   deviceId: MOCK_ID,
   deviceSeq: 0,
-  schemaVersion: 1,
+  schemaVersion: 2,
   subject: { orderId: MOCK_ORDER_ID },
   source: "FIELD",
   actor: { userId: "loader-1", role: "LOADER" },

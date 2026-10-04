@@ -58,6 +58,14 @@ export const PROBLEM_KINDS = [
 export type ProblemKind = (typeof PROBLEM_KINDS)[number];
 export const problemKindSchema = z.enum(PROBLEM_KINDS);
 
+/**
+ * Loader damage-sheet reason chips (ADR 0041). Own catalogue — not load-short codes.
+ * i18n keys are `loadDamaged.<code>`; field snapshot and `/ref/reasons` expose them.
+ */
+export const LOAD_DAMAGED_REASON_CODES = ["CRUSHED", "LEAKING", "TORN_PACKAGING", "CONTAMINATED", "OTHER"] as const;
+export type LoadDamagedReasonCode = (typeof LOAD_DAMAGED_REASON_CODES)[number];
+export const loadDamagedReasonCodeSchema = z.enum(LOAD_DAMAGED_REASON_CODES);
+
 export const ISSUE_KINDS = ["SHORT", "DAMAGED", "WARM", "OTHER"] as const;
 export type IssueKind = (typeof ISSUE_KINDS)[number];
 export const issueKindSchema = z.enum(ISSUE_KINDS);
