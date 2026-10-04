@@ -10,7 +10,7 @@ How NextDrop stores and connects its data. The schema is `apps/api/prisma/schema
 | Identity | `User`, `Session`, `Device` | Four login roles. Field sessions are bound to a device. |
 | Orders | `Order`, `OrderLine`, `OrderEvent`, `OutletServiceState` | `OrderEvent` is the append-only timeline every role reads and adds to. `Order.status` is a projection of it. |
 | Planning | `PlanningDay`, `PlanDraft`, `PlanVersion`, `PlanVersionChange`, `Trip`, `TripStop`, `Deferral`, `VehicleAvailability` | Drafts use optimistic revisions. Published versions are immutable snapshots. Every deferral stores its reason. |
-| Sync | `Conflict`, `Blob`, `ChangeFeed`, `FeedCounter`, `Notification` | Clashes are held for a human. The change feed has gap-free sequence numbers. Proof-of-delivery photos are stored as blobs. |
+| Sync | `Conflict`, `Blob`, `ChangeFeed`, `FeedCounter`, `Notification` | Clashes are held for a human. The change feed has gap-free sequence numbers. Proof-of-delivery photos and signatures are stored as blobs. |
 | Support | `WeeklyDemandHistory`, `DemoState` | Capacity outlook history and the demo clock and reset epoch. |
 
 ## Storage conventions
@@ -18,7 +18,8 @@ How NextDrop stores and connects its data. The schema is `apps/api/prisma/schema
 - Every table has a UUID primary key (UUID v7). Display IDs (`OUT004`, `VEH039`, `ORD10412`) are separate unique columns.
 - Foreign keys restrict deletion, so history cannot disappear through cascades.
 - Hand-written SQL in the migration adds immutability triggers, CHECK constraints and a partial unique index: an order has at most one active (non-cancelled) trip stop.
-- Weights are integer grams and volumes integer litres. Window, ETA and departure values are minutes after local midnight. Instants are `timestamptz`.
+- Reference capacities and distances are `Decimal(10,3)` in the CSV units (kg, m³, km, L). Product and order-line unit sizes are `Decimal(13,6)` kg and m³. Order totals (`Order.weightG`, `Order.volumeL`) are integer grams and litres, ceiled once from the exact sum (ADR 0023). `packages/rules` computes only in integers (ADR 0018).
+- Window, ETA and departure values are minutes after local midnight. Instants are `timestamptz(3)`; delivery dates are `date`.
 
 ## Entity-relationship diagram
 

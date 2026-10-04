@@ -18,16 +18,30 @@ flowchart TB
   end
 
   subgraph App["Application tier: modular monolith (apps/api, Fastify)"]
-    direction LR
-    Orders["orders<br/>16:00 cutoff"]
-    Planning["planning<br/>propose · validate · publish"]
-    Sync["sync<br/>idempotent ingest · clashes"]
-    Feed["feed<br/>change feed cursor"]
-    Notify["notify<br/>SSE hint"]
-    Auth["auth<br/>sessions · policy"]
-    Jobs["jobs<br/>pg-boss"]
-    Demo["demo<br/>clock · reset"]
-    Monitor["monitor<br/>runs · exceptions"]
+    direction TB
+    subgraph Ordering["Ordering and planning"]
+      direction LR
+      Reference["reference<br/>outlets · vehicles · products · calendar"]
+      Orders["orders<br/>16:00 cutoff · timeline"]
+      Planning["planning<br/>propose · validate · publish"]
+      Shortfalls["shortfalls<br/>dock shortfalls"]
+    end
+    subgraph Field["Field sync"]
+      direction LR
+      FieldMod["field<br/>snapshot · idempotent ingest"]
+      Conflicts["conflicts<br/>held facts · resolution"]
+      Blobs["blobs<br/>photos · signatures"]
+      Feed["feed<br/>change feed cursor · SSE hint"]
+      Notifications["notifications<br/>in-app"]
+    end
+    subgraph Platform["Platform and operations"]
+      direction LR
+      Auth["auth<br/>sessions · CSRF · lockout"]
+      Policy["policy<br/>can() · scoped()"]
+      Monitor["monitor<br/>runs · exceptions · outlook"]
+      Jobs["jobs<br/>pg-boss tick"]
+      Demo["demo<br/>clock · reset"]
+    end
   end
 
   Rules["packages/rules (pure TypeScript)<br/>validator · allocator · trip time · ETA · fuel · priority · order reducer"]
@@ -44,7 +58,7 @@ flowchart TB
   Contracts -. types .-> Rules
 ```
 
-`docker-compose.yml` runs one `app` container beside a `db` container (`postgres:16`). The app container applies migrations, seeds, and serves the API and the built PWA from one origin (`@fastify/static`, with client-side routes falling back to `index.html`). An optional `public` profile adds Caddy for TLS. **TODO (#33):** name the host once the public deployment is live.
+`docker-compose.yml` runs one `app` container beside a `db` container (`postgres:16`). The app container applies migrations, seeds, and serves the API and the built PWA from one origin (`@fastify/static`, with client-side routes falling back to `index.html`). The `public` profile adds Caddy in front for TLS. The public URL, https://nextdrop.duckdns.org, runs this same stack on one DigitalOcean droplet (ADR 0051, `agent-docs/spec/platform/deployment.md`). A `solver` profile is only a placeholder: the optional solver sidecar is not built (ADR 0014).
 
 ## How the parts fit
 
@@ -70,13 +84,13 @@ dependency-cruiser enforces these rules (`pnpm deps:check`, `.dependency-cruiser
 
 ## Build status
 
-As of 4 Oct 2026, 17:30. "Built" means merged to `main`. **TODO (before submission):** refresh this table.
+As of 4 Oct 2026, 22:50 (`main` at `8d49e6b`). "Built" means merged to `main`. **TODO (before submission):** refresh this table if more merges land.
 
 | Part | Status |
 | --- | --- |
 | `packages/rules`: calendar, units, cutoff, trip time, ETA, fuel, validator, ranking, allocator, order reducer | Built, with unit and property tests |
 | `packages/contracts`: event envelope and catalogue, API DTOs, route table | Built (v1; `LOAD_DAMAGED` is v2 with an upcaster, #114) |
-| Database: Prisma schema, first migration with hand-written SQL, readiness check | Built |
+| Database: Prisma schema, two migrations (the first with hand-written SQL), readiness check | Built |
 | Seed: reference data, seeded accounts, the Peliyagoda peak day, the Kandy story fixtures | Built (#30) |
 | API: server, `/api/healthz`, `/api/readyz` | Built |
 | API: auth (login, sessions, CSRF, lockout) and policy (`can()`, `scoped()`), with authorization matrix tests | Built (#35, #58) |
@@ -85,16 +99,22 @@ As of 4 Oct 2026, 17:30. "Built" means merged to `main`. **TODO (before submissi
 | API: change feed, SSE hint and notifications | Built (#41) |
 | API: field snapshot, sync ingest, heartbeat and blob upload | Built (#47, #50). `TRIP_READY` is refused until every Loader checklist line is checked (#115) |
 | API: sync conflicts (classification, held facts, resolution, outcomes for field devices) | Built (#54, #97, #117) |
-| API: run monitor, exceptions inbox and dispute resolution | Built (#59) |
-| API: server clock, planning-day tick and demo reset (`before-cutoff` preset) | Built (#38). Other presets and the demo panel: planned (#56) |
+| API: run monitor, exceptions inbox, dispute resolution and capacity outlook | Built (#59, #55) |
+| API: server clock, planning-day tick and demo reset | Built (#38). Presets `before-cutoff` and `orders-closed` are built; the other presets and the demo panel are planned (#56) |
 | Web: routes, login and the four role shells | Built (#36) |
 | Web: shared component kit | Built (#39) |
 | Web: offline core (IndexedDB storage, outbox, sync, session recovery) | Built (#40) |
 | Web: Store app (place order, my deliveries, tracking, timeline, receipt, issues, history, notifications) | Built (#43, #44) |
-| Web: Dispatcher app | Dashboard, order queue and plan board: built (#46). Deferral review and publish (#49), delivery progress and inbox (#61), capacity outlook (#55): planned |
-| Web: Loader and Driver apps | Planned (#52, #53) |
+| Web: Dispatcher app (dashboard, order queue, plan board, deferral review and publish, delivery progress and exceptions inbox, capacity outlook) | Built (#46, #49, #61, #55) |
+| Web: Loader app (dock trips, load checklist, short and damaged lines, hand-over, offline) | Built (#52) |
+| Web: Driver app (today's run, stop and proof of delivery, offline switch, clash cards, recovery) | Built (#53) |
+| Web: Sinhala and Tamil field strings | Drafts only, not yet checked by a native speaker ([field-locale-drafts.md](field-locale-drafts.md), #57) |
 | Story fixture picker (`pnpm seed:pick-fixtures`) | Built |
 | Docker Compose, Dockerfile, `.env.example` | Built (#31) |
-| CI: typecheck, lint, boundaries, unit and integration tests, build, `docker compose up` smoke | Built (#26, #87) |
-| Playwright walkthrough test | Planned (#62) |
-| Public deployment | Planned (#33, #67) |
+| CI: typecheck, lint, boundaries, unit and integration tests, build, `docker compose up` smoke, Playwright | Built (#26, #87, #62) |
+| Playwright walkthrough test (14 steps) | Built (#62), running in CI against the Compose stack, plus a manual `e2e-public` workflow against a deployed URL. Steps 1 to 6 and 8 to 14 pass. Step 7 is `test.fixme`: the Loader asks to accept a plan only when a changed plan arrives, so the first plan cannot be "accepted" as the step words it. Step 8 loads the truck as a stand-in |
+| Other Playwright suites: accessibility (axe), field locales, repeat deferral, Driver offline switch | Built |
+| Public deployment | Built: https://nextdrop.duckdns.org on a DigitalOcean droplet (#33, #67, ADR 0051) |
+| Fleet screen and vehicle breakdowns | Not built (#63) |
+| Load reversal for loaded orders | Not built (#60) |
+| Web Push notifications (optional) | Not built (#65). Notifications are in-app only (ADR 0013) |
