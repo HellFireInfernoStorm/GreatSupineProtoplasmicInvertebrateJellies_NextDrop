@@ -40,14 +40,13 @@ export function DeferPublish(props: Props) {
   const { day, data, outlets, reference, unavailable, breakdown, disabled, onEditingChange } = props;
   const { t } = useTranslation("dispatcher/deferrals");
   const [edits, setEdits] = useState<DraftData | null>(null);
-  const [previewId, setPreviewId] = useState<string | null>(null);
   const session = props.session;
   const publication = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const { busy, error, uncertain } = publication;
   const published = publication.response?.plan ?? null;
   const [toast, setToast] = useState(false);
   const rows = buildDeferralReview(edits ?? data, day, reference, unavailable, breakdown);
-  const preview = rows.find((row) => row.order.id === previewId) ?? rows.find((row) => row.repeat) ?? rows[0];
+  const preview = rows.find((row) => row.repeat) ?? rows[0];
   const candidate = reviewDraft(edits ?? data, rows);
   const validation = evaluate(
     candidate,
@@ -338,26 +337,18 @@ export function DeferPublish(props: Props) {
               {t("storesDeferred", { count: rows.length })}
             </div>
             {preview && (
-              <div className="dispatch-notice-preview">
-                <h3>{t("preview")}</h3>
-                <label>
-                  <span className="sr-only">{t("previewOrder")}</span>
-                  <select value={preview.order.id} onChange={(event) => setPreviewId(event.target.value)}>
-                    {rows.map((row) => (
-                      <option key={row.order.id} value={row.order.id}>
-                        {row.order.displayId}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <strong>{t("noticeTitle", { order: preview.order.displayId })}</strong>
-                <p>
-                  {t("noticeBody", {
-                    from: formatDay(`${day.date}T12:00:00+05:30`),
-                    to: formatDay(`${preview.explanation.nextServiceableDate}T12:00:00+05:30`),
-                    reason: t(`reasons.${preview.reasonCode}`),
-                  })}
-                </p>
+              <div>
+                <h3 className="dispatch-preview-label">{t("preview")}</h3>
+                <div className="dispatch-notice-preview">
+                  <strong>{t("noticeTitle", { order: preview.order.displayId })}</strong>
+                  <p>
+                    {t("noticeBody", {
+                      from: formatDay(`${day.date}T12:00:00+05:30`),
+                      to: formatDay(`${preview.explanation.nextServiceableDate}T12:00:00+05:30`),
+                      reason: t(`reasons.${preview.reasonCode}`),
+                    })}
+                  </p>
+                </div>
               </div>
             )}
             <Button
