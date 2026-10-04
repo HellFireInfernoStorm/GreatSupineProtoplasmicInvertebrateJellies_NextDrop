@@ -5,7 +5,7 @@ import type { ApiDto } from "@nextdrop/contracts";
 import { CapacityBar, ChilledPill, StatusPill } from "../../ui";
 import { Pill } from "../../ui/StatusPill";
 import { Instant } from "../../ui/Timeline";
-import type { Outlet, Vehicle } from "./planning";
+import { demandVsCapacity, type Outlet, type Vehicle } from "./planning";
 import confirmedIcon from "./assets/confirmed.svg";
 import weightIcon from "./assets/weight.svg";
 import chilledIcon from "./assets/chilled.svg";
@@ -69,6 +69,7 @@ export function OrderQueue({
         ))
     );
   });
+  const demand = demandVsCapacity(day.queue, vehicles);
   const selected = day.queue.find((o) => o.id === params.get("order")) ?? matches[0];
   const outlet = selected ? getOutlet(selected.outletId) : null;
   const flags = (order: ApiDto<"order">) => {
@@ -113,8 +114,8 @@ export function OrderQueue({
         <QueueMetric icon={weightIcon} tone="info">
           <CapacityBar
             label={t("weightFleet")}
-            used={day.queue.reduce((n, o) => n + o.weightG, 0) / 1000000}
-            capacity={vehicles.reduce((n, v) => n + v.weightCapG, 0) / 1000000}
+            used={demand.weightT}
+            capacity={demand.fleetWeightT}
             unit={t("units.t")}
             tone="ok"
             presentation="summary"
@@ -123,8 +124,8 @@ export function OrderQueue({
         <QueueMetric icon={chilledIcon} tone="warn">
           <CapacityBar
             label={t("chilledCapacity")}
-            used={day.queue.filter((o) => o.tempRequirement === "chilled").reduce((n, o) => n + o.volumeL, 0) / 1000}
-            capacity={vehicles.filter((v) => v.temp === "reefer").reduce((n, v) => n + v.volumeCapL, 0) / 1000}
+            used={demand.chilledM3}
+            capacity={demand.reeferM3}
             unit={t("units.m3")}
             presentation="summary"
           />

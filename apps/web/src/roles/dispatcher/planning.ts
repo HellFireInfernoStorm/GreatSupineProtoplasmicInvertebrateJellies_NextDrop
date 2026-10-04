@@ -127,6 +127,17 @@ export function evaluate(
   return { ...whole, ok: whole.ok && lockedOrderId === null, lockedOrderId, trips, plan };
 }
 
+/** The demand vs capacity tiles on D0 and D1: queue weight in t against the fleet, chilled volume in m³ against reefers. */
+export function demandVsCapacity(queue: readonly Order[], available: readonly Vehicle[]) {
+  const reefers = available.filter((v) => v.temp === "reefer");
+  return {
+    weightT: queue.reduce((n, o) => n + o.weightG, 0) / 1_000_000,
+    fleetWeightT: available.reduce((n, v) => n + v.weightCapG, 0) / 1_000_000,
+    chilledM3: queue.filter((o) => o.tempRequirement === "chilled").reduce((n, o) => n + o.volumeL, 0) / 1000,
+    reeferM3: reefers.reduce((n, v) => n + v.volumeCapL, 0) / 1000,
+  };
+}
+
 /** Menu filtering needs only placement locks, without recalculating schedules or capacity for every option. */
 export function lockedDraftChange(data: DraftData, reference: BrowserReference, context: ValidationContext) {
   return lockedStopChange(
