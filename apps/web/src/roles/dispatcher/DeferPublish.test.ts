@@ -45,6 +45,8 @@ describe("D3 deferral screen", () => {
     expect(html).toContain("Justification (required)");
     expect(html).toContain("Unavoidable");
     expect(html).toContain("Next delivery");
+    expect(html).toMatch(/\d+ days? unserved · \d+ deferrals?</);
+    expect(html).not.toMatch(/\b1 days unserved|\b1 deferrals/);
     expect(html).toContain("0 now planned · 1 deferred again");
     expect(html).toContain('class="dispatch-preview-label">Preview</h3>');
     expect(html).not.toContain("Preview notice for order");
