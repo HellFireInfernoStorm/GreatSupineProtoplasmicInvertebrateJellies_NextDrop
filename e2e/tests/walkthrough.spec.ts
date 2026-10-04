@@ -482,8 +482,14 @@ test.describe("Judge walkthrough (§15.4)", () => {
     const { page } = dispatcher;
     const main = page.getByRole("main");
 
-    // Delivery Progress is still open from step 10. The cancelled-but-delivered stop is in the inbox, once for
-    // each record the driver's phone held for it: the arrival, the outcome and the proof of delivery.
+    // The dispatcher reopens Delivery Progress. It was left open in step 10 and showed the clash the moment the
+    // driver's text records arrived, before the proof image had uploaded: an evidence panel opened that early keeps
+    // saying "No photo" until the page is opened again.
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Delivery Progress" })).toBeVisible();
+
+    // The cancelled-but-delivered stop is in the inbox, once for each record the driver's phone held for it: the
+    // arrival, the outcome and the proof of delivery.
     const clash = page.getByRole("region", { name: "Sync clash · ORD10491" });
     await expect(page.getByRole("tab", { name: /^Sync clashes 3$/ })).toBeVisible();
     await page.getByRole("tab", { name: /^Sync clashes 3$/ }).click();
