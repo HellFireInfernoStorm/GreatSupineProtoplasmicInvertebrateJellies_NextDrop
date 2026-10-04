@@ -58,6 +58,14 @@
     "footnote": "Status words shared by every role: Ordered → Planned / Deferred → Loaded / Short → Out for delivery → Delivered → Received / Disputed.",
     "empty": "No orders to track."
   },
+  "history": {
+    "title": "Order history",
+    "eyebrow": "Order history · {{outlet}}",
+    "intro": "Your last 50 orders, newest first. Open one to see its timeline.",
+    "empty": "No orders yet. Orders you place show here.",
+    "failed": "The order history could not be loaded.",
+    "retry": "Try again"
+  },
   "order": {
     "title": "Order timeline",
     "back": "Order tracking",

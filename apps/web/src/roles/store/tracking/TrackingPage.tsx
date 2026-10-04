@@ -13,7 +13,7 @@ import { stagesDone, TRACK_STAGES } from "./timeline";
 
 const day = (date: string) => formatDay(dateInstant(date));
 
-interface Row {
+export interface Row {
   order: Order;
   trip: Delivery["trip"];
   /** The store's own stop, with the two times of a delivery. */
@@ -201,7 +201,7 @@ function TempIcon({ order, className = "" }: { order: Order; className?: string 
   return <Icon name={chilled ? "snow" : "bag"} className={`${chilled ? "text-chilled" : "text-muted"} ${className}`} />;
 }
 
-function OrdersTable({ rows }: { rows: readonly Row[] }) {
+export function OrdersTable({ rows }: { rows: readonly Row[] }) {
   const { t } = useTranslation("store/tracking");
   const text = useRowText();
   const head = "px-5 py-3 text-left text-xs font-semibold text-muted";
@@ -259,7 +259,7 @@ function OrdersTable({ rows }: { rows: readonly Row[] }) {
   );
 }
 
-function OrdersList({ rows }: { rows: readonly Row[] }) {
+export function OrdersList({ rows }: { rows: readonly Row[] }) {
   const text = useRowText();
   return (
     <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-surface px-4">

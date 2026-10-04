@@ -81,3 +81,11 @@ export function useOrder(id: string) {
     refetchInterval: 30_000,
   });
 }
+
+/** The outlet's orders, newest first: the first page of its history. */
+export function useOrderHistory() {
+  return useQuery({
+    queryKey: ["store", "orders", "history"],
+    queryFn: async () => (await callApi("storeOrders", { query: { limit: 50 } })).items,
+  });
+}

@@ -386,7 +386,6 @@ export function mockDeliveriesRespond(
       const date = url.searchParams.get("date");
       const status = url.searchParams.get("status");
       if (date !== null && date < colomboLocal(nowMs).date) return null;
-      if (date === null && status === null) return null;
       const items = all
         .map((item) => item.order)
         .filter(

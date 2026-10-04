@@ -9,6 +9,7 @@ import { ReviewPage } from "./order/ReviewPage";
 import { IssuePage } from "./receipt/IssuePage";
 import { ReceiptPage } from "./receipt/ReceiptPage";
 import { StoreLayout } from "./StoreLayout";
+import { HistoryPage } from "./tracking/HistoryPage";
 import { OrderPage } from "./tracking/OrderPage";
 import { TrackingPage } from "./tracking/TrackingPage";
 
@@ -24,6 +25,7 @@ export function StoreShell() {
           <Route path="order/review" element={<ReviewPage />} />
           <Route path="order/placed" element={<PlacedPage />} />
           <Route path="tracking" element={<TrackingPage />} />
+          <Route path="history" element={<HistoryPage />} />
           <Route path="orders/:id" element={<OrderPage />} />
           <Route path="orders/:id/receipt" element={<ReceiptPage />} />
           <Route path="orders/:id/issue" element={<IssuePage />} />
