@@ -39,7 +39,11 @@
     "text": "සම්බන්ධතාව එනතුරු රැඳී ඇත",
     "review": "draft"
   },
-  "offlineSaved": {
+  "offlineSaved_one": {
+    "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
+    "review": "draft"
+  },
+  "offlineSaved_other": {
     "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
     "review": "draft"
   },
@@ -277,7 +281,11 @@
     "text": "බෙදාහැරීමේ හෝ පිවිසීමේ ගැටලුවේ ඡායාරූපයක් අවශ්‍යයි",
     "review": "draft"
   },
-  "photosSaved": {
+  "photosSaved_one": {
+    "text": "ඡායාරූප {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
+    "review": "draft"
+  },
+  "photosSaved_other": {
     "text": "ඡායාරූප {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
     "review": "draft"
   },
@@ -563,14 +571,6 @@
   },
   "flagSaved": {
     "text": "ගැටලුව මෙම දුරකථනයේ සුරැකී ඇත · සමමුහුර්ත වනතුරු රැඳී ඇත",
-    "review": "draft"
-  },
-  "offlineSaved_one": {
-    "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
-    "review": "draft"
-  },
-  "offlineSaved_other": {
-    "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
     "review": "draft"
   },
   "capturedOnly": {

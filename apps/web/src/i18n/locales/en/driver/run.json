@@ -9,7 +9,8 @@
   "waiting": "{{count}} waiting",
   "syncedAt": "Synced {{time}}",
   "waitingSignal": "Waiting for signal",
-  "offlineSaved": "Offline — {{count}} deliveries saved on this phone",
+  "offlineSaved_one": "Offline — {{count}} delivery saved on this phone",
+  "offlineSaved_other": "Offline — {{count}} deliveries saved on this phone",
   "goToStop": "Go to stop {{number}}",
   "startRun": "Start run",
   "saveError": "Could not save. Your work has not been confirmed; please try again.",
@@ -76,7 +77,8 @@
   "clear": "Clear",
   "photoOptional": "Photo of signed sheet or delivery",
   "photoRequired": "Required photo of delivery or access problem",
-  "photosSaved": "{{count}} photos saved on this phone",
+  "photosSaved_one": "{{count}} photo saved on this phone",
+  "photosSaved_other": "{{count}} photos saved on this phone",
   "changeOutcome": "Change outcome",
   "note": "Note (optional)",
   "problem": {
@@ -157,7 +159,5 @@
   },
   "startFirst": "Start this run before recording arrival.",
   "flagSaved": "Problem saved on this phone · waiting for sync",
-  "offlineSaved_one": "Offline — {{count}} delivery saved on this phone",
-  "offlineSaved_other": "Offline — {{count}} deliveries saved on this phone",
   "capturedOnly": "Captured {{time}} · waiting for server confirmation"
 }
