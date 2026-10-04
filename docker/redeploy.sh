@@ -1,7 +1,7 @@
 #!/bin/bash
 # Redeploy the public stack (ADR 0051, ADR 0054, ADR 0055): pull, rebuild, install the hourly demo reset, then reset
 # the demo so every deploy starts on the seeded story day. Run it on the droplet:
-#   /opt/nextdrop/docker/redeploy.sh                  reset to DEMO_DEPLOY_PRESET from .env, else orders-closed
+#   /opt/nextdrop/docker/redeploy.sh                  reset to DEMO_DEPLOY_PRESET from .env, else plan-published
 #   /opt/nextdrop/docker/redeploy.sh before-cutoff    reset to another built preset
 #   /opt/nextdrop/docker/redeploy.sh --keep           keep the current demo state (the hourly reset still runs)
 # DEMO_RESET_HOURLY=false in .env removes the hourly reset on the next redeploy.

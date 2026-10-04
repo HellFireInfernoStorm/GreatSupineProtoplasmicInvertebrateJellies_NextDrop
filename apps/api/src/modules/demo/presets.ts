@@ -1,18 +1,19 @@
 // Demo presets (spec/data/seed-and-demo.md §15.2, ADR 0033). Each one resets to `before-cutoff`, then drives the real
 // service functions on the server clock: no hand-written rows, so every run reaches the same state.
-import { colomboInstant } from "@nextdrop/rules";
+import { colomboInstant, proposePlan } from "@nextdrop/rules";
 import type { demoPresetSchema } from "@nextdrop/contracts";
 import type { z } from "zod";
+import { DISPATCHER_LOGIN_ID } from "../../../prisma/seed/accounts";
 import { PEAK_STORE_OUTLET_ID } from "../../../prisma/seed/story-fixtures";
 import { createCalendarSource, createOrderCommands } from "../orders";
 import { createNotifier } from "../notifications";
-import { tickPlanningDays } from "../planning";
+import { createReferenceSource, loadDayInputs, publishDay, tickPlanningDays, toDraftData } from "../planning";
 import { resetToBeforeCutoff, type ResetDependencies } from "./reset";
 
 type DemoPreset = z.infer<typeof demoPresetSchema>;
 
 /** The presets this module can reach. The rest answer 409 `errors.demoPresetUnavailable`. */
-export const BUILT_PRESETS: ReadonlySet<DemoPreset> = new Set(["before-cutoff", "orders-closed"]);
+export const BUILT_PRESETS: ReadonlySet<DemoPreset> = new Set(["before-cutoff", "orders-closed", "plan-published"]);
 
 /** Walkthrough step 2: Mon 28 Sep 2026, 16:05 Asia/Colombo, five minutes after the cutoff for Tue 29 Sep. */
 export const ORDERS_CLOSED_TIME = new Date(colomboInstant("2026-09-28", 16 * 60 + 5));
@@ -50,6 +51,39 @@ async function closeOrders(deps: ResetDependencies): Promise<void> {
   await tickPlanningDays(deps.prisma, deps.clock.now(), deps.notifier);
 }
 
+/** Walkthrough steps 3 and 5: propose the stock plan for each depot's Tue 29 Sep and publish it, as the dispatcher. */
+async function publishPlans(deps: ResetDependencies): Promise<void> {
+  const { prisma, clock, notifier } = deps;
+  const dispatcher = await prisma.user.findUniqueOrThrow({
+    where: { loginId: DISPATCHER_LOGIN_ID },
+    select: { id: true },
+  });
+  const reference = createReferenceSource(prisma);
+  const days = await prisma.planningDay.findMany({
+    where: { date: new Date(`${DELIVERY_DAY}T00:00:00Z`), state: "CLOSED" },
+  });
+  for (const day of days) {
+    const inputs = await loadDayInputs(prisma, await reference.get(), day.depot, DELIVERY_DAY);
+    const result = proposePlan(inputs.allocation, inputs.reference.ref);
+    await prisma.$transaction([
+      prisma.planDraft.create({
+        data: {
+          planningDayId: day.id,
+          revision: 1,
+          data: toDraftData(result, inputs),
+          baseVersion: day.currentVersion,
+          updatedBy: dispatcher.id,
+        },
+      }),
+      prisma.planningDay.update({ where: { id: day.id }, data: { state: "PLANNING" } }),
+    ]);
+    await publishDay(
+      { prisma, clock, reference, notifier },
+      { depot: day.depot, date: DELIVERY_DAY, revision: 1, actorUserId: dispatcher.id },
+    );
+  }
+}
+
 /** Record which preset the demo is at, who got it there, and when on the demo clock. */
 async function record(deps: ResetDependencies, preset: DemoPreset, actorUserId: string | null): Promise<void> {
   await deps.prisma.demoState.update({
@@ -68,5 +102,6 @@ export async function resetToPreset(
   if (preset === "before-cutoff") return;
   await placeStoryOrders(deps);
   await closeOrders(deps);
+  if (preset === "plan-published") await publishPlans(deps);
   await record(deps, preset, actorUserId);
 }

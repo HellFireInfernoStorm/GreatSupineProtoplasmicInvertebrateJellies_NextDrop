@@ -167,7 +167,7 @@ To redeploy, run this over SSH:
 
 It pulls, rebuilds and restarts the stack, installs the hourly reset, then resets the demo with [`docker/reset-demo.sh`](docker/reset-demo.sh) (ADR 0054, ADR 0055). A failed build stops the script before the reset, and the old container keeps serving.
 
-The demo clock keeps running after a reset, so a cron job resets the demo every hour, on the hour (`/etc/cron.d/nextdrop-demo-reset`, log in `/var/log/nextdrop-demo-reset.log`). Whenever judges arrive, the public demo is within an hour of the seeded story day: by default the `orders-closed` preset, Mon 28 Sep 2026 16:05 on the demo clock, with the Peliyagoda peak day and the Kandy story orders closed for Tue 29 Sep and ready to plan. A reset on the hour also discards whatever a judge was doing, and every shell shows the reset banner.
+The demo clock keeps running after a reset, so a cron job resets the demo every hour, on the hour (`/etc/cron.d/nextdrop-demo-reset`, log in `/var/log/nextdrop-demo-reset.log`). Whenever judges arrive, the public demo is within an hour of the seeded story day: by default the `plan-published` preset, Mon 28 Sep 2026 16:05 on the demo clock, with the stock plan for Tue 29 Sep published for both depots, so the Loader and the Driver have trips. A reset on the hour also discards whatever a judge was doing, and every shell shows the reset banner.
 
 - To reset now: `docker/reset-demo.sh`, or `docker/reset-demo.sh before-cutoff` for another preset.
 - To change the preset for deploys and the hourly job, set `DEMO_DEPLOY_PRESET` in `.env`. A preset that is not built yet fails with a 409.

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Reset the public demo to a preset (ADR 0054, ADR 0055). docker/redeploy.sh runs it after each deploy, and an hourly
 # cron job runs it so the demo clock never drifts far from the story day. Run it on the droplet:
-#   /opt/nextdrop/docker/reset-demo.sh                  reset to DEMO_DEPLOY_PRESET from .env, else orders-closed
+#   /opt/nextdrop/docker/reset-demo.sh                  reset to DEMO_DEPLOY_PRESET from .env, else plan-published
 #   /opt/nextdrop/docker/reset-demo.sh before-cutoff    reset to another built preset
 #   /opt/nextdrop/docker/reset-demo.sh --install-cron   install the hourly job in /etc/cron.d (as root)
 #   /opt/nextdrop/docker/reset-demo.sh --remove-cron    remove the hourly job
@@ -36,7 +36,7 @@ EOF
   esac
 
   local preset="${1:-$(env_value DEMO_DEPLOY_PRESET)}"
-  preset="${preset:-orders-closed}"
+  preset="${preset:-plan-published}"
 
   local port key
   port="$(env_value APP_PORT)"
