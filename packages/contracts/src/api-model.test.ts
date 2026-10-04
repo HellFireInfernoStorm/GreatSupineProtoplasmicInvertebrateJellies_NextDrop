@@ -25,6 +25,24 @@ describe("API projections backed by the merged data model", () => {
     expect(c.apiConflictFixtures.resolved.resolution).toBe("ACCEPT_FACT");
   });
 
+  it("gives field devices open, accepted and rejected outcomes with the original clientEventId (ADR 0042)", () => {
+    for (const fixture of Object.values(c.apiFieldConflictFixtures)) {
+      expect(c.fieldConflictSchema.parse(fixture)).toEqual(fixture);
+    }
+    const { open, rejected } = c.apiFieldConflictFixtures;
+    // An open conflict carries no decision; a resolved one always does.
+    expect(c.fieldConflictSchema.safeParse({ ...open, resolution: "ACCEPT_FACT" }).success).toBe(false);
+    const { resolution: _, ...undecided } = rejected;
+    expect(c.fieldConflictSchema.safeParse(undecided).success).toBe(false);
+    const request = (count: number) => ({
+      clientEventIds: Array.from({ length: count }, () => open.clientEventId),
+    });
+    expect(c.fieldConflictsRequestSchema.safeParse(request(0)).success).toBe(false);
+    expect(c.fieldConflictsRequestSchema.safeParse(request(100)).success).toBe(true);
+    expect(c.fieldConflictsRequestSchema.safeParse(request(101)).success).toBe(false);
+    expect(c.apiRoutes.fieldConflicts.roles).toEqual(["LOADER", "DRIVER"]);
+  });
+
   it("includes the design's acknowledgement row with event actor and payload version", () => {
     const ack = {
       type: "ACK",

@@ -247,7 +247,6 @@ export class SyncController {
     let after = (await db.value<string>("feedCursor")) ?? "0";
     const limit = 100;
     let changed = false;
-    const resolvedConflicts: string[] = [];
     while (await this.canSync(userId)) {
       const response = await this.transport.changes(after, limit);
       if (this.identity() !== userId) return;
@@ -256,26 +255,62 @@ export class SyncController {
         return;
       }
       changed ||= response.items.length > 0;
-      resolvedConflicts.push(
-        ...response.items.filter((item) => item.kind === "conflict_resolved").map((item) => item.entity.id),
-      );
       // No visible rows still advances to head. Never convert a cursor to Number.
       if (BigInt(response.head) < BigInt(after)) throw new Error("Regressing change-feed cursor");
       after = response.items.length === limit ? response.items.at(-1)!.seq : response.head;
       if (response.items.length < limit) {
-        if (changed) await this.fetchSnapshot(userId);
+        // Decisions are fetched before the snapshot, so the snapshot covers them and retires accepted facts.
+        const decided = await this.reconcileHeld(userId);
+        if (changed || decided) await this.fetchSnapshot(userId);
         else await db.set("feedCursor", after);
-        await db.transaction("rw", db.conflictsLocal, db.outbox, async () => {
-          for (const id of resolvedConflicts) {
-            const conflict = await db.conflictsLocal.get(id);
-            if (conflict?.userId !== userId) continue;
-            // The field feed carries no accept/reject outcome. Keep the fact and notice.
-            await db.outbox.update(conflict.clientEventId, { lastError: "RESOLUTION_DETAILS_UNAVAILABLE" });
-          }
-        });
         return;
       }
     }
+  }
+
+  /**
+   * Ask the server for the outcome of every fact still held on this device (ADR 0042). It does not depend on
+   * `conflict_resolved` hints or the feed cursor, so missed hints and cold resumes recover the same way. Accepted
+   * facts stay projected until a snapshot covers the boundary; rejected ones stay visible with the decision; open,
+   * unknown or unreachable outcomes leave the fact held.
+   */
+  private async reconcileHeld(userId: string): Promise<boolean> {
+    const db = this.repository.db;
+    const held = await db.outbox.where("[actor.userId+state]").equals([userId, "held"]).toArray();
+    let decided = false;
+    for (let i = 0; i < held.length; i += 100) {
+      const ids = held.slice(i, i + 100).map((entry) => entry.clientEventId);
+      let response: Awaited<ReturnType<SyncTransport["conflicts"]>>;
+      try {
+        response = await this.transport.conflicts(ids);
+      } catch {
+        // Outcomes are retried on the next pass; this must not block pushing new work.
+        return decided;
+      }
+      if (this.identity() !== userId) return decided;
+      await db.transaction("rw", db.outbox, db.conflictsLocal, async () => {
+        for (const item of response.items) {
+          if (item.state !== "RESOLVED" || !ids.includes(item.clientEventId)) continue;
+          const row = await db.outbox.get(item.clientEventId);
+          if (row?.state !== "held" || row.actor.userId !== userId) continue;
+          const resolution = {
+            conflictId: item.conflictId,
+            decision: item.resolution,
+            note: item.note,
+            resolvedAt: item.resolvedAt,
+          };
+          await db.outbox.update(
+            item.clientEventId,
+            item.resolution === "ACCEPT_FACT"
+              ? { state: "acked", lastError: null, resolution, confirmationFeedHead: response.feedHead }
+              : { state: "rejected", lastError: "CONFLICT_REJECTED", resolution },
+          );
+          await db.conflictsLocal.put({ id: item.conflictId, clientEventId: item.clientEventId, userId, resolution });
+          decided = true;
+        }
+      });
+    }
+    return decided;
   }
 
   private async openStream(): Promise<void> {

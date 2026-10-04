@@ -61,6 +61,7 @@ const endpoints = [
   "PUT /api/sync/blobs/:id",
   "GET /api/blobs/:id",
   "POST /api/sync/heartbeat",
+  "POST /api/sync/conflicts",
   "GET /api/changes",
   "GET /api/stream",
   "GET /api/notifications",

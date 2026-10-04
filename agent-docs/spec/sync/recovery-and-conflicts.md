@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §9.5; issue 54; ADR 0040
+sources: guide §9.5; issue 54, 97; ADR 0040, 0043
 ---
 
 # Recovery rules and conflict classification
@@ -35,3 +35,10 @@ Details settled in ADR 0040:
 - **Illegal transitions.** An illegal delivery fact or `LOAD_CONFIRMED` is held as `ILLEGAL_TRANSITION`. A `STOP_OUTCOME` contradicting the same device's own outcome, and any other illegal event, is rejected.
 - **Conflicts and retries.** Each held event opens its own conflict. A retried held event answers `HELD_CONFLICT` again.
 - **Accepted facts.** An accepted fact keeps `disposition = HELD`; projections treat it as in effect.
+
+The reporting device learns the decision from `POST /sync/conflicts` (ADR 0043):
+
+- **Request and scope.** The device names its held facts by `clientEventId` and gets only its own user's held events back.
+- **Item.** Each item has `conflictId`, `clientEventId`, `kind`, and `OPEN` or `RESOLVED` with the decision, the note and `resolvedAt`.
+- **Boundary.** The response's `feedHead` is the confirmation boundary for snapshot reconciliation.
+- **Recovery.** Conflicts are kept until a demo reset. The device asks on every pull, so missed hints and cold resumes recover.

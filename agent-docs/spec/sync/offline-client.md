@@ -15,4 +15,8 @@ sources: guide §10
 - **Local session**: the app stays usable offline while a local session exists ("works offline after first sign-in on this device"). The server session cookie is re-established on the next sync. If sync gets a 401, pause, ask for the PIN (`/auth/reauth`), keep the outbox intact, resume.
 - **Store and Dispatcher** are online apps: TanStack Query cache, offline banner, read-only degradation of the last-seen view; no outbox.
 - **Force-offline switch** (demo aid, per device): sets `meta.simulateOffline`, making the sync layer behave as if the network were down, so the dead zone -> reconnect -> clash sequence is repeatable on camera (browser DevTools offline also works).
+- **Held facts** (ADR 0043): each pull asks `POST /sync/conflicts` about every fact still held, independent of the feed cursor and of `conflict_resolved` hints.
+  - **Accepted:** becomes `acked` with the response's `feedHead` as its confirmation boundary and stays projected until a covering snapshot.
+  - **Rejected:** becomes `rejected`, showing the dispatcher's note.
+  - **Open or unknown:** stays held.
 - **Reset epoch** (ADR 0007): the snapshot and every `/changes` response carry `resetEpoch`. If it differs from `meta.resetEpoch`, the client discards the outbox and local order data, stores the new epoch and shows 'Demo data was reset by <role> at <time>' before refetching the snapshot.

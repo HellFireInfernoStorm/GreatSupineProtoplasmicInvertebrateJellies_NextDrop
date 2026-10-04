@@ -105,7 +105,7 @@ export type OrderEvent =
     >
   | EventOf<"ORDER_DEFERRED", { readonly reasonCode: string; readonly toDate?: string; readonly planVersion?: number }>
   | EventOf<"LOAD_SHORT", { readonly lines: readonly ShortLine[]; readonly reasonCode?: string }>
-  | EventOf<"LOAD_DAMAGED", { readonly lines: readonly DamagedLine[] }>
+  | EventOf<"LOAD_DAMAGED", { readonly lines: readonly DamagedLine[]; readonly reasonCode?: string }>
   | EventOf<"LOAD_CONFIRMED", { readonly lines?: readonly { lineId: string; qtyLoaded: number }[] }>
   | EventOf<"SHORT_RESOLVED", { readonly lineId: string; readonly outcome: ShortOutcome; readonly note?: string }>
   | EventOf<"LOAD_REVERSAL_REQUESTED", { readonly to: ReversalTarget; readonly planVersion: number }>

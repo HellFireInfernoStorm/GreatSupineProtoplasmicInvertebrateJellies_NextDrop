@@ -97,7 +97,7 @@ export const validPayloads: { [K in EventType]: Extract<EventEnvelope, { type: K
     ...base(),
     type: "LOAD_DAMAGED",
     source: "FIELD",
-    payload: { lines: [{ lineId: LINE, qty: 1 }] },
+    payload: { lines: [{ lineId: LINE, qty: 1 }], reasonCode: "CRUSHED", photoRef: "blob-damage-1" },
   },
   LOAD_CONFIRMED: {
     ...base(),

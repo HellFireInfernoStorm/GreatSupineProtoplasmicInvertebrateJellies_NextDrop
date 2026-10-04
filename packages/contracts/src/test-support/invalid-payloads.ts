@@ -19,7 +19,7 @@ export function invalidPayloadFor(type: EventType): unknown {
     case "LOAD_SHORT":
       return { lines: [{ lineId: LINE, qtyShort: -1 }] };
     case "LOAD_DAMAGED":
-      return { lines: [{ lineId: LINE, qty: -1 }] };
+      return { lines: [{ lineId: LINE, qty: 1 }], reasonCode: "NOT_A_DAMAGE_REASON" };
     case "LOAD_CONFIRMED":
       return { lines: [] };
     case "SHORT_RESOLVED":

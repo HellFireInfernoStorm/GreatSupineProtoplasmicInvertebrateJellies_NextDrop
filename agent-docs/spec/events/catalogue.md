@@ -17,7 +17,7 @@ sources: guide §7.2
 | `ORDER_DEFERRED` | Server / publish or system | reasonCode, causeKind, scoreInputs, toDate (= nextServiceableDate), daysUnserved, consecutiveDeferrals, note, decidedBy | -> DEFERRED |
 | `PLAN_ACKNOWLEDGED` | Field / loader, driver | planVersion | none |
 | `LOAD_SHORT` | Field / loader | lines[{lineId, qtyShort}], reasonCode, photoRef? | flag; notifies dispatcher + store |
-| `LOAD_DAMAGED` | Field / loader | lines[{lineId, qty}], photoRef? | flag; notifies dispatcher |
+| `LOAD_DAMAGED` | Field / loader | lines[{lineId, qty}], reasonCode (`CRUSHED`, `LEAKING`, `TORN_PACKAGING`, `CONTAMINATED`, `OTHER`; ADR 0042), photoRef? | flag; notifies dispatcher |
 | `LOAD_CONFIRMED` | Field / loader | lines[{lineId, qtyLoaded}] | -> LOADED |
 | `SHORT_RESOLVED` | Server / dispatcher | orderId, lineId, outcome SHIP_PARTIAL, HOLD_TRIP, BACKORDER; note | resolves a `LOAD_SHORT` line; BACKORDER creates a follow-up order via `ORDER_PLACED` with `replacesOrderId` |
 | `LOAD_REVERSAL_REQUESTED` | Server / dispatcher | orderId, to PLANNED or DEFERRED, planVersion | loader task; order stays LOADED |

@@ -18,6 +18,7 @@ import {
   deferralReasonCodeSchema,
   issueKindSchema,
   issueResolutionSchema,
+  loadDamagedReasonCodeSchema,
   problemKindSchema,
   reversalTargetSchema,
   shortOutcomeSchema,
@@ -110,6 +111,7 @@ export const loadShortPayloadSchema = z.object({
 
 export const loadDamagedPayloadSchema = z.object({
   lines: z.array(damagedLineSchema).min(1),
+  reasonCode: loadDamagedReasonCodeSchema,
   photoRef: z.string().optional(),
 });
 

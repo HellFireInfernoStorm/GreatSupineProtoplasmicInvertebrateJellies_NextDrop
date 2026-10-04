@@ -1,5 +1,7 @@
 import {
   dateQuerySchema,
+  fieldConflictsRequestSchema,
+  fieldConflictsResponseSchema,
   fieldSnapshotSchema,
   heartbeatRequestSchema,
   heartbeatResponseSchema,
@@ -15,6 +17,7 @@ import { colomboLocal } from "@nextdrop/rules";
 import { appendFeed, readFeedHint } from "../feed";
 import { dateOnly, NO_SIGNAL_AFTER_MIN } from "../orders";
 import { collectionResource, type Actor } from "../policy";
+import { heldOutcomes } from "./conflicts";
 import type { Ingest } from "./ingest";
 import { buildSnapshot } from "./snapshot";
 
@@ -40,7 +43,7 @@ function ownDevice(request: FastifyRequest, deviceId: string) {
   return actor;
 }
 
-/** `GET /field/snapshot`, `POST /sync/events` and `POST /sync/heartbeat`. Field roles mutate only through /sync/*. */
+/** `GET /field/snapshot`, `POST /sync/events`, `POST /sync/conflicts` and `POST /sync/heartbeat`. Field roles mutate only through /sync/*. */
 export const fieldRoutes: FastifyPluginAsyncZod<FieldRouteDependencies> = async (app, deps) => {
   const { prisma } = deps;
 
@@ -65,6 +68,19 @@ export const fieldRoutes: FastifyPluginAsyncZod<FieldRouteDependencies> = async 
       config: { policy: { action: "syncEvents", resourceResolver: collectionResource } },
     },
     async (request) => deps.ingest.ingest(ownDevice(request, request.body.deviceId), request.body),
+  );
+
+  app.post(
+    "/api/sync/conflicts",
+    {
+      schema: {
+        headers: mutationHeadersSchema,
+        body: fieldConflictsRequestSchema,
+        response: { 200: fieldConflictsResponseSchema },
+      },
+      config: { policy: { action: "fieldConflicts", resourceResolver: collectionResource } },
+    },
+    async (request) => heldOutcomes(prisma, fieldActor(request).userId, request.body.clientEventIds, deps.now()),
   );
 
   app.post(
