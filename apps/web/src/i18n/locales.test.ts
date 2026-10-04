@@ -61,6 +61,7 @@ describe("locale files", () => {
         "store/deliveries",
         "store/login",
         "store/order",
+        "store/receipt",
         "store/shell",
         "store/tracking",
       ].sort(),

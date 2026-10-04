@@ -32,13 +32,33 @@ function moment(): MockMoment {
   } catch {
     // No window (tests): the default moment.
   }
-  if (isMoment(asked)) writeStored(MOMENT_KEY, asked, "session");
+  if (isMoment(asked) && asked !== readStored(MOMENT_KEY, "session")) {
+    // A new moment starts the story again.
+    changed.clear();
+    writeStored(CHANGED_KEY, null, "session");
+    writeStored(MOMENT_KEY, asked, "session");
+  }
   const stored = readStored(MOMENT_KEY, "session");
   return isMoment(stored) ? stored : "onway";
 }
 
 /** What the manager did in this tab: receipts confirmed and issues reported, by order ID. */
-const changed = new Map<string, Pick<Order, "status"> & { received?: Readonly<Record<string, number>> }>();
+type Change = Pick<Order, "status"> & { received?: Readonly<Record<string, number>> };
+const CHANGED_KEY = "nextdrop.mock.store.changed";
+
+function readChanged(): Map<string, Change> {
+  try {
+    return new Map(Object.entries(JSON.parse(readStored(CHANGED_KEY, "session") ?? "{}") as Record<string, Change>));
+  } catch {
+    return new Map();
+  }
+}
+// Kept for the tab, like the mock session, so a reload does not undo a receipt.
+const changed = readChanged();
+function remember(orderId: string, change: Change): void {
+  changed.set(orderId, change);
+  writeStored(CHANGED_KEY, JSON.stringify(Object.fromEntries(changed)), "session");
+}
 
 const iso = (ms: number) => new Date(ms).toISOString();
 /** Rounded to five minutes, as an ETA band is. */
@@ -355,13 +375,13 @@ export function mockDeliveriesRespond(
       if (!order) return notFound();
       const body = request.body as ApiDtoInput<"receiptRequest">;
       const received = Object.fromEntries(body.lines.map((line) => [line.lineId, line.qtyReceived]));
-      changed.set(order.id, { status: "RECEIVED", received });
+      remember(order.id, { status: "RECEIVED", received });
       return { status: 200, body: story(nowMs).today.find((item) => item.order.id === order.id)?.order ?? order };
     }
     case "reportIssue": {
       const order = byPath();
       if (!order) return notFound();
-      changed.set(order.id, { ...changed.get(order.id), status: "DISPUTED" });
+      remember(order.id, { ...changed.get(order.id), status: "DISPUTED" });
       return { status: 201, body: { issueId: mockId(90), order: { ...order, status: "DISPUTED" } } };
     }
     default:
