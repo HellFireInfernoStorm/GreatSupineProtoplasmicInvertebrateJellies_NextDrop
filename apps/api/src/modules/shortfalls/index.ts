@@ -212,7 +212,7 @@ export async function registerShortfalls(app: FastifyInstance, deps: { prisma: P
     prisma: deps.prisma,
     now: deps.now,
     calendar: createCalendarSource(deps.prisma),
-    notifier: createNotifier(),
+    notifier: createNotifier(deps.now),
   });
   await app.register(shortfallRoutes, { prisma: deps.prisma, shortfalls });
 }
