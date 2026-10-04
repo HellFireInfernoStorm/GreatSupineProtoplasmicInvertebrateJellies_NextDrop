@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import { ROLE_PATHS } from "../app/roles";
 import { ApiRequestError } from "../lib/api";
+import { homeWithDepot } from "../roles/dispatcher/depot";
 import { signIn } from "../lib/session";
 
 /** Why a sign-in failed, as the login screens word it. */
@@ -29,7 +30,11 @@ export function useLogin() {
       setFailure(null);
       try {
         const session = await signIn(request);
-        await navigate(ROLE_PATHS[session.user.role].home, { replace: true });
+        const home = ROLE_PATHS[session.user.role].home;
+        // A dispatcher's workspace opens on the depot chosen on the form (#131).
+        await navigate(homeWithDepot(home, request.role === "DISPATCHER" ? request.depot : undefined), {
+          replace: true,
+        });
         return null;
       } catch (error) {
         const reason = loginFailureOf(error);

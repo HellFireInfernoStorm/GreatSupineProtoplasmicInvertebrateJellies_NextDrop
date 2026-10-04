@@ -13,6 +13,7 @@ import { Notifications } from "./Notifications";
 import { Workspace } from "./Workspace";
 import { DeliveryProgress } from "./progress/DeliveryProgress";
 import { useDispatchFeed } from "./feed";
+import { initialDepot } from "./depot";
 import "./dispatcher.css";
 
 const nav = ["dashboard", "queue", "plan", "defer", "runs", "outlook", "fleet", "settings"] as const;
@@ -59,16 +60,18 @@ function DispatcherFrame() {
   const acceptedDepot =
     user.role === "DISPATCHER" && linkedDepot && user.depots.includes(linkedDepot) ? linkedDepot : null;
   const linkedScope = `${acceptedDate ?? ""}|${acceptedDepot ?? ""}`;
-  const [scope, setScope] = useState({
+  // The depot chosen at sign-in arrives as `?depot=`; without one the account's default applies (#131).
+  const [scope, setScope] = useState(() => ({
     date: initialDate,
-    depot: user.role === "DISPATCHER" ? user.depots[0]! : "",
+    depot: user.role === "DISPATCHER" ? initialDepot(user.depots, linkedDepot) : "",
     link: "|",
-  });
-  // Remember accepted notification scope before navigation removes its query parameters.
+  }));
+  // Take a new deep-link scope (sign-in, notifications) into state before navigation removes its query parameters.
   if (scope.link !== linkedScope)
     setScope({ date: acceptedDate ?? scope.date, depot: acceptedDepot ?? scope.depot, link: linkedScope });
   const date = acceptedDate ?? scope.date;
-  const depot = acceptedDepot ?? scope.depot;
+  // The state owns the depot, so the selector applies at once and the URL below only mirrors it.
+  const depot = scope.depot;
   // Keep the accepted workspace scope recoverable after navigation and a full reload.
   useEffect(() => {
     if (params.get("day") === date && params.get("depot") === depot) return;
@@ -177,9 +180,8 @@ function DispatcherFrame() {
                 <select
                   value={depot}
                   onChange={(e) => {
-                    const next = new URLSearchParams(params);
-                    next.set("depot", e.target.value);
-                    setParams(next);
+                    const value = e.target.value;
+                    setScope((current) => ({ ...current, depot: value }));
                   }}
                 >
                   {user.depots.map((value) => (

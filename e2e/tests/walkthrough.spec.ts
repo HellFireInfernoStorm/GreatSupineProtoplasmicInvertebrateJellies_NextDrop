@@ -93,13 +93,15 @@ test.describe("Judge walkthrough (§15.4)", () => {
     const { page } = dispatcher;
     const main = page.getByRole("main");
 
-    // The peak day is Peliyagoda's, so choose it in the selector. Bug #131: the dashboard opens on the account's
-    // first depot, not the one chosen at sign-in, and the selector is overwritten while the page settles. Choosing
-    // the depot stays; the retry goes when #131 is fixed.
-    await expect(async () => {
-      await page.getByRole("combobox", { name: "Depot" }).selectOption(DEPOTS.peliyagoda);
-      await expect(page).toHaveURL(/depot=Peliyagoda/, { timeout: 2_000 });
-    }).toPass();
+    // The peak day is Peliyagoda's, the depot chosen at sign-in, so the workspace opens on it (#131). The selector
+    // applies on the first try and the URL follows it.
+    const depot = page.getByRole("combobox", { name: "Depot" });
+    await expect(page).toHaveURL(/depot=Peliyagoda/);
+    await expect(depot).toHaveValue(DEPOTS.peliyagoda);
+    await depot.selectOption(DEPOTS.kandy);
+    await expect(page).toHaveURL(/depot=Kandy/);
+    await depot.selectOption(DEPOTS.peliyagoda);
+    await expect(page).toHaveURL(/depot=Peliyagoda/);
 
     // The queue: the seeded peak day plus the two orders of step 1, and more van-only orders than the vans can
     // take.
