@@ -19,7 +19,11 @@
     "text": "பயணம் {{number}}",
     "review": "draft"
   },
-  "stops": {
+  "stops_one": {
+    "text": "{{count}} நிறுத்தங்கள்",
+    "review": "draft"
+  },
+  "stops_other": {
     "text": "{{count}} நிறுத்தங்கள்",
     "review": "draft"
   },
@@ -87,7 +91,11 @@
     "text": "{{count}} சேதமடைந்தன",
     "review": "draft"
   },
-  "orderedUnits": {
+  "orderedUnits_one": {
+    "text": "{{count}} அலகுகள் ஆர்டர் செய்யப்பட்டன",
+    "review": "draft"
+  },
+  "orderedUnits_other": {
     "text": "{{count}} அலகுகள் ஆர்டர் செய்யப்பட்டன",
     "review": "draft"
   },
@@ -143,7 +151,11 @@
     "text": "ஓட்டுநரிடம் ஒப்படைக்கப்பட்டது",
     "review": "draft"
   },
-  "uncheckedLines": {
+  "uncheckedLines_one": {
+    "text": "{{count}} வரிகள் இன்னும் சரிபார்க்கப்படவில்லை",
+    "review": "draft"
+  },
+  "uncheckedLines_other": {
     "text": "{{count}} வரிகள் இன்னும் சரிபார்க்கப்படவில்லை",
     "review": "draft"
   },

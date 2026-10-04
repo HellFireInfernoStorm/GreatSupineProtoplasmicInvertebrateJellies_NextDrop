@@ -19,7 +19,11 @@
     "text": "ගමන {{number}}",
     "review": "draft"
   },
-  "stops": {
+  "stops_one": {
+    "text": "නැවතුම් {{count}}",
+    "review": "draft"
+  },
+  "stops_other": {
     "text": "නැවතුම් {{count}}",
     "review": "draft"
   },
@@ -87,7 +91,11 @@
     "text": "{{count}} ක් හානි වී ඇත",
     "review": "draft"
   },
-  "orderedUnits": {
+  "orderedUnits_one": {
+    "text": "ඒකක {{count}} ක් ඇණවුම් කළා",
+    "review": "draft"
+  },
+  "orderedUnits_other": {
     "text": "ඒකක {{count}} ක් ඇණවුම් කළා",
     "review": "draft"
   },
@@ -143,7 +151,11 @@
     "text": "රියදුරුට භාර දුන්නා",
     "review": "draft"
   },
-  "uncheckedLines": {
+  "uncheckedLines_one": {
+    "text": "පේළි {{count}} ක් තවම පරීක්ෂා කර නැත",
+    "review": "draft"
+  },
+  "uncheckedLines_other": {
     "text": "පේළි {{count}} ක් තවම පරීක්ෂා කර නැත",
     "review": "draft"
   },
