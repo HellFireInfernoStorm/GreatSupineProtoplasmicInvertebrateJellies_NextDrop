@@ -2,6 +2,16 @@
 // Instants are stored in UTC and always shown in Asia/Colombo, whatever the device's zone.
 
 const ZONE = "Asia/Colombo";
+const dateFormat = new Intl.DateTimeFormat("en-CA", {
+  timeZone: ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+/** Full calendar date comparison, including year, in the display zone. */
+export function sameDisplayDay(instant: string, nowMs: number): boolean {
+  return dateFormat.format(new Date(instant)) === dateFormat.format(new Date(nowMs));
+}
 
 const timeFormat = new Intl.DateTimeFormat("en-GB", {
   timeZone: ZONE,

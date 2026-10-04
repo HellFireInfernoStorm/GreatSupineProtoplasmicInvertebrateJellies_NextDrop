@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { isReviewedString, localeFiles, resources, type LocaleTree } from "./resources";
+import galleryEn from "../ui/gallery/locales/en.json";
+import gallerySi from "../ui/gallery/locales/si.json";
+import galleryTa from "../ui/gallery/locales/ta.json";
 
 /** Every leaf of a locale tree as `path -> text`. */
 function leaves(tree: LocaleTree, prefix = ""): Map<string, string> {
@@ -19,9 +22,37 @@ const english = localeFiles.en ?? {};
 const fieldNamespaces = Object.keys(english).filter((ns) => /^(loader|driver|shared)\//.test(ns));
 
 describe("locale files", () => {
+  it.each(["si", "ta"])("preserves DEV gallery %s keys, placeholders and valid review states", (language) => {
+    const tree = language === "si" ? gallerySi : galleryTa;
+    const source = leaves(galleryEn);
+    const target = leaves(tree);
+    expect([...target.keys()].sort()).toEqual([...source.keys()].sort());
+    for (const [path, text] of source) expect(placeholders(target.get(path)!)).toEqual(placeholders(text));
+    const drafts = (node: LocaleTree) => {
+      for (const value of Object.values(node)) {
+        if (isReviewedString(value)) expect(["draft", "reviewed"]).toContain(value.review);
+        else {
+          expect(typeof value).toBe("object");
+          drafts(value as LocaleTree);
+        }
+      }
+    };
+    drafts(tree);
+    drafts(localeFiles[language]!["shared/ui"]!);
+    // A native speaker may review leaves independently; key/placeholder coverage must keep passing.
+    const reviewed = structuredClone(tree) as LocaleTree;
+    const markReviewed = (node: LocaleTree) => {
+      for (const value of Object.values(node)) {
+        if (isReviewedString(value)) value.review = "reviewed";
+        else if (typeof value === "object") markReviewed(value);
+      }
+    };
+    markReviewed(reviewed);
+    drafts(reviewed);
+  });
   it("has English for every namespace, as plain strings", () => {
     expect(Object.keys(english).sort()).toEqual(
-      ["dispatcher/login", "driver/login", "loader/login", "shared/common", "store/login"].sort(),
+      ["dispatcher/login", "driver/login", "loader/login", "shared/common", "shared/ui", "store/login"].sort(),
     );
     for (const tree of Object.values(english)) {
       expect(JSON.stringify(tree)).not.toContain('"review"');
