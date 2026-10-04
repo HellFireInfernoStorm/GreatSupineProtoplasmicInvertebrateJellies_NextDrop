@@ -136,7 +136,7 @@ export function PlaceOrderPage() {
         </div>
         {ready && <RepeatButton model={model} disabled={pending} />}
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_392px] items-start gap-6">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_392px]">
         {/* Locked while the orders are being sent: what is on screen is what was submitted. */}
         <fieldset disabled={pending} className="flex min-w-0 flex-col gap-5">
           <CutoffHero model={model} />
