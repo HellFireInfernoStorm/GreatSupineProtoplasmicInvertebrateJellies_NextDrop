@@ -455,29 +455,27 @@ describe.skipIf(!testDatabaseUrl)("field snapshot, sync push and heartbeat again
       expect((await get("nimal", "/api/notifications")).json().items[0].kind).toBe("damaged_reported");
     });
 
-    it("refuses TRIP_READY until every short line is resolved other than HOLD_TRIP (ADR 0005)", async () => {
-      const blocked = (
+    it("refuses TRIP_READY while a multi-line checklist is only partially accounted (ADR 0044)", async () => {
+      // After shorts were resolved above the trip is READY; reset so incompleteness can be refused again.
+      await prisma.trip.update({ where: { id: ids.trip }, data: { status: "PLANNED" } });
+      await prisma.tripStop.updateMany({ where: { tripId: ids.trip }, data: { tripStatus: "PLANNED" } });
+      await prisma.orderEvent.deleteMany({ where: { type: "TRIP_READY", tripId: ids.trip } });
+      // Eggs were confirmed earlier; clear their projection so only milk remains accounted.
+      await prisma.orderLine.update({ where: { id: lines.aEggs }, data: { qtyLoaded: 0 } });
+
+      const partial = (
         await push("loader", [ev("loader", "TRIP_READY", { tripId: ids.trip }, { tripId: ids.trip })])
       ).json();
-      expect(blocked.results[0]).toMatchObject({ status: "REJECTED", code: "ILLEGAL_TRANSITION", index: 0 });
-      await prisma.orderEvent.create({
-        data: {
-          type: "SHORT_RESOLVED",
-          source: "SERVER",
-          actorRole: "DISPATCHER",
-          actorUserId: ids.dispatcher,
-          capturedAt: clock,
-          orderId: ids.orderA,
-          payload: { orderId: ids.orderA, lineId: lines.aMilk, outcome: "SHIP_PARTIAL" },
-        },
-      });
-      const ready = (
-        await push("loader", [ev("loader", "TRIP_READY", { tripId: ids.trip }, { tripId: ids.trip })])
-      ).json();
-      expect(ready.results[0].status).toBe("ACCEPTED");
+      expect(partial.results[0]).toMatchObject({ status: "REJECTED", code: "ILLEGAL_TRANSITION" });
+      expect((await prisma.trip.findUniqueOrThrow({ where: { id: ids.trip } })).status).toBe("PLANNED");
+
+      // Offline-style confirm of the missing line, then ready in the same batch.
+      const complete = await push("loader", [
+        ev("loader", "LOAD_CONFIRMED", { orderId: ids.orderA }, { lines: [{ lineId: lines.aEggs, qtyLoaded: 8 }] }),
+        ev("loader", "TRIP_READY", { tripId: ids.trip }, { tripId: ids.trip }),
+      ]);
+      expect(complete.json().results.map((r: { status: string }) => r.status)).toEqual(["ACCEPTED", "ACCEPTED"]);
       expect((await prisma.trip.findUniqueOrThrow({ where: { id: ids.trip } })).status).toBe("READY");
-      const stops = await prisma.tripStop.findMany({ where: { tripId: ids.trip } });
-      expect(stops.every((s) => s.tripStatus === "READY")).toBe(true);
     });
 
     it("handles a partial batch: bad events are rejected with their index, good neighbours are accepted", async () => {

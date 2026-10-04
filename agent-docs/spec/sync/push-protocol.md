@@ -43,7 +43,7 @@ Ingest details (ADR 0034):
 - **Writes.** Status moves by compare-and-set and the event by `createMany({ skipDuplicates: true })`; a lost race retries. An unexpected server error fails the request (5xx) so the client retries the whole, idempotent batch.
 - **Classification** ([recovery-and-conflicts.md](recovery-and-conflicts.md), ADR 0040). A clash is stored `HELD` with an open conflict and answers `HELD_CONFLICT`; a retry answers the same conflict. An illegal field fact is held as `ILLEGAL_TRANSITION`; other illegal events are rejected. A late earlier-stage fact is recorded without moving status.
 - **Trip facts.**
-  - `TRIP_READY` moves PLANNED to READY. It is refused while `rules.shortLinesBlockingReady` reports lines.
+  - `TRIP_READY` moves PLANNED to READY. It is refused while `rules.tripChecklistReadiness` reports incomplete checklist lines or dispatcher-blocking shorts (ADR 0044; shorts via `shortLinesBlockingReady`, ADR 0005).
   - `TRIP_DEPARTED` moves PLANNED or READY to DEPARTED and derives `ORDER_OUT_FOR_DELIVERY` for `rules.ordersGoingOut`.
 - **Line quantities.** `LOAD_CONFIRMED` sets loaded quantities. A delivering `STOP_OUTCOME` sets delivered quantities and the order's confirmed-after-sync time.
 

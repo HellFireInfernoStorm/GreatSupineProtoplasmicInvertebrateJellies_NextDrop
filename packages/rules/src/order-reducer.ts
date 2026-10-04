@@ -87,6 +87,10 @@ export interface DamagedLine {
   readonly lineId: string;
   readonly qty: number;
 }
+export interface LoadedLine {
+  readonly lineId: string;
+  readonly qtyLoaded: number;
+}
 export const SHORT_OUTCOMES = ["SHIP_PARTIAL", "HOLD_TRIP", "BACKORDER"] as const;
 export type ShortOutcome = (typeof SHORT_OUTCOMES)[number];
 export const STOP_OUTCOMES = ["FULL", "PARTIAL", "REFUSED", "FAILED"] as const;
@@ -164,6 +168,8 @@ export interface OrderState {
   /** Short and Damaged are flags with line detail, not statuses. */
   readonly short: readonly (ShortLine & { readonly resolution: ShortOutcome | null })[];
   readonly damaged: readonly DamagedLine[];
+  /** Per-line loaded quantities from `LOAD_CONFIRMED` (ADR 0044). Cleared on `LOAD_REVERSED`. */
+  readonly loaded: readonly LoadedLine[];
   readonly lastStopOutcome: StopOutcome | null;
   readonly pendingReversal: PendingReversal | null;
   /** HELD events waiting for a dispatcher decision, by event id. */
@@ -182,6 +188,7 @@ export function emptyOrderState(orderId: string): OrderState {
     deferralCount: 0,
     short: [],
     damaged: [],
+    loaded: [],
     lastStopOutcome: null,
     pendingReversal: null,
     held: {},
@@ -363,6 +370,16 @@ function assignmentOf(event: Extract<OrderEvent, { type: "ORDER_PLANNED" }>): As
   return { tripId, vehicleId, seq: seq ?? null, planVersion };
 }
 
+/** Latest qtyLoaded per lineId; later confirmations replace earlier ones for the same line. */
+function mergeLoaded(
+  prev: readonly LoadedLine[],
+  updates: readonly { lineId: string; qtyLoaded: number }[],
+): readonly LoadedLine[] {
+  const map = new Map(prev.map((l) => [l.lineId, l.qtyLoaded]));
+  for (const u of updates) map.set(u.lineId, u.qtyLoaded);
+  return [...map.entries()].map(([lineId, qtyLoaded]) => ({ lineId, qtyLoaded }));
+}
+
 /** State after moving to `target`, with the event's own record. */
 function withStatus(state: OrderState, event: OrderEvent, target: OrderStatus): OrderState {
   const next: OrderState = { ...state, status: target };
@@ -371,9 +388,11 @@ function withStatus(state: OrderState, event: OrderEvent, target: OrderStatus): 
       return { ...next, assignment: assignmentOf(event) };
     case "ORDER_DEFERRED":
       return { ...next, assignment: null, deferralCount: state.deferralCount + 1 };
+    case "LOAD_CONFIRMED":
+      return { ...next, loaded: mergeLoaded(state.loaded, event.payload.lines ?? []) };
     case "LOAD_REVERSED": {
       const r = state.pendingReversal;
-      const afterReversal: OrderState = { ...next, pendingReversal: null };
+      const afterReversal: OrderState = { ...next, pendingReversal: null, loaded: [] };
       if (target === "DEFERRED") return { ...afterReversal, assignment: null, deferralCount: state.deferralCount + 1 };
       return { ...afterReversal, assignment: r?.next && !("deferred" in r.next) ? r.next : null };
     }
@@ -429,8 +448,115 @@ export function unresolvedShortLines(state: OrderState): readonly ShortLine[] {
  * Short lines that keep a trip from `TRIP_READY`: unresolved, or resolved `HOLD_TRIP` (ADR 0005, event catalogue).
  * A trip may be marked ready only when no order on it has any.
  */
-export function shortLinesBlockingReady(state: OrderState): readonly ShortLine[] {
+export function shortLinesBlockingReady(
+  state: OrderState,
+): readonly (ShortLine & { readonly resolution: ShortOutcome | null })[] {
   return state.short.filter((l) => l.resolution === null || l.resolution === "HOLD_TRIP");
+}
+
+/** One ordered line the loader must account for on the checklist (ADR 0044). */
+export interface ChecklistLineInput {
+  readonly lineId: string;
+  readonly qtyOrdered: number;
+  /**
+   * Authoritative loaded quantity when known (OrderLine.qtyLoaded / Dexie projection).
+   * When omitted, uses the reducer's `state.loaded` for that line (0 if never confirmed).
+   */
+  readonly qtyLoaded?: number;
+}
+
+/** One order on a trip, with its ordered lines and reduced dock state. */
+export interface OrderChecklistInput {
+  readonly orderId: string;
+  readonly lines: readonly ChecklistLineInput[];
+  readonly state: OrderState;
+}
+
+export interface IncompleteChecklistLine {
+  readonly orderId: string;
+  readonly lineId: string;
+  readonly qtyOrdered: number;
+  readonly qtyAccounted: number;
+  readonly missing: number;
+}
+
+export interface BlockingShortLine {
+  readonly orderId: string;
+  readonly line: ShortLine & { readonly resolution: ShortOutcome | null };
+}
+
+/**
+ * Loader checklist readiness for a trip (ADR 0044).
+ * A line is checked when `qtyLoaded + ΣqtyShort + ΣqtyDamaged >= qtyOrdered`.
+ * Status `LOADED` alone is not enough: one `LOAD_CONFIRMED` line cannot cover a multi-line order.
+ * Dispatcher blockers reuse `shortLinesBlockingReady` (unresolved / `HOLD_TRIP`).
+ */
+export interface TripChecklistReadiness {
+  readonly ready: boolean;
+  readonly incompleteLines: readonly IncompleteChecklistLine[];
+  readonly blockingShorts: readonly BlockingShortLine[];
+}
+
+function sumByLine(rows: readonly { readonly lineId: string; readonly qty: number }[], lineId: string): number {
+  let total = 0;
+  for (const row of rows) if (row.lineId === lineId) total += row.qty;
+  return total;
+}
+
+function loadedQty(state: OrderState, lineId: string, override?: number): number {
+  if (override !== undefined) return override;
+  return state.loaded.find((l) => l.lineId === lineId)?.qtyLoaded ?? 0;
+}
+
+/** Readiness for one order: incomplete lines and short blockers. */
+export function orderChecklistReadiness(
+  orderId: string,
+  lines: readonly ChecklistLineInput[],
+  state: OrderState,
+): Pick<TripChecklistReadiness, "incompleteLines" | "blockingShorts"> {
+  const incompleteLines: IncompleteChecklistLine[] = [];
+  for (const line of lines) {
+    const qtyLoaded = loadedQty(state, line.lineId, line.qtyLoaded);
+    const qtyShort = sumByLine(
+      state.short.map((l) => ({ lineId: l.lineId, qty: l.qtyShort })),
+      line.lineId,
+    );
+    const qtyDamaged = sumByLine(state.damaged, line.lineId);
+    const qtyAccounted = qtyLoaded + qtyShort + qtyDamaged;
+    if (qtyAccounted < line.qtyOrdered) {
+      incompleteLines.push({
+        orderId,
+        lineId: line.lineId,
+        qtyOrdered: line.qtyOrdered,
+        qtyAccounted,
+        missing: line.qtyOrdered - qtyAccounted,
+      });
+    }
+  }
+  const blockingShorts = shortLinesBlockingReady(state).map((line) => ({
+    orderId,
+    line,
+  }));
+  return { incompleteLines, blockingShorts };
+}
+
+/**
+ * Trip-level gate consumed by API `TRIP_READY` and the Loader UI (#52).
+ * `ready` is true only when every line is checked and no short blocks departure.
+ */
+export function tripChecklistReadiness(orders: readonly OrderChecklistInput[]): TripChecklistReadiness {
+  const incompleteLines: IncompleteChecklistLine[] = [];
+  const blockingShorts: BlockingShortLine[] = [];
+  for (const order of orders) {
+    const part = orderChecklistReadiness(order.orderId, order.lines, order.state);
+    incompleteLines.push(...part.incompleteLines);
+    blockingShorts.push(...part.blockingShorts);
+  }
+  return {
+    ready: incompleteLines.length === 0 && blockingShorts.length === 0,
+    incompleteLines,
+    blockingShorts,
+  };
 }
 
 /**

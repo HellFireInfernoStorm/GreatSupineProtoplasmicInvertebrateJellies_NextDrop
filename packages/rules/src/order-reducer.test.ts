@@ -5,11 +5,13 @@ import {
   applyEvent,
   emptyOrderState,
   isAllowedTransition,
+  orderChecklistReadiness,
   ordersGoingOut,
   PROGRESS_RANK,
   reduceOrder,
   TRANSITIONS,
   shortLinesBlockingReady,
+  tripChecklistReadiness,
   unresolvedShortLines,
 } from "./order-reducer";
 
@@ -267,12 +269,171 @@ describe("flags: short and damaged are not statuses", () => {
     expect(shortLinesBlockingReady(s)).toEqual([]);
   });
 
+  it("records LOAD_CONFIRMED line quantities and clears them on LOAD_REVERSED", () => {
+    let s = run(
+      placed(),
+      planned(),
+      ev("LOAD_CONFIRMED", {
+        lines: [
+          { lineId: "L1", qtyLoaded: 8 },
+          { lineId: "L2", qtyLoaded: 3 },
+        ],
+      }),
+    );
+    expect(s.status).toBe("LOADED");
+    expect(s.loaded).toEqual([
+      { lineId: "L1", qtyLoaded: 8 },
+      { lineId: "L2", qtyLoaded: 3 },
+    ]);
+    s = applyEvent(s, ev("LOAD_REVERSAL_REQUESTED", { to: "PLANNED", planVersion: 2 })).state;
+    s = applyEvent(s, ev("LOAD_REVERSED", {})).state;
+    expect(s.loaded).toEqual([]);
+  });
+
   it("treats informational events as no-ops", () => {
     const s = run(placed(), planned());
     expect(applyEvent(s, ev("PLAN_ACKNOWLEDGED", { planVersion: 1 })).outcome).toEqual({
       kind: "NO_EFFECT",
       reason: "INFORMATIONAL",
     });
+  });
+});
+
+describe("trip checklist readiness (ADR 0044)", () => {
+  const lines = [
+    { lineId: "L1", qtyOrdered: 12 },
+    { lineId: "L2", qtyOrdered: 8 },
+  ] as const;
+
+  it("treats an entirely unchecked order as incomplete, without inventing short blockers", () => {
+    const state = run(placed(), planned());
+    const part = orderChecklistReadiness(ORDER, lines, state);
+    expect(part.incompleteLines).toEqual([
+      { orderId: ORDER, lineId: "L1", qtyOrdered: 12, qtyAccounted: 0, missing: 12 },
+      { orderId: ORDER, lineId: "L2", qtyOrdered: 8, qtyAccounted: 0, missing: 8 },
+    ]);
+    expect(part.blockingShorts).toEqual([]);
+    expect(tripChecklistReadiness([{ orderId: ORDER, lines, state }]).ready).toBe(false);
+  });
+
+  it("does not treat LOADED status as complete when only one of several lines is confirmed", () => {
+    const state = run(placed(), planned(), ev("LOAD_CONFIRMED", { lines: [{ lineId: "L1", qtyLoaded: 12 }] }));
+    expect(state.status).toBe("LOADED");
+    const readiness = tripChecklistReadiness([{ orderId: ORDER, lines, state }]);
+    expect(readiness.ready).toBe(false);
+    expect(readiness.incompleteLines.map((l) => l.lineId)).toEqual(["L2"]);
+  });
+
+  it("accepts a completed checklist from loaded, short and damaged quantities", () => {
+    let state = run(
+      placed(),
+      planned(),
+      ev("LOAD_SHORT", { lines: [{ lineId: "L1", qtyShort: 4 }] }),
+      ev("LOAD_DAMAGED", { lines: [{ lineId: "L2", qty: 2 }] }),
+      ev("LOAD_CONFIRMED", {
+        lines: [
+          { lineId: "L1", qtyLoaded: 8 },
+          { lineId: "L2", qtyLoaded: 6 },
+        ],
+      }),
+      ev("SHORT_RESOLVED", { lineId: "L1", outcome: "SHIP_PARTIAL" }),
+    );
+    expect(tripChecklistReadiness([{ orderId: ORDER, lines, state }]).ready).toBe(true);
+
+    // Zero-loaded fully short / fully damaged lines also count as checked.
+    state = run(
+      placed(),
+      planned(),
+      ev("LOAD_SHORT", { lines: [{ lineId: "L1", qtyShort: 12 }] }),
+      ev("LOAD_DAMAGED", { lines: [{ lineId: "L2", qty: 8 }] }),
+      ev("SHORT_RESOLVED", { lineId: "L1", outcome: "BACKORDER" }),
+    );
+    expect(state.status).toBe("PLANNED");
+    expect(tripChecklistReadiness([{ orderId: ORDER, lines, state }]).ready).toBe(true);
+  });
+
+  it("preserves shortLinesBlockingReady: unresolved and HOLD_TRIP block; SHIP_PARTIAL and BACKORDER do not", () => {
+    const base = [
+      placed(),
+      planned(),
+      ev("LOAD_SHORT", { lines: [{ lineId: "L1", qtyShort: 12 }] }),
+      ev("LOAD_CONFIRMED", { lines: [{ lineId: "L2", qtyLoaded: 8 }] }),
+    ];
+    const unresolved = run(...base);
+    expect(tripChecklistReadiness([{ orderId: ORDER, lines, state: unresolved }])).toMatchObject({
+      ready: false,
+      incompleteLines: [],
+      blockingShorts: [{ orderId: ORDER, line: { lineId: "L1", qtyShort: 12, resolution: null } }],
+    });
+
+    const held = run(...base, ev("SHORT_RESOLVED", { lineId: "L1", outcome: "HOLD_TRIP" }));
+    expect(tripChecklistReadiness([{ orderId: ORDER, lines, state: held }]).blockingShorts[0]?.line.resolution).toBe(
+      "HOLD_TRIP",
+    );
+    expect(tripChecklistReadiness([{ orderId: ORDER, lines, state: held }]).ready).toBe(false);
+
+    const partial = run(...base, ev("SHORT_RESOLVED", { lineId: "L1", outcome: "SHIP_PARTIAL" }));
+    expect(tripChecklistReadiness([{ orderId: ORDER, lines, state: partial }]).ready).toBe(true);
+  });
+
+  it("prefers authoritative qtyLoaded overrides over reducer state (API / Dexie projection)", () => {
+    const state = run(placed(), planned());
+    const readiness = tripChecklistReadiness([
+      {
+        orderId: ORDER,
+        lines: [
+          { lineId: "L1", qtyOrdered: 12, qtyLoaded: 12 },
+          { lineId: "L2", qtyOrdered: 8, qtyLoaded: 8 },
+        ],
+        state,
+      },
+    ]);
+    expect(readiness.ready).toBe(true);
+  });
+
+  it("aggregates every order on the trip and stays ready after offline event replay", () => {
+    const eventsA = [
+      placed(),
+      planned("T1"),
+      ev("LOAD_CONFIRMED", {
+        lines: [
+          { lineId: "L1", qtyLoaded: 12 },
+          { lineId: "L2", qtyLoaded: 8 },
+        ],
+      }),
+    ];
+    const eventsB: OrderEvent[] = [
+      { ...placed(), id: "b-placed", subject: { orderId: "ORD2" } },
+      {
+        ...planned("T1"),
+        id: "b-planned",
+        subject: { orderId: "ORD2" },
+      },
+      {
+        ...ev("LOAD_SHORT", { lines: [{ lineId: "L3", qtyShort: 10 }] }),
+        id: "b-short",
+        subject: { orderId: "ORD2" },
+      },
+      {
+        ...ev("SHORT_RESOLVED", { lineId: "L3", outcome: "BACKORDER" }),
+        id: "b-resolved",
+        subject: { orderId: "ORD2" },
+      },
+    ];
+    const stateA = reduceOrder(ORDER, eventsA);
+    const stateB = reduceOrder("ORD2", eventsB);
+    const beforeReplay = tripChecklistReadiness([
+      { orderId: ORDER, lines, state: stateA },
+      { orderId: "ORD2", lines: [{ lineId: "L3", qtyOrdered: 10 }], state: stateB },
+    ]);
+    expect(beforeReplay.ready).toBe(true);
+
+    // Offline replay of the same facts yields the same gate.
+    const replayed = tripChecklistReadiness([
+      { orderId: ORDER, lines, state: reduceOrder(ORDER, eventsA) },
+      { orderId: "ORD2", lines: [{ lineId: "L3", qtyOrdered: 10 }], state: reduceOrder("ORD2", eventsB) },
+    ]);
+    expect(replayed).toEqual(beforeReplay);
   });
 });
 

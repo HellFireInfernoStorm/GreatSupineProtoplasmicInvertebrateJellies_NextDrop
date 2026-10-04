@@ -11,7 +11,7 @@ import {
   colomboLocal,
   ordersGoingOut,
   reduceOrder,
-  shortLinesBlockingReady,
+  tripChecklistReadiness,
   type OrderEvent,
 } from "@nextdrop/rules";
 import { Prisma, type PrismaClient } from "../../generated/prisma/client";
@@ -421,8 +421,19 @@ export function createIngest(deps: IngestDependencies) {
     let nextStatus: "READY" | "DEPARTED" | null = null;
     let goingOut: string[] = [];
     if (event.type === "TRIP_READY") {
-      if (states.some(({ state }) => shortLinesBlockingReady(state).length > 0))
-        throw new Refusal("ILLEGAL_TRANSITION");
+      // Checklist completeness + dispatcher short blockers share one rules gate (ADR 0044).
+      const readiness = tripChecklistReadiness(
+        states.map(({ order, state }) => ({
+          orderId: order.id,
+          lines: order.orderLine_orderId.map((line) => ({
+            lineId: line.id,
+            qtyOrdered: line.qtyOrdered,
+            qtyLoaded: line.qtyLoaded,
+          })),
+          state,
+        })),
+      );
+      if (!readiness.ready) throw new Refusal("ILLEGAL_TRANSITION");
       if (trip.status === "PLANNED") nextStatus = "READY";
     } else if (trip.status === "PLANNED" || trip.status === "READY") {
       nextStatus = "DEPARTED";
