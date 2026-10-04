@@ -11,3 +11,5 @@ dist/
 coverage/
 apps/api/src/generated/
 .pnpm-store/
+e2e/test-results/
+e2e/playwright-report/

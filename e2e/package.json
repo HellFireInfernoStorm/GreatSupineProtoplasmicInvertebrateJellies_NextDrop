@@ -1,0 +1,18 @@
+{
+  "name": "@nextdrop/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install --with-deps chromium"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@nextdrop/config": "workspace:*",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.19.0",
+    "typescript": "~6.0.3"
+  }
+}

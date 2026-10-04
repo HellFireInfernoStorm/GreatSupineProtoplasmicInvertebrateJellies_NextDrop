@@ -1,0 +1,44 @@
+# The judge walkthrough against a deployed stack (issues #62, #33). Run by hand from the Actions tab.
+# It resets the demo data of the stack it is pointed at, and every judge on that stack sees the reset (ADR 0007).
+name: e2e-public
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "The deployment to test, e.g. https://nextdrop.example.com. Its demo data is reset."
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  walkthrough:
+    name: Walkthrough against the deployed URL
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium for Playwright
+        run: pnpm e2e:install
+      - name: Walkthrough and accessibility smoke (Playwright)
+        run: pnpm e2e
+        env:
+          E2E_BASE_URL: ${{ inputs.base_url }}
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
