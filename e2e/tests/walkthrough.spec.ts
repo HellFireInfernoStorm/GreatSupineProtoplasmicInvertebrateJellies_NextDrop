@@ -49,18 +49,17 @@ test.describe("Judge walkthrough (§15.4)", () => {
     await expect(page.getByText(/^1 h 5\d min left$/)).toBeVisible();
     await expect(page.getByRole("radio", { name: "Tue 29 Sep" })).toBeChecked();
 
-    // The dry order.
+    // The clicks of the README's step 1: one visit to the catalogue, "+" on a dry item, then on the Chilled tab
+    // "+" on a chilled item. The chilled item becomes its own order for the same date.
+    const increase = (product: string) =>
+      page.getByRole("listitem").filter({ hasText: product }).getByRole("button", { name: "Increase quantity" });
     await page.getByRole("link", { name: "Add items from the catalogue" }).click();
-    await page.getByRole("spinbutton", { name: /Rice, 25 kg bag/ }).fill("4");
-    await page.getByRole("button", { name: "Done · 1 item in dry order" }).click();
-
-    // The chilled order: its own order for the same date.
+    await increase("Rice, 25 kg bag").click();
     await page.getByRole("tab", { name: /^Chilled/ }).click();
-    await page.getByRole("link", { name: "Add items from the catalogue" }).click();
-    await page.getByRole("spinbutton", { name: /Fresh milk/ }).fill("2");
+    await increase("Fresh milk, crate of 12").click();
     await page.getByRole("button", { name: "Done · 1 item in chilled order" }).click();
 
-    await page.getByRole("button", { name: "Review 2 orders · 6 units" }).click();
+    await page.getByRole("button", { name: "Review 2 orders · 2 units" }).click();
     await page.getByRole("button", { name: "Submit 2 orders" }).click();
 
     // The confirmation: one ID per order, for tomorrow.
@@ -193,7 +192,7 @@ test.describe("Judge walkthrough (§15.4)", () => {
     await expect(page.getByText("Next delivery · Tue 29 Sep")).toBeVisible();
     await expect(page.getByText(/^\d{2}:\d{2}–\d{2}:\d{2}$/)).toBeVisible();
     await expect(
-      page.getByText(new RegExp(`^Chilled · ${placed.chilled} · Trip T\\d+ · stop \\d+ · 2 units$`)),
+      page.getByText(new RegExp(`^Chilled · ${placed.chilled} · Trip T\\d+ · stop \\d+ · 1 unit$`)),
     ).toBeVisible();
   });
 
@@ -207,19 +206,19 @@ test.describe("Judge walkthrough (§15.4)", () => {
   // offline mode in the other (support/offline.ts).
   test.fixme("9. Switch the driver to force-offline; record two more stops offline (pending count visible).", async () => {});
 
-  // Waits on #61 (dispatcher D4).
+  // The D4 screens are merged (#128). Waits on the driver's offline deliveries of steps 8 and 9 (#53).
   test.fixme("10. Dispatcher edits a later stop and cancels a stop the driver already delivered offline. D4 shows the vehicle as no signal / last heard.", async () => {});
 
   // Waits on #53 (driver R1-R3).
   test.fixme("11. Driver reconnects: sync progress, plan-changed acknowledgement, and a clash card for the cancelled-but-delivered stop.", async () => {});
 
-  // Waits on #61 (dispatcher D4 and exceptions inbox).
+  // The exceptions inbox is merged (#128). Waits on the clash that steps 9 to 11 make (#53).
   test.fixme("12. Dispatcher exceptions inbox shows the clash with the POD photo; resolve it.", async () => {});
 
   // The screens are merged (#44), but the step needs a delivery at the hill store, which only steps 7 to 11 make
   // (#52, #53): no demo preset reaches it yet (#56).
   test.fixme("13. Store: sees delivered (double timestamp), confirms receipt of one order, reports a shortage on another.", async () => {});
 
-  // Waits on #61 (dispute resolution in D4) and #55 (capacity outlook).
+  // Dispute resolution is merged (#128). Waits on the dispute that step 13 opens and on #55 (capacity outlook).
   test.fixme("14. Dispatcher resolves the dispute; opens the capacity outlook.", async () => {});
 });
