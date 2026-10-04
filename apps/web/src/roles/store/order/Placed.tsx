@@ -87,21 +87,17 @@ function usePlacedActions() {
 /** Desktop: the "orders placed" dialog over the place-order screen, Figma `233:804`. */
 export function PlacedDialog() {
   const { t } = useTranslation("store/order");
-  const placed = useDraft((state) => state.placed);
-  const orders = placed ?? [];
+  const orders = useDraft((state) => state.placed);
   const { track, deliveries } = usePlacedActions();
-  // The Modal stays mounted and only `open` changes. Mounting it already open makes it close itself in development:
-  // React runs the mount effect twice there, and the kit's close handler takes the first run's `close` event for a
-  // real dismissal (reported on PR #98).
+  // Mounted only while there is something to show, so the next confirmation starts clean.
+  if (!orders || orders.length === 0) return null;
   return (
-    <Modal open={orders.length > 0} onClose={draft.dismissPlaced} title={t("placed.title", { count: orders.length })}>
+    <Modal open onClose={draft.dismissPlaced} title={t("placed.title", { count: orders.length })}>
       <div className="flex flex-col gap-4">
-        {orders[0] && (
-          <p className="text-sm text-muted">
-            {t("placed.subtitle", { day: formatDay(dateInstant(orders[0].currentDate)) })}
-          </p>
-        )}
-        {orders.length > 0 && <PlacedDetails orders={orders} />}
+        <p className="text-sm text-muted">
+          {t("placed.subtitle", { day: formatDay(dateInstant(orders[0]!.currentDate)) })}
+        </p>
+        <PlacedDetails orders={orders} />
         <div className="flex gap-3">
           <Button className="flex-1" icon={<Icon name="route" />} onClick={track}>
             {t("placed.track")}
