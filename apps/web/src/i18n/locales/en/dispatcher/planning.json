@@ -232,5 +232,21 @@
   "loadingState": "Loaded order assignments",
   "repeatDeferral": "Previous-run deferrals",
   "skippedPrevious": "Skipped previous run",
-  "stopLocked": "Locked · field fact or pinned load"
+  "stopLocked": "Locked · field fact or pinned load",
+  "outlookView": {
+    "loading": "Loading the outlook…",
+    "error": "The outlook could not be loaded.",
+    "empty": "No demand history for this depot yet.",
+    "chartLabel": "Weekly demand in m³ against a fleet capacity of {{capacity}} m³",
+    "axis": "m³ per week",
+    "barTitle": "{{week}}: {{demand}} m³",
+    "capacityLine": "Fleet capacity {{capacity}} m³",
+    "caption": "Weekly demand across brands. Seeded history, then a four-week moving average. The dashed line is the depot's weekly fleet volume.",
+    "tableCaption": "Weekly demand and capacity (m³)",
+    "week": "Week",
+    "demand": "Demand (m³)",
+    "chilled": "Chilled (m³)",
+    "capacity": "Capacity (m³)",
+    "utilisation": "Use of capacity"
+  }
 }

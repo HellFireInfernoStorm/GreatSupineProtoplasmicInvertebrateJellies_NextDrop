@@ -11,6 +11,7 @@ import { Logo } from "../../ui/Logo";
 import { Button } from "../../ui";
 import { Notifications } from "./Notifications";
 import { Workspace } from "./Workspace";
+import { Outlook } from "./Outlook";
 import { DeliveryProgress } from "./progress/DeliveryProgress";
 import { useDispatchFeed } from "./feed";
 import { initialDepot } from "./depot";
@@ -207,6 +208,8 @@ function DispatcherFrame() {
           </header>
           {live ? (
             <DeliveryProgress key={depot} depot={depot} />
+          ) : page === "outlook" ? (
+            <Outlook key={`${depot}|${date}`} depot={depot} date={date} />
           ) : (
             <Workspace key={`${depot}|${date}`} depot={depot} date={date} />
           )}
