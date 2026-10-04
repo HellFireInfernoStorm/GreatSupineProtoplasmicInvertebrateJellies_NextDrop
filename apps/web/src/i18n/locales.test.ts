@@ -52,7 +52,15 @@ describe("locale files", () => {
   });
   it("has English for every namespace, as plain strings", () => {
     expect(Object.keys(english).sort()).toEqual(
-      ["dispatcher/login", "driver/login", "loader/login", "shared/common", "shared/ui", "store/login"].sort(),
+      [
+        "dispatcher/login",
+        "dispatcher/planning",
+        "driver/login",
+        "loader/login",
+        "shared/common",
+        "shared/ui",
+        "store/login",
+      ].sort(),
     );
     for (const tree of Object.values(english)) {
       expect(JSON.stringify(tree)).not.toContain('"review"');
