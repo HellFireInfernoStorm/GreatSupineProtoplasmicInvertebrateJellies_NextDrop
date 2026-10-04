@@ -18,7 +18,25 @@ interface Draft {
   data: DraftData;
 }
 
-const day = (path = "") => `/api/dispatch/days/${STORY.deliveryDay}${path}?depot=${DEPOTS.peliyagoda}`;
+const dayAt = (depot: string, path = "") => `/api/dispatch/days/${STORY.deliveryDay}${path}?depot=${depot}`;
+const day = (path = "") => dayAt(DEPOTS.peliyagoda, path);
+
+/**
+ * Stands in for the Kandy half of steps 3 and 5 (issue #49): propose the Kandy plan and publish it as proposed.
+ * The field steps 7 to 12 run on the Kandy hill trip (§15.5), so the Driver needs that plan published.
+ */
+export async function publishKandyPlan(baseURL: string): Promise<void> {
+  const api = await ApiSession.dispatcher(baseURL, DEPOTS.kandy);
+  try {
+    const { draft } = await api.get<{ draft: Draft | null }>(dayAt(DEPOTS.kandy, "/draft"));
+    const proposed = await api.post<{ draft: Draft }>(dayAt(DEPOTS.kandy, "/propose"), {
+      revision: draft?.revision ?? 0,
+    });
+    await api.post(dayAt(DEPOTS.kandy, "/publish"), { revision: proposed.draft.revision });
+  } finally {
+    await api.dispose();
+  }
+}
 
 /**
  * Stands in for step 5 (dispatcher D3, issue #49): on the Peliyagoda draft the dispatcher saved in steps 3 and 4,
