@@ -80,7 +80,7 @@ export function Outlook({ depot, date }: { depot: string; date: string }) {
                 width={band * 0.6}
                 y={y(row.demand)}
                 height={pad.top + plotH - y(row.demand)}
-                fill={row.demand > capacity ? "var(--color-danger, #c0392b)" : "var(--color-primary, #2563eb)"}
+                fill={row.demand > capacity ? "var(--nd-danger)" : "var(--nd-primary)"}
                 rx={2}
               >
                 <title>{t("outlookView.barTitle", { week: row.label, demand: fmt(row.demand) })}</title>
