@@ -1,3 +1,4 @@
+import { isDriverStopTerminal, validateStopOutcome } from "@nextdrop/rules";
 import { Pill } from "../../ui/StatusPill";
 import { useRef, useState, type PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -136,6 +137,7 @@ function StopForm({
   const [flagOpen, setFlagOpen] = useState(false);
   const [flagNote, setFlagNote] = useState("");
   const canvas = useRef<HTMLCanvasElement>(null);
+  const signatureRef = useRef<string | undefined>(undefined);
   const departed =
     trip.status === "DEPARTED" ||
     trip.status === "COMPLETE" ||
@@ -214,8 +216,9 @@ function StopForm({
     });
   const save = () =>
     act(async () => {
-      let signature: string | undefined;
-      if (signed && canvas.current) {
+      if (validation.codes.length) throw new Error(validation.codes.join(", "));
+      let signature = signed ? signatureRef.current : undefined;
+      if (signed && canvas.current && !signature) {
         const image = document.createElement("canvas");
         image.width = canvas.current.width;
         image.height = canvas.current.height;
@@ -226,6 +229,7 @@ function StopForm({
         const bytes = await new Promise<Blob | null>((resolve) => image.toBlob(resolve, "image/png"));
         if (!bytes) throw new Error("Signature encoding failed");
         signature = await queuePhoto(bytes, user.id);
+        signatureRef.current = signature;
       }
       const intents = deliveryIntents({
         stop,
@@ -254,11 +258,16 @@ function StopForm({
       );
       setStep("saved");
     });
-  const selectedPartialValid =
-    outcome !== "PARTIAL" ||
-    (stop.order.lines.some((l) => (quantities[l.id] ?? 0) > 0) &&
-      stop.order.lines.some((l) => (quantities[l.id] ?? 0) < l.qtyLoaded));
-  const terminal = ["DELIVERED", "FAILED", "CONFIRMED", "DISPUTED"].includes(stop.order.status) && !receipt;
+  const validation = validateStopOutcome({
+    lines: stop.order.lines,
+    outcome,
+    quantities,
+    reason,
+    receiver,
+    photos,
+    signature: signed ? "signature" : undefined,
+  });
+  const terminal = isDriverStopTerminal(stop.order.status);
   return (
     <Frame
       back
@@ -270,16 +279,7 @@ function StopForm({
             {t("arrived")}
           </Action>
         ) : step === "proof" ? (
-          <Action
-            loading={busy}
-            disabled={
-              !receiver.trim() ||
-              (!signed && !photos.length) ||
-              (outcome !== "FULL" && (!reason || !photos.length)) ||
-              !selectedPartialValid
-            }
-            onClick={() => void save()}
-          >
+          <Action loading={busy} disabled={validation.codes.length > 0} onClick={() => void save()}>
             {t("saveDelivery")}
           </Action>
         ) : step === "saved" ? (
@@ -431,7 +431,13 @@ function StopForm({
             <input autoComplete="name" value={receiver} onChange={(e) => setReceiver(e.target.value)} />
           </FormField>
           <h2>{t("signatureOrPhoto")}</h2>
-          <Signature canvas={canvas} onSigned={setSigned} />
+          <Signature
+            canvas={canvas}
+            onSigned={(value) => {
+              signatureRef.current = undefined;
+              setSigned(value);
+            }}
+          />
           <FormField id="proof-photo" label={t(outcome === "FULL" ? "photoOptional" : "photoRequired")}>
             <input
               type="file"
@@ -445,6 +451,7 @@ function StopForm({
           <Button
             variant="ghost"
             onClick={() => {
+              signatureRef.current = undefined;
               setSigned(false);
               setStep("outcome");
             }}

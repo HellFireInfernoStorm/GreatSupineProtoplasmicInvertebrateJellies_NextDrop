@@ -235,3 +235,11 @@ it("distinguishes received clashes from applied facts and waits for context, pho
   ).toBe(false);
   expect(deliveryDone(input().stop, { ...receipt(), events: held }, held)).toBe(false);
 });
+
+it("treats received and cancelled orders as done without a local receipt", () => {
+  const { stop } = input();
+  for (const status of ["RECEIVED", "CANCELLED"] as const) {
+    stop.order.status = status;
+    expect(deliveryDone(stop, undefined, [])).toBe(true);
+  }
+});

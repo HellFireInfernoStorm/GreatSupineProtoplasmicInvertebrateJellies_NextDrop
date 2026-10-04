@@ -1,3 +1,4 @@
+import { isDriverStopTerminal, validateStopOutcome } from "@nextdrop/rules";
 import type { ApiDto, ClientEvent, TripDto } from "@nextdrop/contracts";
 import type { FieldReceipt, OutboxEntry, LocalConflict } from "../../sync/database";
 import type { EventIntent, FieldRepository } from "../../sync/repository";
@@ -22,6 +23,7 @@ export function receiptEvents(receipt: FieldReceipt, outbox: OutboxEntry[]): Out
   return receipt.events.map((event) => outbox.find((row) => row.clientEventId === event.clientEventId) ?? event);
 }
 export function deliveryDone(stop: Stop, receipt: FieldReceipt | undefined, outbox: OutboxEntry[]): boolean {
+  if (isDriverStopTerminal(stop.order.status)) return true;
   if (receipt) {
     const events = receiptEvents(receipt, outbox);
     return (
@@ -29,7 +31,7 @@ export function deliveryDone(stop: Stop, receipt: FieldReceipt | undefined, outb
       events.some((e) => e.type === "POD_CAPTURED" && projected(e))
     );
   }
-  return ["DELIVERED", "PARTIAL", "REFUSED", "FAILED", "CONFIRMED", "DISPUTED"].includes(stop.order.status);
+  return false;
 }
 export function savedDeliveryCount(receipts: FieldReceipt[], outbox: OutboxEntry[]): number {
   return receipts.filter(
@@ -49,16 +51,8 @@ export function deliveryIntents(input: {
   photos: string[];
 }): EventIntent[] {
   const { stop, trip, outcome, userId } = input;
-  const lines = stop.order.lines.map((line) => {
-    const delivered = outcome === "FULL" ? line.qtyLoaded : outcome === "PARTIAL" ? input.quantities[line.id] : 0;
-    if (delivered === undefined || !Number.isSafeInteger(delivered) || delivered < 0 || delivered > line.qtyLoaded)
-      throw new Error("Invalid delivery quantity");
-    return { lineId: line.id, qtyDelivered: delivered, qtyReturned: line.qtyLoaded - delivered };
-  });
-  if (outcome === "PARTIAL" && (!lines.some((l) => l.qtyDelivered > 0) || !lines.some((l) => l.qtyReturned > 0)))
-    throw new Error("Partial must include delivered and returned items");
-  if (outcome !== "FULL" && (!input.reason || !input.photos.length)) throw new Error("Reason and photo required");
-  if (!input.receiver.trim() || (!input.signature && !input.photos.length)) throw new Error("Proof required");
+  const { lines, codes } = validateStopOutcome({ ...input, lines: stop.order.lines });
+  if (codes.length) throw new Error(codes.join(", "));
   const subject = { orderId: stop.order.id, tripId: trip.id, vehicleId: trip.vehicleId };
   const actor = { userId, role: "DRIVER" as const };
   return [
