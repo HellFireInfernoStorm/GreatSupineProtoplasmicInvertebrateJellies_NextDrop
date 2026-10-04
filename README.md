@@ -191,9 +191,9 @@ These depart from the Day 5 design as submitted. Each is recorded in an ADR in `
    - the issue kinds are Short, Damaged, Warm on arrival and Something else, where the frame has "Wrong item";
    - quantities are shown as "units", because an order's lines can have different unit labels.
 
-Driver run, proof and recovery ([ADR 0048](agent-docs/adr/0048-driver-run-proof-and-recovery.md), #53 / #130): each order in an adjacent-outlet card has its own recording route; settings expose language and diagnostics. Recovery follows real queue/context/confirmation gates instead of prototype timing. Server-received held facts remain Needs dispatch beside All synced. Existing real fixture IDs and grouping follow ADRs 0008 and 0010.
+Driver run, proof and recovery ([ADR 0049](agent-docs/adr/0049-driver-run-proof-and-recovery.md), #53 / #130): each order in an adjacent-outlet card has its own recording route; settings expose language and diagnostics. Recovery follows real queue/context/confirmation gates instead of prototype timing. Server-received held facts remain Needs dispatch beside All synced. Existing real fixture IDs and grouping follow ADRs 0008 and 0010.
 
-**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:30. This list covers the ADRs up to 0048. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). The Loader, Driver and Dispatcher D4 screens are not merged yet: their issues are labelled as departures (#52, #61) and each needs a line here once its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
+**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:30. This list covers the ADRs up to 0049. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). The Loader, Driver and Dispatcher D4 screens are not merged yet: their issues are labelled as departures (#52, #61) and each needs a line here once its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
 
 ## Scope: what is not built
 
@@ -333,7 +333,8 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0045 D | Store deliveries, tracking, receipt and issues: routes and departures |
 | 0046 | Dispatcher planning validation context |
 | 0047 | Shared Loader checklist readiness for TRIP_READY |
-| 0048 D | Driver run, proof and recovery |
+| 0048 | Kandy story workshop fixture |
+| 0049 D | Driver run, proof and recovery |
 
 ## Submission documents
 

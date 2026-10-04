@@ -38,6 +38,6 @@ sources: guide §7.2
 
 Trip-level facts are stored once (subject `tripId`), vehicle-level facts once (subject `vehicleId`); per-order consequences such as `ORDER_OUT_FOR_DELIVERY` are derived in the same transaction as `TRIP_DEPARTED`.
 
-## Driver outcome and proof policy (ADR 0048)
+## Driver outcome and proof policy (ADR 0049)
 
 The Driver save gate calls `rules.validateStopOutcome`. FULL delivers loaded quantities. PARTIAL uses safe integer quantities from zero to loaded and must include both delivered and returned items across the order. REFUSED and FAILED deliver zero and return loaded quantities. Every outcome requires a receiver name and a signature or photo; every non-full outcome also requires a reason and photo. Outcome, POD and local receipt commit atomically before Saved is shown. These are Driver validation requirements; API adoption is a separate change and existing wire payloads remain unchanged.
