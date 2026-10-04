@@ -23,7 +23,7 @@ pre-commit:
 commit-msg:
   commands:
     subject:
-      run: node scripts/agent-context/commit-msg.mjs {1}
+      run: node scripts/agent-context/commit-msg.mjs
 
 pre-push:
   commands:

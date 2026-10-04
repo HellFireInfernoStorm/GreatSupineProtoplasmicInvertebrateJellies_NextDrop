@@ -18,3 +18,6 @@ sources: guide §8, §8.1
 Manual-only planning is also valid: the dispatcher can start from an empty draft and the same validator guards every move.
 
 The scoped day response includes `planningContext` from the server day-input loader: per-vehicle weekly fuel used on other published, non-cancelled days (excluding the selected day), queued-outlet service age and previous-run deferral state, and queued LOADED-order vehicle/trip-number pins with pending reversal state. The UI passes this context into both shared validators, displays weekly fuel and service age, and still calls server validation before each save. The context may change after it is fetched; it never replaces revision checks or server revalidation.
+
+Planning reads also retain current published-trip orders beyond the allocatable queue. planningContext.publishedStops lists their orderId, vehicleId, tripNo, 1-based seq, locked and departed flags. Locked stops show a lock label and cannot move; unreported departed stops can move to the end of their own trip or to Unassigned for D3 review. New cargo and cross-trip moves on departed trips are refused. Propose is refused after departure; edit the retained draft instead (ADR 0053).
+

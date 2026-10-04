@@ -24,6 +24,18 @@ import { orderSchema, tripSchema, vehicleSchema } from "./resources";
 
 export const dayQuerySchema = z.strictObject({ depot: nonempty });
 export const planningContextSchema = z.strictObject({
+  publishedStops: z
+    .array(
+      z.strictObject({
+        orderId: uuidV7,
+        vehicleId: uuidV7,
+        tripNo: z.union([z.literal(1), z.literal(2)]),
+        seq: z.number().int().positive(),
+        locked: z.boolean(),
+        departed: z.boolean(),
+      }),
+    )
+    .optional(),
   vehicleFuel: z.array(z.strictObject({ vehicleId: uuidV7, usedOtherDaysThisWeekMl: count })),
   outletService: z.array(
     z.strictObject({ outletId: uuidV7, daysSinceLastServed: count, deferredLastRun: z.boolean() }),
