@@ -1,3 +1,7 @@
+import { sequenceStops } from "./etas";
+import type { Plan } from "./validator";
+import type { ReferenceData } from "./reference";
+
 /** Canonical published placement and server fact lock (ADR 0053). Sequence is 1-based. */
 export interface PublishedStop {
   readonly orderId: string;
@@ -9,6 +13,32 @@ export interface PublishedStop {
 }
 
 export type StopPlacement = Pick<PublishedStop, "orderId" | "vehicleId" | "tripNo" | "seq">;
+
+/** Compare locks against the delivery sequence that schedules and publish actually use. */
+export function stopPlacements(plan: Pick<Plan, "trips">, ref: Pick<ReferenceData, "outlets">): StopPlacement[] {
+  return plan.trips.flatMap((trip) => {
+    // Invalid drafts still need validator diagnostics rather than an unknown-outlet exception here.
+    const orders = trip.orders.every((order) => ref.outlets.has(order.outletId))
+      ? sequenceStops(trip, ref)
+      : trip.orders;
+    return orders.map((order, index) => ({
+      orderId: order.id,
+      vehicleId: trip.vehicleId,
+      tripNo: trip.tripNo,
+      seq: index + 1,
+    }));
+  });
+}
+
+/** Only departed published trips retain dispatcher draft order (ADR 0053). */
+export function preserveDraftOrder(
+  trip: Pick<PublishedStop, "vehicleId" | "tripNo">,
+  publishedStops: readonly PublishedStop[] = [],
+): boolean {
+  return publishedStops.some(
+    (stop) => stop.departed && stop.vehicleId === trip.vehicleId && stop.tripNo === trip.tripNo,
+  );
+}
 
 /** First illegal edit, or null. Departed cargo may only leave or move later on its original trip. */
 export function lockedStopChange(current: readonly PublishedStop[], next: readonly StopPlacement[]): string | null {

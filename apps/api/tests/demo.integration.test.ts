@@ -282,9 +282,9 @@ describe.skipIf(!url)("demo module (PostgreSQL)", () => {
     }, 60000);
 
     it("refuses the presets that are not built yet", async () => {
-      const res = await asDispatcher("POST", "/api/demo/reset", { preset: "plan-published" });
+      const res = await asDispatcher("POST", "/api/demo/reset", { preset: "loading" });
       expect(res.statusCode).toBe(409);
-      expect(res.json()).toMatchObject({ code: "ILLEGAL_TRANSITION", params: { preset: "plan-published" } });
+      expect(res.json()).toMatchObject({ code: "ILLEGAL_TRANSITION", params: { preset: "loading" } });
     });
   });
 

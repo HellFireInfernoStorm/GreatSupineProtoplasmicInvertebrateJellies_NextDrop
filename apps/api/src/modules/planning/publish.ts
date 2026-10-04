@@ -13,6 +13,7 @@ import {
   isoWeekOf,
   validatePlan,
   lockedStopChange,
+  stopPlacements,
   type AllocationOrder,
   type LocalDate,
   type PlanTrip,
@@ -120,17 +121,7 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
       const validation = validatePlan(plan, reference.ref, inputs.validation);
       // Preserve ADR 0004's hard validation response for removing/moving pinned loaded cargo.
       if (validation.violations.some((v) => v.code === "ORDER_ALREADY_LOADED")) throw validationFailed(validation);
-      const illegalStop = lockedStopChange(
-        inputs.validation.publishedStops ?? [],
-        data.trips.flatMap((t) =>
-          t.orderIds.map((orderId, seq) => ({
-            orderId,
-            vehicleId: reference.ids.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId,
-            tripNo: t.tripNo,
-            seq: seq + 1,
-          })),
-        ),
-      );
+      const illegalStop = lockedStopChange(inputs.validation.publishedStops ?? [], stopPlacements(plan, reference.ref));
       if (illegalStop) throw new ApiHttpError(409, "STOP_LOCKED", "errors.stopLocked", { orderId: illegalStop });
       if (!validation.ok) throw validationFailed(validation);
 

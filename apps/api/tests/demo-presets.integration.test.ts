@@ -142,8 +142,26 @@ describe.skipIf(!url)("demo presets (PostgreSQL)", () => {
     }, 90000);
   });
 
+  describe("plan-published", () => {
+    it("proposes and publishes the stock plan for both depots' Tue 29 Sep", async () => {
+      const res = await reset("plan-published");
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.json()).toMatchObject({ preset: "plan-published" });
+      const days = await database.prisma!.planningDay.findMany({
+        where: { date: new Date("2026-09-29T00:00:00Z") },
+        select: { depot: true, state: true, currentVersion: true },
+        orderBy: { depot: "asc" },
+      });
+      expect(days).toEqual([
+        { depot: "Kandy", state: "PUBLISHED", currentVersion: 1 },
+        { depot: "Peliyagoda", state: "PUBLISHED", currentVersion: 1 },
+      ]);
+      expect(await database.prisma!.trip.count()).toBeGreaterThan(0);
+    }, 90000);
+  });
+
   describe("presets that are not built yet", () => {
-    it.each(["plan-published", "loading", "mid-run", "clash-ready"])("refuses %s with 409", async (preset) => {
+    it.each(["loading", "mid-run", "clash-ready"])("refuses %s with 409", async (preset) => {
       const res = await reset(preset);
       expect(res.statusCode).toBe(409);
       expect(res.json()).toMatchObject({ code: "ILLEGAL_TRANSITION", params: { preset } });

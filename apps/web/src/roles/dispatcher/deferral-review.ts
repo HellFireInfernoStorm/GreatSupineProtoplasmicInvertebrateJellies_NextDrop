@@ -10,11 +10,11 @@ export function buildDeferralReview(
   unavailable: ReadonlySet<string>,
   breakdown: ReadonlySet<string>,
 ) {
-  const plan = toPlan(data, day.queue, day.date, reference);
+  const ctx = validationContext(day.planningContext, reference);
+  const plan = toPlan(data, day.queue, day.date, reference, ctx);
   const assigned = new Set(data.trips.flatMap((trip) => trip.orderIds));
   const chosen = new Map(data.deferrals.map((row) => [row.orderId, row]));
   const service = new Map(day.planningContext.outletService.map((row) => [row.outletId, row]));
-  const ctx = validationContext(day.planningContext, reference);
   return day.queue
     .filter((order) => !assigned.has(order.id))
     .map((order) => {

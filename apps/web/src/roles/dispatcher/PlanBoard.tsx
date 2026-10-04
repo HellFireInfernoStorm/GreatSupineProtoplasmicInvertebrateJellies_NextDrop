@@ -8,6 +8,7 @@ import {
   moveOrder,
   evaluate,
   lockedDraftChange,
+  toPlan,
   type DraftData,
   type Order,
   type Outlet,
@@ -62,7 +63,11 @@ export function PlanBoard({
     const outlet = outlets.find((out) => out.id === order.outletId);
     const locked = context.publishedStops?.some((s) => s.orderId === order.id && s.locked) ?? false;
     const allowed = (destination: string | null) =>
-      lockedDraftChange(moveOrder(data, order.id, destination), reference, context) === null;
+      lockedDraftChange(
+        toPlan(moveOrder(data, order.id, destination), orders, date, reference, context),
+        reference,
+        context,
+      ) === null;
     return (
       <div className="dispatch-order-card" key={order.id}>
         <strong>

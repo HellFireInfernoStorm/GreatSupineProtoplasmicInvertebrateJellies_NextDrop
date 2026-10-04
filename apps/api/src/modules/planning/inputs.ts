@@ -7,6 +7,7 @@ import {
   dayOfWeek,
   daysBetween,
   litresToMillilitres,
+  preserveDraftOrder,
   type AllocationInput,
   type AllocationOrder,
   type AllocationResult,
@@ -220,13 +221,16 @@ export function toRulesPlan(data: DraftData, inputs: DayInputs): Plan {
     byId.get(id) ?? { id, outletId: "", temp: "ambient", weightG: 0, volumeL: 0, deliveryDate: inputs.date };
   return {
     date: inputs.date,
-    trips: data.trips.map((t) => ({
-      preserveOrder: true,
-      ref: t.ref,
-      vehicleId: inputs.reference.ids.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId,
-      tripNo: t.tripNo,
-      orders: t.orderIds.map(order),
-    })),
+    trips: data.trips.map((t) => {
+      const vehicleId = inputs.reference.ids.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId;
+      return {
+        preserveOrder: preserveDraftOrder({ vehicleId, tripNo: t.tripNo }, inputs.validation.publishedStops),
+        ref: t.ref,
+        vehicleId,
+        tripNo: t.tripNo,
+        orders: t.orderIds.map(order),
+      };
+    }),
     orders: inputs.allocation.orders,
     deferrals: data.deferrals.map((d) => ({
       orderId: d.orderId,
