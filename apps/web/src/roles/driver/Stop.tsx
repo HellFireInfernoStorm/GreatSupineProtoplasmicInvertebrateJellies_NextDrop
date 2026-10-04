@@ -267,7 +267,7 @@ function StopForm({
     photos,
     signature: signed ? "signature" : undefined,
   });
-  const terminal = isDriverStopTerminal(stop.order.status);
+  const terminal = isDriverStopTerminal(stop.order.status) && !receipt;
   return (
     <Frame
       back
