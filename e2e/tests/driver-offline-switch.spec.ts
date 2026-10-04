@@ -5,7 +5,7 @@ import { signIn } from "../support/signIn";
 // #147: the Driver's "Simulate offline" switch turns off after a reload, and the phone reconnects at once.
 // Settings used to show the switch unchecked until the saved value loaded, so a check read too early saw "off".
 test("the Simulate offline switch shows its saved state and turns off straight away", async ({ browser, demo }) => {
-  await demo.reset("mid-run");
+  await demo.reset();
   const driver = await signIn(browser, ACCOUNTS.driver, { viewport: "phone" });
   try {
     const { page } = driver;
