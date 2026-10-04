@@ -196,5 +196,15 @@
       "text": "ஒத்திசைவுக்குக் காத்திருக்கிறது",
       "review": "draft"
     }
+  },
+  "tripReadiness": {
+    "waitingOnDispatcher": {
+      "text": "விநியோகத் திட்டமிடுநரின் முடிவுக்காகக் காத்திருக்கிறது",
+      "review": "draft"
+    },
+    "heldByDispatcher": {
+      "text": "விநியோகத் திட்டமிடுநரால் நிறுத்திவைக்கப்பட்டது",
+      "review": "draft"
+    }
   }
 }

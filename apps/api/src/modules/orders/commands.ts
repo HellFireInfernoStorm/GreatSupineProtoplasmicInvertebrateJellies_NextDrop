@@ -7,7 +7,14 @@ import {
   reduceOrder,
   type OrderEvent,
 } from "@nextdrop/rules";
-import { Prisma, type PrismaClient } from "../../generated/prisma/client";
+import {
+  Prisma,
+  type Brand,
+  type OrderStatus,
+  type PrismaClient,
+  type Role,
+  type TempRequirement,
+} from "../../generated/prisma/client";
 import { ApiHttpError, notFound } from "../../lib/errors";
 import { appendFeed, type FeedRowInput } from "../feed";
 import type { Notifier } from "../notifications";
@@ -53,6 +60,89 @@ export function orderChanged(order: {
       depot: order.depot,
       vehicleId: order.vehicleId,
     },
+  };
+}
+
+export interface NewOrder {
+  outletId: string;
+  depot: string;
+  brand: Brand;
+  tempRequirement: TempRequirement;
+  requestedDate: string;
+  currentDate: string;
+  status: OrderStatus;
+  placedAt: Date;
+  idempotencyKey: string;
+  replacesOrderId: string | null;
+  lines: {
+    productId: string;
+    sku: string;
+    qtyOrdered: number;
+    unitWeightKg: Prisma.Decimal;
+    unitVolumeM3: Prisma.Decimal;
+  }[];
+  actor: { userId: string; role: Role };
+}
+
+/**
+ * Insert an order with its lines and `ORDER_PLACED` inside the caller's transaction, allocating the next `ORD#####`
+ * under an advisory lock. Totals come from `rules.aggregateOrderQuantities`. Returns the feed row for the caller to
+ * append last. Used by store placement and by server-authored follow-up orders (backorders, ADR 0026).
+ */
+export async function insertOrder(
+  tx: Prisma.TransactionClient,
+  input: NewOrder,
+): Promise<{ id: string; displayId: string; feed: FeedRowInput }> {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(${DISPLAY_ID_LOCK})`;
+  const last = await tx.order.findFirst({
+    where: { displayId: { startsWith: "ORD" } },
+    orderBy: { displayId: "desc" },
+    select: { displayId: true },
+  });
+  const lastNumber = last ? Number.parseInt(last.displayId.slice(3), 10) : Number.NaN;
+  const displayNumber = Number.isFinite(lastNumber)
+    ? Math.max(lastNumber + 1, FIRST_DISPLAY_NUMBER)
+    : FIRST_DISPLAY_NUMBER;
+  const totals = aggregateOrderQuantities(input.lines);
+  const skuByProduct = new Map(input.lines.map((line) => [line.productId, line.sku]));
+  const order = await tx.order.create({
+    data: {
+      displayId: `ORD${displayNumber}`,
+      brand: input.brand,
+      tempRequirement: input.tempRequirement,
+      requestedDate: dateOnly(input.requestedDate),
+      currentDate: dateOnly(input.currentDate),
+      status: input.status,
+      weightG: totals.weightG,
+      volumeL: totals.volumeL,
+      placedAt: input.placedAt,
+      idempotencyKey: input.idempotencyKey,
+      outletId: input.outletId,
+      replacesOrderId: input.replacesOrderId,
+      orderLine_orderId: { create: input.lines.map(({ sku: _sku, ...line }) => line) },
+    },
+    include: { orderLine_orderId: { select: { id: true, productId: true, qtyOrdered: true } } },
+  });
+  const payload: EventPayloadMap["ORDER_PLACED"] = {
+    lines: order.orderLine_orderId.map((line) => ({
+      lineId: line.id,
+      skuId: skuByProduct.get(line.productId)!,
+      qty: line.qtyOrdered,
+    })),
+    requestedDate: input.requestedDate,
+    ...(input.replacesOrderId ? { replacesOrderId: input.replacesOrderId } : {}),
+  };
+  await appendServerEvent(tx, {
+    type: "ORDER_PLACED",
+    payload,
+    orderId: order.id,
+    actor: input.actor,
+    at: input.placedAt,
+  });
+  return {
+    id: order.id,
+    displayId: order.displayId,
+    feed: orderChanged({ id: order.id, outletId: input.outletId, depot: input.depot, vehicleId: null }),
   };
 }
 
@@ -111,7 +201,6 @@ export function createOrderCommands(deps: OrderCommandDependencies) {
         unitVolumeM3: product.unitVolumeM3,
       };
     });
-    const totals = aggregateOrderQuantities(lines);
     const placedEvent = {
       id: "pending",
       type: "ORDER_PLACED",
@@ -122,56 +211,22 @@ export function createOrderCommands(deps: OrderCommandDependencies) {
 
     try {
       const id = await prisma.$transaction(async (tx) => {
-        await tx.$executeRaw`SELECT pg_advisory_xact_lock(${DISPLAY_ID_LOCK})`;
-        const last = await tx.order.findFirst({
-          where: { displayId: { startsWith: "ORD" } },
-          orderBy: { displayId: "desc" },
-          select: { displayId: true },
-        });
-        const lastNumber = last ? Number.parseInt(last.displayId.slice(3), 10) : Number.NaN;
-        const displayNumber = Number.isFinite(lastNumber)
-          ? Math.max(lastNumber + 1, FIRST_DISPLAY_NUMBER)
-          : FIRST_DISPLAY_NUMBER;
-        const order = await tx.order.create({
-          data: {
-            displayId: `ORD${displayNumber}`,
-            brand: outlet.brand,
-            tempRequirement,
-            requestedDate: dateOnly(body.requestedDate),
-            currentDate: dateOnly(currentDate),
-            status,
-            weightG: totals.weightG,
-            volumeL: totals.volumeL,
-            placedAt: now,
-            idempotencyKey: key,
-            outletId: actor.outletId,
-            replacesOrderId: body.replacesOrderId ?? null,
-            orderLine_orderId: {
-              create: lines.map(({ sku: _sku, ...line }) => line),
-            },
-          },
-          include: { orderLine_orderId: { select: { id: true, productId: true, qtyOrdered: true } } },
-        });
-        const payload: EventPayloadMap["ORDER_PLACED"] = {
-          lines: order.orderLine_orderId.map((line) => ({
-            lineId: line.id,
-            skuId: byId.get(line.productId)!.sku,
-            qty: line.qtyOrdered,
-          })),
+        const placed = await insertOrder(tx, {
+          outletId: actor.outletId,
+          depot: outlet.depot,
+          brand: outlet.brand,
+          tempRequirement,
           requestedDate: body.requestedDate,
-          ...(body.replacesOrderId ? { replacesOrderId: body.replacesOrderId } : {}),
-        };
-        await appendServerEvent(tx, {
-          type: "ORDER_PLACED",
-          payload,
-          orderId: order.id,
+          currentDate,
+          status,
+          placedAt: now,
+          idempotencyKey: key,
+          replacesOrderId: body.replacesOrderId ?? null,
+          lines,
           actor: { userId: actor.userId, role: "STORE" },
-          at: now,
         });
-        await appendFeed(tx, [
-          orderChanged({ id: order.id, outletId: actor.outletId, depot: outlet.depot, vehicleId: null }),
-        ]);
-        return order.id;
+        await appendFeed(tx, [placed.feed]);
+        return placed.id;
       }, TX);
       return reload(id);
     } catch (error) {
