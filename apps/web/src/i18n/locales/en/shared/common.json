@@ -61,5 +61,9 @@
     "paused": "Reconnect needed",
     "retrying": "Sync will retry",
     "waiting": "Waiting to sync"
+  },
+  "tripReadiness": {
+    "waitingOnDispatcher": "Waiting on dispatcher",
+    "heldByDispatcher": "Held by dispatcher"
   }
 }

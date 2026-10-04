@@ -14,6 +14,8 @@ export const NOTIFICATION_GROUPS = {
   eta_updated: "DELIVERIES",
   delivered: "DELIVERIES",
   dispute_updated: "DELIVERIES",
+  /** The dispatcher's decision on a dock shortfall (ADR 0026). */
+  short_resolved: "DELIVERIES",
   // Loader and driver
   plan_changed: "PLANNING",
   // Dispatcher
