@@ -56,15 +56,18 @@ export function useLoaderData(): LoaderData {
               d.receipt.date === snapshot.scope.date,
           );
         const states: Record<string, OrderState> = {};
-        for (const trip of snapshot?.scope.trips ?? [])
-          for (const stop of trip.stops) {
-            const state = await fieldRepository.projectOrder(stop.order.id, user.id);
-            if (state)
-              states[stop.order.id] = projectDrafts(
-                state,
-                drafts.filter((d) => d.receipt.planVersion === snapshot!.planVersion),
-              );
-          }
+        const orders = new Set([
+          ...(snapshot?.scope.trips.flatMap((trip) => trip.stops.map((stop) => stop.order.id)) ?? []),
+          ...(snapshot?.scope.reversals.map((order) => order.id) ?? []),
+        ]);
+        for (const orderId of orders) {
+          const state = await fieldRepository.projectOrder(orderId, user.id);
+          if (state)
+            states[orderId] = projectDrafts(
+              state,
+              drafts.filter((d) => d.receipt.planVersion === snapshot!.planVersion),
+            );
+        }
         const baseline = snapshot
           ? ((await db.value<number>(loaderPlanKey(user.id, snapshot))) ?? snapshot.planVersion)
           : null;

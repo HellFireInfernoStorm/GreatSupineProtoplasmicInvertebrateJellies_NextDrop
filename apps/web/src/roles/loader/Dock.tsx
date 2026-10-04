@@ -7,6 +7,7 @@ import { Frame, Empty, Countdown } from "./parts";
 import { PlanReview } from "./Review";
 import { orderGate } from "./model";
 import { formatTime } from "../../lib/time";
+import { Reversals } from "./Reversals";
 export function Dock({ data }: { data: LoaderData }) {
   const { t } = useTranslation("loader/dock");
   const snapshot = data.snapshot;
@@ -16,6 +17,7 @@ export function Dock({ data }: { data: LoaderData }) {
   return (
     <Frame data={data}>
       <PlanReview data={data} />
+      <Reversals data={data} />
       <div className="loader-heading">
         <h1>{t("title")}</h1>
         {trips.length > 0 && <p className="loader-muted">{t("earliestFirst", { count: trips.length })}</p>}

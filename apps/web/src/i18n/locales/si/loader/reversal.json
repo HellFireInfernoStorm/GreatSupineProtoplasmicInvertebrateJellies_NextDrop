@@ -1,0 +1,48 @@
+{
+  "title": {
+    "text": "බෑමේ ඉල්ලීම්",
+    "review": "draft"
+  },
+  "instruction": {
+    "text": "තහවුරු කිරීමට පෙර මෙම භාණ්ඩ ට්‍රක් රථයෙන් බාන්න.",
+    "review": "draft"
+  },
+  "target": {
+    "PLANNED": {
+      "text": "තහවුරු කිරීමෙන් පසු ඇණවුම පැටවීමේ සැලැස්මට නැවත එක් වේ.",
+      "review": "draft"
+    },
+    "DEFERRED": {
+      "text": "තහවුරු කිරීමෙන් පසු ඇණවුම කල් දමනු ලැබේ.",
+      "review": "draft"
+    }
+  },
+  "review": {
+    "text": "බෑමේ ඉල්ලීම බලන්න",
+    "review": "draft"
+  },
+  "confirmTitle": {
+    "text": "{{order}} බෑම තහවුරු කරන්න",
+    "review": "draft"
+  },
+  "line": {
+    "text": "{{name}} · රථයේ ඒකක {{quantity}}",
+    "review": "draft"
+  },
+  "confirm": {
+    "text": "භාණ්ඩ බා ඇත — තහවුරු කරන්න",
+    "review": "draft"
+  },
+  "draftSaved": {
+    "text": "බෑම මෙම උපාංගයේ සුරකින ලදී. තත්පර පහක් තුළ අවලංගු කළ හැක.",
+    "review": "draft"
+  },
+  "undo": {
+    "text": "අවලංගු කරන්න",
+    "review": "draft"
+  },
+  "saveError": {
+    "text": "බෑම සුරැකිය නොහැකි විය. නැවත උත්සාහ කරන්න.",
+    "review": "draft"
+  }
+}

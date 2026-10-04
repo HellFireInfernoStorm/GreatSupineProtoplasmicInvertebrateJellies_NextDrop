@@ -26,6 +26,20 @@ export function canRetry(receipt: FieldReceipt, events: OutboxEntry[]): boolean 
     })
   );
 }
+/** A completed attempt no longer blocks a later reversal request for the same order. */
+export function receiptCovered(receipt: FieldReceipt, events: OutboxEntry[], feedCursor: string): boolean {
+  return (
+    receipt.events.length > 0 &&
+    receipt.events.every((saved) => {
+      const event = events.find((e) => e.clientEventId === saved.clientEventId) ?? saved;
+      return (
+        event.state === "acked" &&
+        event.confirmationFeedHead !== undefined &&
+        BigInt(event.confirmationFeedHead) <= BigInt(feedCursor)
+      );
+    })
+  );
+}
 export type Stop = ApiDto<"stop">;
 export type Line = Stop["order"]["lines"][number];
 export const loadOrder = (trip: TripDto) => [...trip.stops].sort((a, b) => b.seq - a.seq);

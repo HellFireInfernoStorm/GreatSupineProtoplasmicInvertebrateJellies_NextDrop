@@ -61,6 +61,7 @@ describe("locale files", () => {
         "driver/run",
         "loader/login",
         "loader/dock",
+        "loader/reversal",
         "shared/common",
         "shared/ui",
         "store/deliveries",

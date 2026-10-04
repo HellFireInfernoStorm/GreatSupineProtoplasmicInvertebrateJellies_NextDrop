@@ -1,0 +1,15 @@
+{
+  "title": "Unload requests",
+  "instruction": "Take these goods off the truck before confirming.",
+  "target": {
+    "PLANNED": "The order returns to the loading plan after confirmation.",
+    "DEFERRED": "The order is deferred after confirmation."
+  },
+  "review": "Review unload request",
+  "confirmTitle": "Confirm unloading {{order}}",
+  "line": "{{name}} · {{quantity}} units on truck",
+  "confirm": "Goods off truck — confirm",
+  "draftSaved": "Unloading saved on this device. Undo is available for five seconds.",
+  "undo": "Undo",
+  "saveError": "Could not save unloading. Try again."
+}
