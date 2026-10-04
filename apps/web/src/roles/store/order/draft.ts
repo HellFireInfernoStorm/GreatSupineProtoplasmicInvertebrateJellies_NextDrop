@@ -1,6 +1,7 @@
 import type { ApiDto } from "@nextdrop/contracts";
 import type { LocalDate } from "@nextdrop/rules";
 import { create } from "zustand";
+import { onSessionReset } from "../../../lib/session";
 
 // The order being built. One draft covers the whole delivery date; it is sent as one order per temperature, because
 // an order holds a single temperature (ADR 0032). That is why the screens say "2 orders".
@@ -79,7 +80,12 @@ interface DraftState {
   placed: Order[] | null;
 }
 
-export const useDraft = create<DraftState>(() => ({ date: null, qty: {}, keys: {}, placed: null }));
+const EMPTY: DraftState = { date: null, qty: {}, keys: {}, placed: null };
+
+export const useDraft = create<DraftState>(() => EMPTY);
+
+// The draft belongs to the signed-in manager. The next user of the device must not find, or submit, their quantities.
+onSessionReset(() => useDraft.setState(EMPTY));
 
 export const draft = {
   setDate: (date: LocalDate) => useDraft.setState({ date }),
@@ -94,7 +100,18 @@ export const draft = {
     }),
   rememberKey: (temp: Temp, key: SubmissionKey) =>
     useDraft.setState((state) => ({ keys: { ...state.keys, [temp]: key } })),
-  /** The orders are placed: show them and start a fresh draft. */
-  placed: (orders: Order[]) => useDraft.setState({ placed: orders, qty: {}, keys: {} }),
+  /**
+   * The orders are placed: show them, and take what was sent out of the draft. A product added while the request
+   * was in flight was not sent, so it stays for the next order.
+   */
+  placed: (orders: Order[]) =>
+    useDraft.setState((state) => {
+      const sent = new Set(orders.flatMap((order) => order.lines.map((line) => line.productId)));
+      return {
+        placed: orders,
+        qty: Object.fromEntries(Object.entries(state.qty).filter(([productId]) => !sent.has(productId))),
+        keys: {},
+      };
+    }),
   dismissPlaced: () => useDraft.setState({ placed: null }),
 };

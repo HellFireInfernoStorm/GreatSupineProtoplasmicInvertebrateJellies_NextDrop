@@ -35,9 +35,22 @@ function remember(session: Session | null): Session | null {
   return session;
 }
 
+const sessionResets = new Set<() => void>();
+
+/**
+ * Register state that belongs to one session and lives outside the query cache, such as a draft kept in a store.
+ * It is reset whenever cached data is dropped: on sign-in, on sign-out and when the session is lost. A role's module
+ * registers itself, so this module never has to know the roles.
+ */
+export function onSessionReset(reset: () => void): () => void {
+  sessionResets.add(reset);
+  return () => sessionResets.delete(reset);
+}
+
 /** Drop everything cached for the previous session, so the next user of a shared device starts clean. */
 function dropCachedData(): void {
   queryClient.removeQueries({ predicate: (query) => !isSessionKey(query.queryKey) });
+  for (const reset of sessionResets) reset();
 }
 
 /** The current session, or null when nobody is signed in. A network failure rejects instead of signing out. */

@@ -1,7 +1,9 @@
 import { colomboInstant } from "@nextdrop/rules";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { apiRouteFixtures, apiVariantFixtures } from "@nextdrop/contracts";
 import { setTransport } from "../../../lib/api";
 import { MOCK_PRODUCTS, mockStoreRespond } from "../../../lib/api/mockStore";
+import { signIn, signOut } from "../../../lib/session";
 import type { TransportRequest } from "../../../lib/api/types";
 import { timeLeft } from "../dates";
 import { draft, draftLines, keyFor, orderSignature, quantitiesOf, totalUnits, useDraft, type Product } from "./draft";
@@ -152,5 +154,63 @@ describe("the countdown", () => {
   it("counts whole hours and minutes, and never goes below zero", () => {
     expect(timeLeft(10_080_000 + 30_000, 0)).toEqual({ hours: 2, minutes: 48 });
     expect(timeLeft(0, 5_000)).toEqual({ hours: 0, minutes: 0 });
+  });
+});
+
+describe("a shared device", () => {
+  const untouched = { date: null, qty: {}, keys: {}, placed: null };
+  const fillDraft = () => {
+    draft.setQty(rice.id, 10);
+    draft.setDate("2026-10-06");
+    draft.rememberKey("ambient", { signature: "s", key: "k" });
+  };
+
+  it("empties the draft on sign-out, so the next manager cannot submit it", async () => {
+    fillDraft();
+    setTransport(async (request) => {
+      if (request.name !== "logout") throw new TypeError("Failed to fetch");
+      return { status: 200, body: apiRouteFixtures.logout.responses[200] };
+    });
+    await signOut();
+    expect(useDraft.getState()).toEqual(untouched);
+  });
+
+  it("empties the draft on sign-in, whoever used the tab before", async () => {
+    fillDraft();
+    setTransport(async (request) => {
+      if (request.name !== "login") throw new TypeError("Failed to fetch");
+      return {
+        status: 200,
+        body: { ...apiRouteFixtures.me.responses[200], user: apiVariantFixtures.sessionUser.STORE },
+      };
+    });
+    await signIn(apiVariantFixtures.loginRequest.STORE);
+    expect(useDraft.getState()).toEqual(untouched);
+  });
+
+  it("keeps the draft when sign-out fails: the manager is still signed in", async () => {
+    fillDraft();
+    setTransport(async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    await expect(signOut()).rejects.toThrow();
+    expect(useDraft.getState().qty).toEqual({ [rice.id]: 10 });
+  });
+});
+
+describe("placing while the draft changes", () => {
+  it("keeps a product that was added after the orders were sent", async () => {
+    draft.setQty(rice.id, 10);
+    const now = saturdayAt(9 * 60);
+    setTransport(async (request) => {
+      // The manager adds milk while the dry order is in flight.
+      draft.setQty(milk.id, 6);
+      return mockStoreRespond(request as TransportRequest, now)!;
+    });
+    const lines = draftLines(products, useDraft.getState().qty, "ambient");
+    expect(await placeOrders("2026-10-05", [{ temp: "ambient", lines }])).toBeNull();
+    const state = useDraft.getState();
+    expect(state.placed).toHaveLength(1);
+    expect(state.qty).toEqual({ [milk.id]: 6 });
   });
 });
