@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useSearchParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { ApiDto } from "@nextdrop/contracts";
@@ -6,6 +6,21 @@ import { CapacityBar, ChilledPill, StatusPill } from "../../ui";
 import { Pill } from "../../ui/StatusPill";
 import { Instant } from "../../ui/Timeline";
 import type { Outlet, Vehicle } from "./planning";
+import confirmedIcon from "./assets/confirmed.svg";
+import weightIcon from "./assets/weight.svg";
+import chilledIcon from "./assets/chilled.svg";
+import vanIcon from "./assets/van.svg";
+
+function QueueMetric({ icon, tone, children }: { icon: string; tone: string; children: ReactNode }) {
+  return (
+    <section className="dispatch-card dispatch-queue-metric">
+      <span className="dispatch-kpi-icon" data-tone={tone}>
+        <img src={icon} alt="" />
+      </span>
+      <div className="dispatch-kpi-content">{children}</div>
+    </section>
+  );
+}
 
 export function OrderQueue({
   day,
@@ -77,34 +92,48 @@ export function OrderQueue({
   };
   const clock = (minutes: number) =>
     `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  const selectOrder = (id: string) =>
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("order", id);
+      return next;
+    });
   return (
     <>
       <div className="dispatch-kpis dispatch-queue-kpis">
-        <section className="dispatch-card">
-          <span>{t("confirmed")}</span>
+        <QueueMetric icon={confirmedIcon} tone="ok">
+          <span className="dispatch-kpi-label">{t("confirmed")}</span>
           <strong>{day.queue.length}</strong>
-        </section>
-        <section className="dispatch-card">
+          <small>
+            {["Fresh", "Style", "Tech"]
+              .map((brand) => `${t(`brands.${brand}`)} ${day.queue.filter((order) => order.brand === brand).length}`)
+              .join(" · ")}
+          </small>
+        </QueueMetric>
+        <QueueMetric icon={weightIcon} tone="info">
           <CapacityBar
             label={t("weightFleet")}
-            used={day.queue.reduce((n, o) => n + o.weightG, 0) / 1000}
-            capacity={vehicles.reduce((n, v) => n + v.weightCapG, 0) / 1000}
-            unit={t("units.kg")}
+            used={day.queue.reduce((n, o) => n + o.weightG, 0) / 1000000}
+            capacity={vehicles.reduce((n, v) => n + v.weightCapG, 0) / 1000000}
+            unit={t("units.t")}
             tone="ok"
+            presentation="summary"
           />
-        </section>
-        <section className="dispatch-card">
+        </QueueMetric>
+        <QueueMetric icon={chilledIcon} tone="warn">
           <CapacityBar
             label={t("chilledCapacity")}
             used={day.queue.filter((o) => o.tempRequirement === "chilled").reduce((n, o) => n + o.volumeL, 0) / 1000}
             capacity={vehicles.filter((v) => v.temp === "reefer").reduce((n, v) => n + v.volumeCapL, 0) / 1000}
             unit={t("units.m3")}
+            presentation="summary"
           />
-        </section>
-        <section className="dispatch-card">
-          <span>{t("vanOrders")}</span>
+        </QueueMetric>
+        <QueueMetric icon={vanIcon} tone="deferred">
+          <span className="dispatch-kpi-label">{t("vanOrders")}</span>
           <strong>{day.queue.filter((o) => getOutlet(o.outletId)?.parking === "van_only").length}</strong>
-        </section>
+          <small>{t("availableVans", { count: vehicles.filter((vehicle) => vehicle.type === "van").length })}</small>
+        </QueueMetric>
       </div>
       <div className="dispatch-filters">
         <input
@@ -149,18 +178,21 @@ export function OrderQueue({
                 {matches.map((order) => {
                   const out = getOutlet(order.outletId);
                   return (
-                    <tr key={order.id} data-selected={order.id === selected?.id}>
+                    <tr
+                      key={order.id}
+                      data-selected={order.id === selected?.id}
+                      tabIndex={0}
+                      aria-selected={order.id === selected?.id}
+                      onClick={() => selectOrder(order.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          selectOrder(order.id);
+                        }
+                      }}
+                    >
                       <td>
-                        <button
-                          className="dispatch-text-button"
-                          onClick={() => {
-                            const next = new URLSearchParams(params);
-                            next.set("order", order.id);
-                            setParams(next);
-                          }}
-                        >
-                          {order.displayId}
-                        </button>
+                        <strong>{order.displayId}</strong>
                       </td>
                       <td>
                         {out?.displayId ?? t("unavailable")}

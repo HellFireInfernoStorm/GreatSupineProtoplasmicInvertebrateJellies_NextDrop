@@ -93,6 +93,7 @@
   "mallDock": "Mall bay",
   "previouslyDeferred": "Previously deferred",
   "vanOrders": "Van-only orders",
+  "availableVans": "{{count}} available vans",
   "queueIntro": "Confirmed orders for {{date}} · {{depot}}",
   "selectOrder": "Select an order to see its details.",
   "placed": "Placed",
@@ -121,6 +122,7 @@
   "fuelPending": "Weekly usage awaiting server verification",
   "units": {
     "kg": "kg",
+    "t": "t",
     "m3": "m³",
     "min": "min",
     "L": "L",

@@ -230,7 +230,7 @@ export function PlanBoard({
           <section className="dispatch-card">
             <ValidationChecks result={savedResult} contextAvailable />
           </section>
-          <section className="dispatch-card">
+          <section className="dispatch-card dispatch-unassigned">
             <h2>
               {t("unassigned")} · {data.unassignedOrderIds.length}
             </h2>
