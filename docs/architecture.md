@@ -70,7 +70,7 @@ dependency-cruiser enforces these rules (`pnpm deps:check`, `.dependency-cruiser
 
 ## Build status
 
-As of 4 Oct 2026, 17:15. "Built" means merged to `main`. **TODO (before submission):** refresh this table.
+As of 4 Oct 2026, 17:30. "Built" means merged to `main`. **TODO (before submission):** refresh this table.
 
 | Part | Status |
 | --- | --- |
@@ -83,7 +83,7 @@ As of 4 Oct 2026, 17:15. "Built" means merged to `main`. **TODO (before submissi
 | API: store orders (cutoff, place, track, cancel, receipt, issues) and reference data | Built (#42, #110) |
 | API: planning (day, propose, draft, validate, fleet), publish and plan versions, dock shortfalls | Built (#45, #48, #51) |
 | API: change feed, SSE hint and notifications | Built (#41) |
-| API: field snapshot, sync ingest, heartbeat and blob upload | Built (#47, #50) |
+| API: field snapshot, sync ingest, heartbeat and blob upload | Built (#47, #50). `TRIP_READY` is refused until every Loader checklist line is checked (#115) |
 | API: sync conflicts (classification, held facts, resolution, outcomes for field devices) | Built (#54, #97, #117) |
 | API: run monitor, exceptions inbox and dispute resolution | Built (#59) |
 | API: server clock, planning-day tick and demo reset (`before-cutoff` preset) | Built (#38). Other presets and the demo panel: planned (#56) |
