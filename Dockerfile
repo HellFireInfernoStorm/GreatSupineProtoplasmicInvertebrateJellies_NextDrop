@@ -25,6 +25,10 @@ COPY packages/rules/package.json packages/rules/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
+# Vite reads VITE_* values when it builds, not when the container starts. This one compiles the quick-login chips
+# for the seeded accounts into the login screens (ADR 0031). Compose passes DEMO_MODE here; see .env.example.
+ARG VITE_DEMO_MODE=true
+ENV VITE_DEMO_MODE=$VITE_DEMO_MODE
 RUN pnpm --filter @nextdrop/api run db:generate \
  && pnpm --filter @nextdrop/web run build
 

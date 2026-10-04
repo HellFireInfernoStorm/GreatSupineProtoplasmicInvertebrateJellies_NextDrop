@@ -22,7 +22,11 @@ services:
     # Not published to the host: only the app talks to it, so parallel stacks never fight over a port.
 
   app:
-    build: .
+    build:
+      context: .
+      args:
+        # The web app's demo flag is fixed at build time: after changing DEMO_MODE, run `docker compose up --build`.
+        VITE_DEMO_MODE: ${DEMO_MODE:-true}
     depends_on:
       db:
         condition: service_healthy

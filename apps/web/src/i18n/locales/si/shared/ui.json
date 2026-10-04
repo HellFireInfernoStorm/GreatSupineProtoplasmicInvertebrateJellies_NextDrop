@@ -1,0 +1,177 @@
+{
+  "confirm": { "text": "තහවුරු කරන්න", "review": "draft" },
+  "statusUnknown": { "text": "නොදන්නා තත්ත්වය", "review": "draft" },
+  "timeUnavailable": { "text": "වේලාව ලබාගත නොහැක", "review": "draft" },
+  "status": {
+    "ORDERED": {
+      "text": "ඇණවුම් කර ඇත",
+      "review": "draft"
+    },
+    "PLANNED": {
+      "text": "සැලසුම් කර ඇත",
+      "review": "draft"
+    },
+    "DEFERRED": {
+      "text": "කල් දමා ඇත",
+      "review": "draft"
+    },
+    "CANCELLED": {
+      "text": "අවලංගු කර ඇත",
+      "review": "draft"
+    },
+    "LOADED": {
+      "text": "පටවා ඇත",
+      "review": "draft"
+    },
+    "OUT_FOR_DELIVERY": {
+      "text": "බෙදාහැරීමට පිටත් වී ඇත",
+      "review": "draft"
+    },
+    "DELIVERED": {
+      "text": "බෙදාහැර ඇත",
+      "review": "draft"
+    },
+    "FAILED": {
+      "text": "අසාර්ථකයි",
+      "review": "draft"
+    },
+    "RECEIVED": {
+      "text": "ලැබී ඇත",
+      "review": "draft"
+    },
+    "DISPUTED": {
+      "text": "මතභේදයක් ඇත",
+      "review": "draft"
+    }
+  },
+  "tripStatus": {
+    "PLANNED": {
+      "text": "සැලසුම් කර ඇත",
+      "review": "draft"
+    },
+    "READY": {
+      "text": "සූදානම්",
+      "review": "draft"
+    },
+    "DEPARTED": {
+      "text": "පිටත් වී ඇත",
+      "review": "draft"
+    },
+    "COMPLETE": {
+      "text": "සම්පූර්ණයි",
+      "review": "draft"
+    },
+    "CANCELLED": {
+      "text": "අවලංගු කර ඇත",
+      "review": "draft"
+    }
+  },
+  "flags": {
+    "short": {
+      "text": "ප්‍රමාණය අඩුයි",
+      "review": "draft"
+    },
+    "damaged": {
+      "text": "හානි වී ඇත",
+      "review": "draft"
+    }
+  },
+  "chilled": {
+    "text": "ශීත කළ",
+    "review": "draft"
+  },
+  "sync": {
+    "offline": {
+      "text": "අන්තර්ජාල සම්බන්ධතාව නැත",
+      "review": "draft"
+    },
+    "saved": {
+      "text": "මෙම උපාංගයේ සුරැකී ඇත",
+      "review": "draft"
+    },
+    "sending": {
+      "text": "යවමින් පවතී",
+      "review": "draft"
+    },
+    "synced": {
+      "text": "සමමුහුර්ත කර ඇත",
+      "review": "draft"
+    },
+    "seen": {
+      "text": "බලා ඇත",
+      "review": "draft"
+    }
+  },
+  "loading": {
+    "text": "පූරණය වෙමින් පවතී",
+    "review": "draft"
+  },
+  "dismiss": {
+    "text": "ඉවත් කරන්න",
+    "review": "draft"
+  },
+  "close": {
+    "text": "වසන්න",
+    "review": "draft"
+  },
+  "holdHint": {
+    "text": "තහවුරු කිරීමට තත්පර 1.2ක් තද කරගෙන සිටින්න",
+    "review": "draft"
+  },
+  "quantityDecrease": {
+    "text": "ප්‍රමාණය අඩු කරන්න",
+    "review": "draft"
+  },
+  "quantityIncrease": {
+    "text": "ප්‍රමාණය වැඩි කරන්න",
+    "review": "draft"
+  },
+  "quantityInvalid": {
+    "text": "අවසර ඇති පරාසය තුළ පූර්ණ සංඛ්‍යාවක් ඇතුළත් කරන්න",
+    "review": "draft"
+  },
+  "timeline": {
+    "captured": {
+      "text": "සටහන් කළේ",
+      "review": "draft"
+    },
+    "confirmed": {
+      "text": "තහවුරු කළේ",
+      "review": "draft"
+    },
+    "pending": {
+      "text": "තහවුරු කිරීම සමමුහුර්ත කිරීමට නියමිතයි",
+      "review": "draft"
+    }
+  },
+  "capacity": {
+    "value": {
+      "text": "{{used}} / {{capacity}} {{unit}}",
+      "review": "draft"
+    },
+    "unavailable": {
+      "text": "ධාරිතාව නොමැත",
+      "review": "draft"
+    }
+  },
+  "trip": {
+    "departure": {
+      "text": "පිටත්වීම",
+      "review": "draft"
+    },
+    "changed": {
+      "text": "සැලසුම වෙනස් වී ඇත",
+      "review": "draft"
+    }
+  },
+  "stop": {
+    "sequence": {
+      "text": "නැවතුම {{sequence}}",
+      "review": "draft"
+    },
+    "eta": {
+      "text": "පැමිණීමේ අපේක්ෂිත වේලාව",
+      "review": "draft"
+    }
+  }
+}

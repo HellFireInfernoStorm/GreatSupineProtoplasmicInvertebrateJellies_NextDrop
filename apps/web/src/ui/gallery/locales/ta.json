@@ -1,0 +1,220 @@
+{
+  "gallery": {
+    "title": {
+      "text": "பகிரப்பட்ட கூறுகளின் காட்சியகம்",
+      "review": "draft"
+    },
+    "theme": {
+      "text": "பங்கு தோற்றம்",
+      "review": "draft"
+    },
+    "language": {
+      "text": "மொழி",
+      "review": "draft"
+    },
+    "draft": {
+      "text": "சிங்களம் மற்றும் தமிழ் மொழிபெயர்ப்புகள் தாய்மொழி மதிப்பாய்வுக்காகக் காத்திருக்கும் வரைவுகள்.",
+      "review": "draft"
+    },
+    "store": {
+      "text": "கடை",
+      "review": "draft"
+    },
+    "dispatcher": {
+      "text": "விநியோகத் திட்டமிடுபவர்",
+      "review": "draft"
+    },
+    "loader": {
+      "text": "ஏற்றும் பணியாளர்",
+      "review": "draft"
+    },
+    "driver": {
+      "text": "ஓட்டுநர்",
+      "review": "draft"
+    },
+    "en": {
+      "text": "ஆங்கிலம்",
+      "review": "draft"
+    },
+    "si": {
+      "text": "சிங்களம்",
+      "review": "draft"
+    },
+    "ta": {
+      "text": "தமிழ்",
+      "review": "draft"
+    },
+    "buttons": {
+      "text": "பொத்தான்கள்",
+      "review": "draft"
+    },
+    "primary": {
+      "text": "ஏற்றுவதைத் தொடரவும்",
+      "review": "draft"
+    },
+    "secondary": {
+      "text": "விவரங்களை மதிப்பாய்வு செய்யவும்",
+      "review": "draft"
+    },
+    "ghost": {
+      "text": "நிகழ்வு வரிசையைப் பார்க்கவும்",
+      "review": "draft"
+    },
+    "on-panel": {
+      "text": "தொடரவும்",
+      "review": "draft"
+    },
+    "on-panel-outline": {
+      "text": "திரும்பு",
+      "review": "draft"
+    },
+    "ok": {
+      "text": "தயார் என்பதை உறுதிப்படுத்தவும்",
+      "review": "draft"
+    },
+    "warn": {
+      "text": "அளவுக் குறைவை மதிப்பாய்வு செய்யவும்",
+      "review": "draft"
+    },
+    "danger": {
+      "text": "சேதத்தைப் புகாரளிக்கவும்",
+      "review": "draft"
+    },
+    "disabled": {
+      "text": "செயல் கிடைக்கவில்லை",
+      "review": "draft"
+    },
+    "statuses": {
+      "text": "நிலைகள் மற்றும் குறிகள்",
+      "review": "draft"
+    },
+    "cards": {
+      "text": "பயணங்கள் மற்றும் நிறுத்தங்கள்",
+      "review": "draft"
+    },
+    "vehicle": {
+      "text": "VEH001 · குளிரூட்டப்பட்ட வாகனம்",
+      "review": "draft"
+    },
+    "outlet": {
+      "text": "மலைப்பகுதிக் கடையின் விநியோகப் பொருட்களைப் பெறும் இடம்",
+      "review": "draft"
+    },
+    "changed": {
+      "text": "வாகனம் மறுஒதுக்கீடு செய்யப்பட்ட பின் புறப்பாடு மாற்றப்பட்டது",
+      "review": "draft"
+    },
+    "capacity": {
+      "text": "கொள்ளளவு",
+      "review": "draft"
+    },
+    "unit": {
+      "text": "பெட்டிகள்",
+      "review": "draft"
+    },
+    "timeline": {
+      "text": "கள நிகழ்வு வரிசை",
+      "review": "draft"
+    },
+    "delivered": {
+      "text": "இணையமின்றி விநியோகம் பதிவு செய்யப்பட்டது",
+      "review": "draft"
+    },
+    "pending": {
+      "text": "பெறுதல் உறுதிப்படுத்தலுக்காகக் காத்திருக்கிறது",
+      "review": "draft"
+    },
+    "forms": {
+      "text": "உள்ளீடுகள் மற்றும் அளவு",
+      "review": "draft"
+    },
+    "field": {
+      "text": "விநியோகக் குறிப்பு",
+      "review": "draft"
+    },
+    "hint": {
+      "text": "விநியோக நிலையை விவரிக்கவும்",
+      "review": "draft"
+    },
+    "error": {
+      "text": "விநியோகக் குறிப்பு தேவை",
+      "review": "draft"
+    },
+    "quantity": {
+      "text": "பெறப்பட்ட பெட்டிகளின் எண்ணிக்கை",
+      "review": "draft"
+    },
+    "feedback": {
+      "text": "அறிவிப்புகள் மற்றும் வெற்று நிலைகள்",
+      "review": "draft"
+    },
+    "offline": {
+      "text": "இணைய இணைப்பு இல்லை. ஒத்திசைக்கும் வரை மாற்றங்கள் இந்தச் சாதனத்தில் இருக்கும்.",
+      "review": "draft"
+    },
+    "failure": {
+      "text": "இந்த நிகழ்வை உறுதிப்படுத்த முடியவில்லை",
+      "review": "draft"
+    },
+    "retry": {
+      "text": "மீண்டும் முயற்சிக்கவும்",
+      "review": "draft"
+    },
+    "empty": {
+      "text": "காண்பிக்க நிறுத்தங்கள் இல்லை",
+      "review": "draft"
+    },
+    "emptyDetail": {
+      "text": "ஒதுக்கப்பட்ட நிறுத்தங்கள் கிடைக்கும் போது இங்கே தோன்றும்.",
+      "review": "draft"
+    },
+    "interactions": {
+      "text": "உறுதிப்படுத்தல் மற்றும் உரையாடல்கள்",
+      "review": "draft"
+    },
+    "hold": {
+      "text": "தயார் எனக் குறிக்க அழுத்திப் பிடிக்கவும்",
+      "review": "draft"
+    },
+    "confirmed": {
+      "text": "{{count}} முறை உறுதிப்படுத்தப்பட்டது",
+      "review": "draft"
+    },
+    "disableHold": {
+      "text": "உறுதிப்படுத்தலை முடக்கவும்",
+      "review": "draft"
+    },
+    "hideHold": {
+      "text": "உறுதிப்படுத்தலை மறைக்கவும்",
+      "review": "draft"
+    },
+    "showModal": {
+      "text": "உரையாடலைத் திறக்கவும்",
+      "review": "draft"
+    },
+    "showSheet": {
+      "text": "தாளைத் திறக்கவும்",
+      "review": "draft"
+    },
+    "showToast": {
+      "text": "சேமிப்பு அறிவிப்பைக் காண்பிக்கவும்",
+      "review": "draft"
+    },
+    "overlayTitle": {
+      "text": "விநியோக விவரங்களை மதிப்பாய்வு செய்யவும்",
+      "review": "draft"
+    },
+    "overlayBody": {
+      "text": "இந்த மாதிரி விநியோகத்தை உறுதிப்படுத்தும் முன் அளவுகளைச் சரிபார்க்கவும்.",
+      "review": "draft"
+    },
+    "saved": {
+      "text": "மாதிரி விநியோகம் இந்தச் சாதனத்தில் சேமிக்கப்பட்டது",
+      "review": "draft"
+    },
+    "undo": {
+      "text": "செயல்தவிர்",
+      "review": "draft"
+    }
+  }
+}

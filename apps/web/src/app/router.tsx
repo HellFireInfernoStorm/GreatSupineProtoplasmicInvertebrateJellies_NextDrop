@@ -9,6 +9,9 @@ export const router = createBrowserRouter([
     ErrorBoundary: RouteError,
     HydrateFallback: Splash,
     children: [
+      ...(import.meta.env.DEV
+        ? [{ path: "/dev/ui", lazy: () => import("../ui/gallery/Gallery").then((m) => ({ Component: m.Gallery })) }]
+        : []),
       { path: "/", loader: entryLoader },
       { path: "/login", loader: entryLoader },
       {
