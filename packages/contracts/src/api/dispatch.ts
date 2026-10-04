@@ -78,6 +78,8 @@ export const issueSchema = z.strictObject({
   resolvedAt: isoDateTime.nullable(),
   note: z.string().nullable(),
 });
+/** Blob ids of the photos and signatures behind an exception, readable through `GET /api/blobs/:id` (ADR 0041). */
+const evidence = z.array(nonempty);
 export const exceptionSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("ACK"),
@@ -86,8 +88,8 @@ export const exceptionSchema = z.discriminatedUnion("type", [
     actor: actorSchema.strict(),
     at: isoDateTime,
   }),
-  z.strictObject({ type: z.literal("CONFLICT"), conflict: conflictSchema }),
-  z.strictObject({ type: z.literal("ISSUE"), issue: issueSchema }),
+  z.strictObject({ type: z.literal("CONFLICT"), conflict: conflictSchema, evidence }),
+  z.strictObject({ type: z.literal("ISSUE"), issue: issueSchema, evidence }),
   z.strictObject({
     type: z.literal("SHORT"),
     orderId: uuidV7,
@@ -95,7 +97,13 @@ export const exceptionSchema = z.discriminatedUnion("type", [
     qtyShort: z.number().int().positive(),
     resolution: shortOutcomeSchema.nullable(),
   }),
-  z.strictObject({ type: z.literal("DAMAGED"), orderId: uuidV7, lineId: nonempty, qty: z.number().int().positive() }),
+  z.strictObject({
+    type: z.literal("DAMAGED"),
+    orderId: uuidV7,
+    lineId: nonempty,
+    qty: z.number().int().positive(),
+    evidence,
+  }),
   z.strictObject({ type: z.literal("FAILED"), order: orderSchema }),
   z.strictObject({
     type: z.literal("PROBLEM"),
@@ -104,6 +112,7 @@ export const exceptionSchema = z.discriminatedUnion("type", [
     tripId: uuidV7.nullable(),
     kind: problemKindSchema,
     note: z.string().nullable(),
+    evidence,
   }),
 ]);
 export const exceptionsResponseSchema = z.strictObject({ items: z.array(exceptionSchema) });
