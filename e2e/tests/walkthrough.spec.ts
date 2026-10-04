@@ -247,7 +247,7 @@ test.describe("Judge walkthrough (§15.4)", () => {
 
     // A valid edit: take the store's dry order off its trip. ETA warnings remain non-blocking.
     await page.getByRole("combobox", { name: `Move to… ${placed.dry}` }).selectOption("unassigned");
-    await expect(review.getByText(/^Constraints pass · \d+ warnings to review$/)).toBeVisible();
+    await expect(review.getByText(/^Constraints pass · \d+ warnings? to review$/)).toBeVisible();
     await expect(review.getByRole("button", { name: "Save changes" })).toBeEnabled();
     await review.getByRole("button", { name: "Save changes" }).click();
     await expect(main.getByText(/^\d+ trips · 81 of 88 orders planned · 7 unassigned/)).toBeVisible();
