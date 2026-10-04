@@ -15,7 +15,7 @@ import { ApiHttpError } from "../../lib/errors";
 import type { Notifier } from "../notifications";
 import { tickPlanningDays } from "../planning";
 import { collectionResource } from "../policy";
-import { resetToBeforeCutoff } from "./reset";
+import { BUILT_PRESETS, resetToPreset } from "./presets";
 
 export interface DemoRouteDependencies {
   prisma: PrismaClient | null;
@@ -98,12 +98,13 @@ export const demoRoutes: FastifyPluginAsyncZod<DemoRouteDependencies> = async (a
     },
     async (request) => {
       const { preset } = request.body;
-      // The other presets come with the tier S demo issue.
-      if (preset !== "before-cutoff") {
+      // A preset that is not built yet (clash-ready waits on #145) answers 409.
+      if (!BUILT_PRESETS.has(preset)) {
         throw new ApiHttpError(409, "ILLEGAL_TRANSITION", "errors.demoPresetUnavailable", { preset });
       }
-      await resetToBeforeCutoff(
+      await resetToPreset(
         { prisma: database(), schema: deps.schema, clock: deps.clock, notifier: deps.notifier },
+        preset,
         actorId(request),
       );
       request.log.info({ actorUserId: actorId(request), preset }, "demo reset");
