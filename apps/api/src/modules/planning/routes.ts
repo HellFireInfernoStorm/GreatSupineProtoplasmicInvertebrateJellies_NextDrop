@@ -27,7 +27,7 @@ import { ApiHttpError, forbidden } from "../../lib/errors";
 import { dateOnly, toOrderDto } from "../orders";
 import type { Notifier } from "../notifications";
 import { collectionResource, type Resource } from "../policy";
-import { loadDayInputs, toDraftData, toRulesPlan, toPlanningContext, type DayInputs } from "./inputs";
+import { loadDayInputs, toDraftData, toRulesPlan, toPlanningContext, type DayInputs, QUEUE_STATUSES } from "./inputs";
 import { publishDay } from "./publish";
 import type { ReferenceSource } from "./reference";
 
@@ -146,7 +146,13 @@ export const planningRoutes: FastifyPluginAsyncZod<PlanningRouteDependencies> = 
         queue: day.queue.map(toOrderDto),
         planningContext: toPlanningContext(day),
         // What the allocator could serve from this queue with the available fleet: demand against capacity.
-        demandCapacity: proposePlan(day.allocation, day.reference.ref).stats,
+        demandCapacity: proposePlan(
+          {
+            ...day.allocation,
+            orders: day.allocation.orders.filter((o) => QUEUE_STATUSES.some((status) => status === o.status)),
+          },
+          day.reference.ref,
+        ).stats,
         serverTime: clock.now().toISOString(),
       };
     },
@@ -169,6 +175,8 @@ export const planningRoutes: FastifyPluginAsyncZod<PlanningRouteDependencies> = 
       const { depot } = request.query;
       const planningDay = await writableDay(depot, date);
       const day = await inputs(depot, date);
+      if (day.validation.publishedStops?.some((s) => s.departed))
+        throw new ApiHttpError(409, "ILLEGAL_TRANSITION", "errors.dayNotPlannable", { state: planningDay.state });
       const result = proposePlan(day.allocation, day.reference.ref);
       const draft = await writeDraft(planningDay, request.body.revision, toDraftData(result, day), actorId(request));
       return { draft: toDraftDto(draft), stats: result.stats, trace: [...result.trace] };

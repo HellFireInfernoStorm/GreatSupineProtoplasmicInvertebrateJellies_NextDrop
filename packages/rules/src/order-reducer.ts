@@ -44,7 +44,7 @@ export const TRANSITIONS: Readonly<Record<OrderStatus, readonly OrderStatus[]>> 
   DEFERRED: ["PLANNED", "CANCELLED"],
   PLANNED: ["LOADED", "DEFERRED", "PLANNED", "OUT_FOR_DELIVERY"],
   LOADED: ["OUT_FOR_DELIVERY", "PLANNED", "DEFERRED"],
-  OUT_FOR_DELIVERY: ["DELIVERED", "FAILED"],
+  OUT_FOR_DELIVERY: ["DELIVERED", "FAILED", "DEFERRED"],
   FAILED: ["DEFERRED", "PLANNED"],
   DELIVERED: ["RECEIVED", "DISPUTED"],
   DISPUTED: ["RECEIVED"],
@@ -58,6 +58,7 @@ const DEPARTURE_EVENTS: readonly string[] = ["TRIP_DEPARTED", "ORDER_OUT_FOR_DEL
 export function isAllowedTransition(from: OrderStatus | null, to: OrderStatus, eventType: OrderEvent["type"]): boolean {
   if (from === null) return to === "ORDERED" && eventType === "ORDER_PLACED";
   if (!TRANSITIONS[from].includes(to)) return false;
+  if (from === "OUT_FOR_DELIVERY" && to === "DEFERRED") return eventType === "ORDER_DEFERRED";
   if (from === "LOADED" && (to === "PLANNED" || to === "DEFERRED")) return eventType === "LOAD_REVERSED";
   if (from === "PLANNED" && to === "OUT_FOR_DELIVERY") return DEPARTURE_EVENTS.includes(eventType);
   return true;
@@ -311,6 +312,15 @@ function resolveConflict(state: OrderState, event: Extract<OrderEvent, { type: "
  */
 function reduce(state: OrderState, event: OrderEvent, forced: boolean): ReduceResult {
   const from = state.status;
+  // An authoritative same-trip re-sequence changes placement, never physical progress (ADR 0053).
+  if (
+    from === "OUT_FOR_DELIVERY" &&
+    event.type === "ORDER_PLANNED" &&
+    state.assignment?.tripId === event.payload.tripId &&
+    state.assignment.vehicleId === event.payload.vehicleId
+  ) {
+    return applied(state, { ...state, assignment: assignmentOf(event) });
+  }
 
   if (event.type === "TRIP_DEPARTED" || event.type === "ORDER_OUT_FOR_DELIVERY") {
     const trip = departingTrip(event);

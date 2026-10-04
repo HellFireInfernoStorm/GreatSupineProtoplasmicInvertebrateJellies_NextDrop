@@ -37,3 +37,23 @@ describe("planning day validator context", () => {
     ).toBe(false);
   });
 });
+
+it("strictly validates published stop lock context", () => {
+  const stop = {
+    orderId: apiFixtures.order.id,
+    vehicleId: apiFixtures.vehicle.id,
+    tripNo: 1,
+    seq: 1,
+    locked: true,
+    departed: true,
+  };
+  const context = { ...apiFixtures.planningContext, publishedStops: [stop] };
+  expect(apiSchemas.planningContext.safeParse(context).success).toBe(true);
+  for (const invalid of [
+    { ...stop, seq: 0 },
+    { ...stop, locked: "true" },
+    { ...stop, trusted: true },
+  ]) {
+    expect(apiSchemas.planningContext.safeParse({ ...context, publishedStops: [invalid] }).success).toBe(false);
+  }
+});

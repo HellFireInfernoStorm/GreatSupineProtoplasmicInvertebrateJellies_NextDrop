@@ -467,3 +467,15 @@ describe("performance", () => {
     expect(perPlan).toBeLessThan(50);
   });
 });
+
+describe("published in-flight planning (ADR 0053)", () => {
+  it("allows retained in-flight orders only on their published trip", () => {
+    const t = trip("T", "VEH001", 1, [o("A", "OUT026", { status: "OUT_FOR_DELIVERY" })]);
+    const ctx = {
+      publishedStops: [{ orderId: "A", vehicleId: "VEH001", tripNo: 1, seq: 1, locked: false, departed: true }],
+    };
+    expect(only(check([t], ctx).violations, "ORDER_NOT_CONFIRMED")).toEqual([]);
+    expect(only(check([{ ...t, tripNo: 2 }], ctx).violations, "ORDER_NOT_CONFIRMED")).toHaveLength(1);
+    expect(only(check([t]).violations, "ORDER_NOT_CONFIRMED")).toHaveLength(1);
+  });
+});

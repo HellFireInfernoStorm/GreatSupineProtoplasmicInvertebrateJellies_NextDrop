@@ -7,6 +7,7 @@ import { Pill } from "../../ui/StatusPill";
 import {
   moveOrder,
   evaluate,
+  lockedDraftChange,
   type DraftData,
   type Order,
   type Outlet,
@@ -59,6 +60,9 @@ export function PlanBoard({
     `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
   const orderCard = (order: Order, seq?: number) => {
     const outlet = outlets.find((out) => out.id === order.outletId);
+    const locked = context.publishedStops?.some((s) => s.orderId === order.id && s.locked) ?? false;
+    const allowed = (destination: string | null) =>
+      lockedDraftChange(moveOrder(data, order.id, destination), reference, context) === null;
     return (
       <div className="dispatch-order-card" key={order.id}>
         <strong>
@@ -68,6 +72,7 @@ export function PlanBoard({
           {order.weightG / 1000} {t("units.kg")}
         </small>
         <span className="dispatch-flags">
+          {locked && <Pill tone="warn">{t("stopLocked")}</Pill>}
           {order.tempRequirement === "chilled" && <ChilledPill />}
           {outlet?.parking === "van_only" && <Pill tone="deferred">{t("vanOnly")}</Pill>}
           {order.deferredCount > 0 && <Pill tone="warn">{t("previouslyDeferred")}</Pill>}
@@ -77,7 +82,7 @@ export function PlanBoard({
         </span>
         <select
           aria-label={`${t("moveTo")} ${order.displayId}`}
-          disabled={disabled || busy}
+          disabled={disabled || busy || locked}
           value=""
           onChange={(e) => {
             if (e.target.value) {
@@ -87,12 +92,14 @@ export function PlanBoard({
           }}
         >
           <option value="">{t("moveTo")}</option>
-          {data.trips.map((trip) => (
-            <option key={trip.ref} value={trip.ref}>
-              {trip.ref} · {vehicles.find((v) => v.id === trip.vehicleId)?.displayId}
-            </option>
-          ))}
-          <option value="unassigned">{t("unassigned")}</option>
+          {data.trips
+            .filter((trip) => allowed(trip.ref))
+            .map((trip) => (
+              <option key={trip.ref} value={trip.ref}>
+                {trip.ref} · {vehicles.find((v) => v.id === trip.vehicleId)?.displayId}
+              </option>
+            ))}
+          {allowed(null) && <option value="unassigned">{t("unassigned")}</option>}
         </select>
       </div>
     );

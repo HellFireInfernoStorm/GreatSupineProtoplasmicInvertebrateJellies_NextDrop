@@ -17,6 +17,8 @@ export interface PlanOrder {
 }
 
 export interface PlanTrip {
+  /** Dispatcher explicitly ordered these stops; allocator trips use the default window ordering. */
+  readonly preserveOrder?: boolean;
   /** Display id, e.g. `T015`. Unique within a plan. */
   readonly ref: string;
   readonly vehicleId: string;

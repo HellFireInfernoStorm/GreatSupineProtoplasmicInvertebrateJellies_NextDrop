@@ -322,4 +322,126 @@ describe.skipIf(!url)("publish transaction (PostgreSQL)", () => {
     expect(hill).toMatchObject({ brand: WALKTHROUGH_TRIP.brand, district: WALKTHROUGH_TRIP.district });
     expect([...new Set(hill.stops.map((s) => s.outlet.displayId))]).toEqual([...WALKTHROUGH_TRIP.stopOutletIds]);
   }, 60000);
+  it("edits departed later stops, protects reported facts and holds offline cancelled-stop delivery (ADR 0053)", async () => {
+    const prisma = database.prisma!;
+    const deviceId = randomUUID();
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { role: "DRIVER", loginId: WALKTHROUGH_DRIVER_ID, pin: DEMO_PIN, deviceId },
+      headers: { [CSRF_HEADER]: "1" },
+    });
+    expect(login.statusCode, login.body).toBe(200);
+    const userId = login.json().user.id as string;
+    const cookies = { [SESSION_COOKIE]: login.cookies.find((c) => c.name === SESSION_COOKIE)!.value };
+    const headers = { [CSRF_HEADER]: login.json().csrfToken as string };
+    const versions = (await call("GET", day("/versions", "Kandy"))).json() as ApiDto<"versionsResponse">;
+    const plan = versions.items.at(-1)!;
+    const hill =
+      plan.trips.find((t) => t.vehicleId === login.json().user.vehicleId) ??
+      plan.trips.find((t) => t.stops.length >= 4)!;
+    let seq = 0;
+    const event = (type: string, orderId: string | null, payload: object) => ({
+      clientEventId: randomUUID(),
+      deviceId,
+      deviceSeq: seq++,
+      schemaVersion: 1,
+      source: "FIELD",
+      actor: { userId, role: "DRIVER" },
+      subject: { tripId: hill.id, ...(orderId ? { orderId } : {}) },
+      capturedAt: `${DATE}T01:00:00.000Z`,
+      basedOnPlanVersion: plan.version,
+      type,
+      payload,
+    });
+    const push = async (events: unknown[]) => {
+      const r = await app.inject({
+        method: "POST",
+        url: "/api/sync/events",
+        cookies,
+        headers,
+        payload: { deviceId, events },
+      });
+      expect(r.statusCode, r.body).toBe(200);
+      return r.json().results as { status: string; conflictId?: string }[];
+    };
+    // The walkthrough loads on the dock, then departs. Departure itself is the real ingest path.
+    await prisma.trip.update({ where: { id: hill.id }, data: { status: "READY" } });
+    expect((await push([event("TRIP_DEPARTED", null, { tripId: hill.id })]))[0]?.status).toBe("ACCEPTED");
+    const reported = hill.stops[0]!.order.id;
+    expect((await push([event("STOP_OUTCOME", reported, { outcome: "FULL" })]))[0]?.status).toBe("ACCEPTED");
+    const offline = hill.stops.at(-1)!.order.id;
+    const offlineFact = event("STOP_OUTCOME", offline, { outcome: "FULL" });
+    const beforeDay = (await call("GET", day("", "Kandy"))).json() as ApiDto<"dayResponse">;
+    expect(beforeDay.queue.map((o) => o.id)).toEqual(expect.arrayContaining(hill.stops.map((s) => s.order.id)));
+    expect(beforeDay.planningContext.publishedStops).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ orderId: reported, locked: true, departed: true }),
+        expect.objectContaining({ orderId: offline, locked: false, departed: true }),
+      ]),
+    );
+    const current = (await call("GET", day("/draft", "Kandy"))).json().draft as ApiDto<"draft">;
+    const target = current.data.trips.find((t) => t.orderIds.includes(offline))!;
+    const edited: DraftData = {
+      ...current.data,
+      trips: current.data.trips.map((t) =>
+        t.ref === target.ref
+          ? {
+              ...t,
+              orderIds: [
+                t.orderIds[0]!,
+                ...t.orderIds
+                  .slice(1)
+                  .filter((id) => id !== offline)
+                  .reverse(),
+              ],
+            }
+          : t,
+      ),
+      unassignedOrderIds: [offline],
+      deferrals: [{ orderId: offline, reasonCode: "OTHER", note: "Offline stop cancelled" }],
+    };
+    const saved = await saveDraft(current.revision, edited, "Kandy");
+    const published = await call("POST", day("/publish", "Kandy"), { revision: saved.revision });
+    expect(published.statusCode, published.body).toBe(200);
+    expect(
+      await prisma.orderEvent.count({
+        where: { type: "PLAN_CHANGED", orderId: { in: target.orderIds.slice(1).filter((id) => id !== offline) } },
+      }),
+    ).toBeGreaterThan(0);
+    const retained = await prisma.order.findMany({
+      where: { id: { in: target.orderIds.filter((id) => id !== offline) } },
+    });
+    expect(retained.find((o) => o.id === reported)?.status).toBe("DELIVERED");
+    expect(retained.filter((o) => o.id !== reported).every((o) => o.status === "OUT_FOR_DELIVERY")).toBe(true);
+    const replay = await prisma.order.findUniqueOrThrow({
+      where: { id: offline },
+      include: { orderEvent_orderId: { orderBy: { id: "asc" } } },
+    });
+    expect(reduceOrder(offline, replay.orderEvent_orderId.map(toRulesEvent)).status).toBe(replay.status);
+    const held = (await push([offlineFact]))[0]!;
+    expect(held.status).toBe("HELD_CONFLICT");
+    expect(await prisma.conflict.findUniqueOrThrow({ where: { id: held.conflictId! } })).toMatchObject({
+      kind: "FACT_ON_CANCELLED_STOP",
+    });
+    // Simulate a stale/tampered draft to ensure authoritative publish refuses moving a reported stop atomically.
+    const illegal = {
+      ...edited,
+      trips: edited.trips.map((t) =>
+        t.ref === target.ref ? { ...t, orderIds: [...t.orderIds.slice(1), reported] } : t,
+      ),
+    };
+    await prisma.planDraft.update({
+      where: {
+        planningDayId: (await prisma.planningDay.findFirstOrThrow({ where: { depot: "Kandy", date: new Date(DATE) } }))
+          .id,
+      },
+      data: { revision: saved.revision + 1, data: illegal },
+    });
+    const before = await written();
+    const refused = await call("POST", day("/publish", "Kandy"), { revision: saved.revision + 1 });
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.json()).toMatchObject({ code: "STOP_LOCKED", params: { orderId: reported } });
+    expect(await written()).toEqual(before);
+  }, 60000);
 });

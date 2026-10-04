@@ -12,6 +12,7 @@ import {
   explainDeferral,
   isoWeekOf,
   validatePlan,
+  lockedStopChange,
   type AllocationOrder,
   type LocalDate,
   type PlanTrip,
@@ -49,10 +50,6 @@ export interface PublishInput {
 
 /** Day states a draft can be published from. */
 const PUBLISHABLE = new Set(["PLANNING", "PUBLISHED", "IN_PROGRESS"]);
-/** Trip states whose stops can no longer change. */
-const DEPARTED = new Set(["DEPARTED", "COMPLETE"]);
-/** Field facts that lock a stop. */
-const FIELD_FACTS = ["STOP_ARRIVED", "STOP_OUTCOME", "POD_CAPTURED"];
 
 const revisionConflict = (current: number) =>
   new ApiHttpError(409, "REVISION_CONFLICT", "errors.revisionConflict", { revision: current });
@@ -121,6 +118,20 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
       const inputs = await loadDayInputs(tx, reference, input.depot, input.date);
       const plan = toRulesPlan(data, inputs);
       const validation = validatePlan(plan, reference.ref, inputs.validation);
+      // Preserve ADR 0004's hard validation response for removing/moving pinned loaded cargo.
+      if (validation.violations.some((v) => v.code === "ORDER_ALREADY_LOADED")) throw validationFailed(validation);
+      const illegalStop = lockedStopChange(
+        inputs.validation.publishedStops ?? [],
+        data.trips.flatMap((t) =>
+          t.orderIds.map((orderId, seq) => ({
+            orderId,
+            vehicleId: reference.ids.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId,
+            tripNo: t.tripNo,
+            seq: seq + 1,
+          })),
+        ),
+      );
+      if (illegalStop) throw new ApiHttpError(409, "STOP_LOCKED", "errors.stopLocked", { orderId: illegalStop });
       if (!validation.ok) throw validationFailed(validation);
 
       // 5. A reason for every unassigned confirmed order; a note for OTHER and for a repeat deferral.
@@ -146,7 +157,7 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
         );
       }
 
-      // 6. Diff against the published plan; stops with field facts or on departed trips are locked.
+      // 6. Diff against the published plan; server facts, loaded pins and complete trips lock stops (ADR 0053).
       const current = await tx.trip.findMany({
         where: { planningDayId: day.id, status: { not: "CANCELLED" } },
         include: { stops: true },
@@ -157,13 +168,6 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
           was.set(s.orderId, { tripId: t.id, vehicleId: t.vehicleId, tripNo: t.tripNo, seq: s.seq, etaMin: s.etaMin });
         }
       }
-      const facts = await tx.orderEvent.findMany({
-        where: { orderId: { in: [...was.keys()] }, type: { in: FIELD_FACTS }, disposition: "APPLIED" },
-        select: { orderId: true },
-      });
-      const locked = new Set(facts.map((f) => f.orderId!));
-      for (const t of current) if (DEPARTED.has(t.status)) for (const s of t.stops) locked.add(s.orderId);
-
       const { vehicleUuid } = reference.ids;
       const schedules = scheduleByVehicle(plan.trips, inputs);
       const next = new Map<string, Omit<Slot, "tripId">>();
@@ -177,14 +181,6 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
           });
         }
       }
-      for (const orderId of locked) {
-        const a = was.get(orderId);
-        const b = next.get(orderId);
-        if (!a || !b || a.vehicleId !== b.vehicleId || a.tripNo !== b.tripNo || a.seq !== b.seq) {
-          throw new ApiHttpError(409, "STOP_LOCKED", "errors.stopLocked", { orderId });
-        }
-      }
-
       // 7. Trips and stops, written in place.
       const now = deps.clock.now();
       const version = day.currentVersion + 1;
@@ -220,7 +216,11 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
             actor,
             at: now,
           });
-          if (order.status !== "PLANNED")
+          if (
+            order.status !== "PLANNED" &&
+            order.status !== "OUT_FOR_DELIVERY" &&
+            ["ORDERED", "DEFERRED", "FAILED"].includes(order.status)
+          )
             await tx.order.update({ where: { id: orderId }, data: { status: "PLANNED" } });
         }
         if (before) {

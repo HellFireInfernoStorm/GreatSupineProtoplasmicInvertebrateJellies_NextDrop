@@ -15,3 +15,4 @@ export * from "./validator";
 export * from "./ranking";
 export * from "./allocator";
 export * from "./stop-outcome";
+export * from "./planning-locks";

@@ -231,5 +231,6 @@
   "saveChanges": "Save changes",
   "loadingState": "Loaded order assignments",
   "repeatDeferral": "Previous-run deferrals",
-  "skippedPrevious": "Skipped previous run"
+  "skippedPrevious": "Skipped previous run",
+  "stopLocked": "Locked · field fact or pinned load"
 }
