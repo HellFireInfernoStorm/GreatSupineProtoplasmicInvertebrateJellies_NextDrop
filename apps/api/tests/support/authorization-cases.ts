@@ -144,6 +144,7 @@ export const expectedRoles = {
   uploadBlob: field,
   blob: all,
   heartbeat: field,
+  fieldConflicts: field,
   changes: all,
   stream: all,
   demoState: dispatch,

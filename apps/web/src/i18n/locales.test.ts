@@ -60,10 +60,17 @@ describe("locale files", () => {
         "shared/common",
         "shared/ui",
         "store/login",
+        "store/order",
+        "store/shell",
       ].sort(),
     );
-    for (const tree of Object.values(english)) {
-      expect(JSON.stringify(tree)).not.toContain('"review"');
+    // English is the source: plain strings, with no `{ text, review }` leaves. A key may still be called "review".
+    const hasReviewState = (tree: LocaleTree): boolean =>
+      Object.values(tree).some(
+        (value) => typeof value !== "string" && (isReviewedString(value) || hasReviewState(value)),
+      );
+    for (const [namespace, tree] of Object.entries(english)) {
+      expect(hasReviewState(tree), namespace).toBe(false);
     }
   });
 

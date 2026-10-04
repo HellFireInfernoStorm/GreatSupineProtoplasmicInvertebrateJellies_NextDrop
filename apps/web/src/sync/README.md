@@ -16,6 +16,10 @@ The controller owns one flight per tab and one cross-tab owner per database (Web
 
 The Vite Workbox build precaches the shell, role chunks, local fonts, locales and icons; `/api` never falls through to the cached shell. The update prompt requires explicit confirmation of an idle/between-stops moment and disables activation during sync. Tests use fake-indexeddb; production-browser verification must use `pnpm build` and `pnpm preview`, because the worker is intentionally disabled in development.
 
-A `conflict_resolved` hint has no authoritative accept/reject outcome in the current field contract. It never marks a held fact successful or removes the notice; the row retains `RESOLUTION_DETAILS_UNAVAILABLE`. [Issue #97](https://github.com/HellFireInfernoStorm/GreatSupineProtoplasmicInvertebrateJellies_NextDrop/issues/97) tracks the contracts/API recovery path for decisions, reasons and missed hints.
+Held facts are reconciled on every pull through `POST /sync/conflicts` (ADR 0043), asked by `clientEventId` and independent of the feed cursor. A `conflict_resolved` hint only triggers a pass, so a missed hint or a cold resume recovers the same way.
+
+- **Accepted:** the fact becomes `acked` with the response `feedHead` as its confirmation boundary, so it stays projected until a covering snapshot.
+- **Rejected:** the fact becomes `rejected` (`CONFLICT_REJECTED`) and keeps the decision and the dispatcher's note for diagnostics.
+- **Open, unknown or unreachable:** the fact stays held. A failed outcome request never blocks pushing.
 
 Server endpoints and field screens remain separate issues. `VITE_API_MOCK=true` uses the contract fixtures, with correlated acknowledgements for the submitted event IDs. Mock snapshots are static examples and do not simulate a complete evolving backend.

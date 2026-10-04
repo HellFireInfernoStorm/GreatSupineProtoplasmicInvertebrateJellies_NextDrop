@@ -1,4 +1,4 @@
-# ADR 0038: Dispatcher planning validation context
+# ADR 0044: Dispatcher planning validation context
 
 - Status: proposed
 - Date: 2026-10-04

@@ -7,12 +7,15 @@ export interface SyncTransport {
   snapshot(date: string): Promise<FieldSnapshot>;
   changes(after: string, limit: number): Promise<ApiDto<"changesResponse">>;
   push(deviceId: string, events: ClientEvent[]): Promise<ApiDto<"syncEventsResponse">>;
+  conflicts(clientEventIds: string[]): Promise<ApiDto<"fieldConflictsResponse">>;
   upload(blob: QueuedBlob): Promise<void>;
 }
 export const syncTransport: SyncTransport = {
   snapshot: (date) => callApi("snapshot", { query: { date }, signal: AbortSignal.timeout(20000) }),
   changes: (after, limit) => callApi("changes", { query: { after, limit }, signal: AbortSignal.timeout(20000) }),
   push: (deviceId, events) => callApi("syncEvents", { body: { deviceId, events }, signal: AbortSignal.timeout(20000) }),
+  conflicts: (clientEventIds) =>
+    callApi("fieldConflicts", { body: { clientEventIds }, signal: AbortSignal.timeout(20000) }),
   upload: async (blob) => {
     const bytes = new Uint8Array(await blob.bytes.arrayBuffer());
     apiSchemas.blobBody.parse(bytes);

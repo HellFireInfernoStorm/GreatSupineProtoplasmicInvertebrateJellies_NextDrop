@@ -4,6 +4,7 @@ import { eventPayloadSchemas, type EventPayloadMap } from "../event-payload";
 import { errorCodeSchema } from "../errors";
 import { syncResultStatusSchema } from "../sync";
 import { SCHEMA_VERSION, schemaVersion } from "../schema-version";
+import { conflictKindSchema, conflictResolutionSchema } from "../vocab";
 import { upcastPayload, upcasterRegistry, type UpcasterRegistry } from "../upcasters";
 import { isoDateTime, localDate, uuidV7 } from "../primitives";
 import { count, cursorSchema, nonempty } from "./common";
@@ -175,6 +176,31 @@ export const heartbeatResponseSchema = z.strictObject({
   feedHead: cursorSchema,
   resetEpoch: count,
 });
+/**
+ * The device's own held facts, looked up by clientEventId (ADR 0042). Unknown, foreign or not-held IDs are omitted.
+ */
+export const fieldConflictsRequestSchema = z.strictObject({ clientEventIds: z.array(uuidV7).min(1).max(100) });
+const fieldConflictBase = z.strictObject({
+  conflictId: uuidV7,
+  clientEventId: uuidV7,
+  kind: conflictKindSchema,
+  openedAt: isoDateTime,
+});
+export const fieldConflictSchema = z.discriminatedUnion("state", [
+  fieldConflictBase.extend({ state: z.literal("OPEN") }),
+  fieldConflictBase.extend({
+    state: z.literal("RESOLVED"),
+    resolution: conflictResolutionSchema,
+    note: z.string().nullable(),
+    resolvedAt: isoDateTime,
+  }),
+]);
+export const fieldConflictsResponseSchema = z.strictObject({
+  items: z.array(fieldConflictSchema),
+  serverTime: isoDateTime,
+  /** Confirmation boundary: a snapshot whose feedCursor is at or past this reflects every listed resolution. */
+  feedHead: cursorSchema,
+});
 export const blobHeadersSchema = z.object({
   "content-type": z.enum(["image/jpeg", "image/png", "image/webp"]),
   "x-nextdrop-csrf": nonempty,
@@ -202,6 +228,9 @@ export const fieldSchemas = {
   fieldSnapshot: fieldSnapshotSchema,
   heartbeatRequest: heartbeatRequestSchema,
   heartbeatResponse: heartbeatResponseSchema,
+  fieldConflictsRequest: fieldConflictsRequestSchema,
+  fieldConflict: fieldConflictSchema,
+  fieldConflictsResponse: fieldConflictsResponseSchema,
   blobHeaders: blobHeadersSchema,
   blobBody: blobBodySchema,
   blobResponse: blobResponseSchema,

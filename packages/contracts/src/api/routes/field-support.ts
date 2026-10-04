@@ -53,6 +53,16 @@ export const fieldSupportRoutes = {
     request: { headers: "mutationHeaders", body: "heartbeatRequest" },
     responses: { 200: "heartbeatResponse" },
   },
+  /** Outcomes of the caller's own held facts, for cold resume and missed hints (ADR 0042). A read sent as POST. */
+  fieldConflicts: {
+    method: "POST",
+    path: "/api/sync/conflicts",
+    roles: field,
+    access: "session",
+    transport: "json",
+    request: { headers: "mutationHeaders", body: "fieldConflictsRequest" },
+    responses: { 200: "fieldConflictsResponse" },
+  },
   changes: {
     method: "GET",
     path: "/api/changes",

@@ -22,13 +22,14 @@ const reasons = {
   deferral: [{ code: "TIME_BUDGET", message_key: "reasons.TIME_BUDGET" }],
   problems: [{ code: "VEHICLE_PROBLEM", message_key: "problems.VEHICLE_PROBLEM" }],
   loadShort: [{ code: "STOCK_SHORT", message_key: "loadShort.STOCK_SHORT" }],
+  loadDamaged: [{ code: "CRUSHED", message_key: "loadDamaged.CRUSHED" }],
   stopOutcome: [{ code: "VEHICLE_BREAKDOWN", message_key: "stopOutcome.VEHICLE_BREAKDOWN" }],
 } satisfies ApiDtoInput<"reasonsResponse">;
 const clientEvent = {
   clientEventId: MOCK_ID,
   deviceId: MOCK_ID,
   deviceSeq: 0,
-  schemaVersion: 1,
+  schemaVersion: 2,
   subject: { orderId: MOCK_ORDER_ID },
   source: "FIELD",
   actor: { userId: "loader-1", role: "LOADER" },
@@ -60,6 +61,16 @@ const conflict = {
   resolution: null,
   note: null,
 } satisfies ApiDtoInput<"conflict">;
+const fieldConflict = {
+  conflictId: MOCK_ID,
+  clientEventId: MOCK_ID,
+  kind: "FACT_ON_REASSIGNED_STOP",
+  openedAt: MOCK_TIME,
+  state: "RESOLVED",
+  resolution: "REJECT_FACT",
+  note: "Mock resolution",
+  resolvedAt: MOCK_TIME,
+} satisfies ApiDtoInput<"fieldConflict">;
 const issue = {
   id: MOCK_ID,
   orderId: MOCK_ORDER_ID,
@@ -181,11 +192,11 @@ export const apiFixtures = {
   runsResponse: { items: [run], serverTime: MOCK_TIME },
   conflict,
   issue,
-  exception: { type: "CONFLICT", conflict },
+  exception: { type: "CONFLICT", conflict, evidence: [MOCK_ID] },
   exceptionsResponse: {
     items: [
-      { type: "CONFLICT", conflict },
-      { type: "ISSUE", issue },
+      { type: "CONFLICT", conflict, evidence: [MOCK_ID] },
+      { type: "ISSUE", issue, evidence: [] },
     ],
   },
   resolveConflictRequest: { resolution: "ACCEPT_FACT", note: "Mock resolution" },
@@ -262,6 +273,9 @@ export const apiFixtures = {
     lastKnownStop: null,
   },
   heartbeatResponse: { serverTime: MOCK_TIME, feedHead: "9007199254740993", resetEpoch: 1 },
+  fieldConflictsRequest: { clientEventIds: [MOCK_ID] },
+  fieldConflict: fieldConflict,
+  fieldConflictsResponse: { items: [fieldConflict], serverTime: MOCK_TIME, feedHead: "9007199254740993" },
   blobHeaders: { "content-type": "image/jpeg", "x-nextdrop-csrf": "mock-csrf-token" },
   blobBody: new Uint8Array([255, 216, 255, 217]),
   blobResponse: { clientBlobId: MOCK_ID, mime: "image/jpeg", size: 4 },

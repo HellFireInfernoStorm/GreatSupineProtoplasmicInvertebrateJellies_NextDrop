@@ -1,9 +1,9 @@
 import type { FieldSnapshot } from "@nextdrop/contracts";
-import { kgToGrams, kmPerLitreToMetresPerLitre, litresToMillilitres, m3ToLitres } from "@nextdrop/rules";
 import type { PrismaClient } from "../../generated/prisma/client";
 import { readFeedHint } from "../feed";
 import { dateOnly, orderInclude, toOrderDto, toTripDto, tripInclude } from "../orders";
 import type { Actor } from "../policy";
+import { toVehicleDto, vehicleInclude } from "../reference";
 import { snapshotConfig } from "./config";
 
 type FieldActor = Extract<Actor, { role: "LOADER" | "DRIVER" }>;
@@ -34,12 +34,7 @@ export async function buildSnapshot(
   const onDate = { date: dateOnly(date) };
 
   if (actor.role === "DRIVER") {
-    const vehicle = await prisma.vehicle.findUniqueOrThrow({
-      where: { id: actor.vehicleId },
-      include: { driver_vehicleId: true },
-    });
-    const driver = vehicle.driver_vehicleId;
-    if (!driver) throw new Error(`Vehicle ${vehicle.displayId} has no Driver record`);
+    const vehicle = await prisma.vehicle.findUniqueOrThrow({ where: { id: actor.vehicleId }, include: vehicleInclude });
     const trips = await prisma.trip.findMany({
       where: { vehicleId: actor.vehicleId, status: { not: "CANCELLED" }, planningDay: onDate },
       include: tripInclude(),
@@ -50,19 +45,7 @@ export async function buildSnapshot(
       role: "DRIVER",
       scope: {
         date,
-        vehicle: {
-          id: vehicle.id,
-          displayId: vehicle.displayId,
-          type: vehicle.type,
-          temp: vehicle.temp,
-          weightCapG: kgToGrams(vehicle.weightCapKg.toNumber()),
-          volumeCapL: m3ToLitres(vehicle.volumeCapM3.toNumber()),
-          fuelType: vehicle.fuelType,
-          metresPerLitre: kmPerLitreToMetresPerLitre(vehicle.kmPerL.toNumber()),
-          weeklyFuelQuotaMl: litresToMillilitres(vehicle.weeklyFuelQuotaL.toNumber()),
-          depot: vehicle.depot,
-          driver: { name: driver.name, phone: driver.phone },
-        },
+        vehicle: toVehicleDto(vehicle),
         trips: trips.map(toTripDto),
       },
     };

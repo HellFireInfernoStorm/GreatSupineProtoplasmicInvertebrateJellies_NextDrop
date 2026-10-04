@@ -1,12 +1,12 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §12; issues 29, 78; accepted ADRs 0024, 0026
+sources: guide §12; issues 29, 59, 78, 110; accepted ADRs 0024, 0026, 0038, 0041
 ---
 
 # API wire DTOs
 
-The dispatcher day response includes required `planningContext`: `vehicleFuel[{vehicleId,usedOtherDaysThisWeekMl}]`, `outletService[{outletId,daysSinceLastServed,deferredLastRun}]`, and `loadedOrders[{orderId,vehicleId,tripNo,reversalRequested}]`. Identities are UUIDs; fuel is nonnegative integer millilitres, service age is a nonnegative integer day count, and trip number is 1 or 2. Context is generated from the existing authoritative planning inputs, scoped to the permitted depot and queue, with explicit zero usage for known vehicles. It is a fetch-time snapshot; server validation on save remains authoritative (ADR 0038 proposal).
+The dispatcher day response includes required `planningContext`: `vehicleFuel[{vehicleId,usedOtherDaysThisWeekMl}]`, `outletService[{outletId,daysSinceLastServed,deferredLastRun}]`, and `loadedOrders[{orderId,vehicleId,tripNo,reversalRequested}]`. Identities are UUIDs; fuel is nonnegative integer millilitres, service age is a nonnegative integer day count, and trip number is 1 or 2. Context is generated from the existing authoritative planning inputs, scoped to the permitted depot and queue, with explicit zero usage for known vehicles. It is a fetch-time snapshot; server validation on save remains authoritative (ADR 0044 proposal).
 
 This draft documents the wire conventions for [API endpoints](api.md) accepted in [ADR 0024](../../adr/0024-api-wire-contracts.md). Schemas, inferred types, and synthetic web fixtures are exported by `@nextdrop/contracts`. Prisma records stay inside the API.
 
@@ -56,7 +56,7 @@ Login body is discriminated by `role`:
 
 Login, me and reauth return `{ user, expiresAt, serverTime, csrfToken }`. User variants include common id/displayName/locale and the required role scope: store outlet, dispatcher depots, loader depot, driver vehicle. Reauth takes `{ role, pin, deviceId }` for loader/driver and uses the `expired-session` policy above; missing/revoked identity requires normal login. Logout returns `{ ok: true, serverTime }`.
 
-Reference lists wrap `{ items }`. Optional depot query selection never overrides authorization. Calendar requires `from` and `to`. Reasons returns separate deferral, problem, load-short, and stop-outcome lists of `{ code, message_key }`.
+Reference lists wrap `{ items }`. Optional depot query selection never overrides authorization: a depot outside the caller's scope returns an empty list (ADR 0038). A store sees its own brand's products; other roles see the whole catalogue. Calendar requires `from` and `to` and returns every date in that inclusive range, at most 366 days, with `from` not after `to`; otherwise 400 `SCHEMA_INVALID`. Reasons returns separate deferral, problem, load-short, and stop-outcome lists of `{ code, message_key }`.
 
 ## Store
 
@@ -85,7 +85,7 @@ Validate takes `{ data }` and returns `ValidationResult`. Publish takes `{ revis
 
 Hard validation fails with 422 `{ code: VALIDATION_FAILED, message_key, params, requestId, validation: ValidationResult }`. Missing deferral reasons use the same 422 structure with `MISSING_DEFERRAL_REASON`; the API must include the associated validation information. Locked stops use 409 `STOP_LOCKED`; stale revisions use 409 `REVISION_CONFLICT`. Warnings alone remain successful. Rules perform the checks; Zod does not reproduce them.
 
-Runs wraps vehicle, trips, progress counts, separate last-heard/last-sync times, pending count, late risk and the documented state vocabulary, plus server time. Exceptions are discriminated ACK, CONFLICT, ISSUE, SHORT, DAMAGED, FAILED or PROBLEM rows. ACK is `{ type: ACK, tripId, planVersion, actor, at }`, projected from PLAN_ACKNOWLEDGED subject.tripId, payload.planVersion, actor and capturedAt to match the design's Ack inbox row. Conflict.orderId is required nullable for trip-level conflicts; tripId and resolution are also required nullable. `apiConflictFixtures` exports order-level, trip-level and resolved examples. Fleet wraps date and vehicle/availability pairs. Read availability is `{ status, reason, note, changedAt }`, with required nullable reason/note/changedAt; a never-changed available vehicle has all three null. PUT takes `{ changes: [availability payloads without sourceEventId] }`. Outlook takes depot/from/weeks and returns weekly brand demand/chilled/capacity in litres. Outlet history returns `{ items, total, nextCursor }`; pass non-null nextCursor as the next after query, and null means completion.
+Runs wraps vehicle, trips, progress counts, separate last-heard/last-sync times, pending count, late risk and the documented state vocabulary, plus server time. Exceptions are discriminated ACK, CONFLICT, ISSUE, SHORT, DAMAGED, FAILED or PROBLEM rows. CONFLICT, ISSUE, DAMAGED and PROBLEM rows carry `evidence`, the blob IDs of their photos and signatures, readable through `GET /blobs/:id` (ADR 0041). ACK is `{ type: ACK, tripId, planVersion, actor, at }`, projected from PLAN_ACKNOWLEDGED subject.tripId, payload.planVersion, actor and capturedAt to match the design's Ack inbox row. Conflict.orderId is required nullable for trip-level conflicts; tripId and resolution are also required nullable. `apiConflictFixtures` exports order-level, trip-level and resolved examples. Fleet wraps date and vehicle/availability pairs. Read availability is `{ status, reason, note, changedAt }`, with required nullable reason/note/changedAt; a never-changed available vehicle has all three null. PUT takes `{ changes: [availability payloads without sourceEventId] }`. Outlook takes depot/from/weeks and returns weekly brand demand/chilled/capacity in litres. Outlet history returns `{ items, total, nextCursor }`; pass non-null nextCursor as the next after query, and null means completion.
 
 ### Dispatcher dock commands (ADR 0026)
 
@@ -101,7 +101,7 @@ Both commands require a DISPATCHER session and `mutationHeaders` (CSRF), use JSO
 
 The client sync envelope and batch are documented in [push protocol](../sync/push-protocol.md). The persisted event envelope is unchanged.
 
-Snapshot is discriminated by `role`. Common fields are `planVersion`, `serverTime`, `feedCursor`, `resetEpoch`, `scope`, `config`. `planVersion` is null before publication. Loader scope is `{ depot, date, trips, reversals }`; `reversals` contains the depot/date orders that are LOADED with pendingReversal, regardless of the current plan. These loader tasks are confirmed through the existing LOAD_REVERSED field event. Driver scope is `{ date, vehicle, trips }`. Populated stops provide order lines, outlet contacts/docks/windows, and ETAs. Config is `{ rules, reasons, noSignalAfterMin, lateGraceMin }`. Snapshot replaces server-derived tables only; it does not contain or replace the outbox.
+Snapshot is discriminated by `role`. Common fields are `planVersion`, `serverTime`, `feedCursor`, `resetEpoch`, `scope`, `config`. `planVersion` is null before publication. Loader scope is `{ depot, date, trips, reversals }`; `reversals` contains the depot/date orders that are LOADED with pendingReversal, regardless of the current plan. These loader tasks are confirmed through the existing LOAD_REVERSED field event. Driver scope is `{ date, vehicle, trips }`. Populated stops provide order lines, outlet contacts/docks/windows, and ETAs. Config is `{ rules, reasons, noSignalAfterMin, lateGraceMin }`. `reasons` includes `deferral`, `problems`, `loadShort`, `loadDamaged` and `stopOutcome` (ADR 0042 for damage codes). Snapshot replaces server-derived tables only; it does not contain or replace the outbox.
 
 Heartbeat body is `{ deviceId, appVersion, pendingCount, lastSyncAt, lastKnownStop }`; the last two fields are required nullable values. Response is `{ serverTime, feedHead, resetEpoch }`.
 

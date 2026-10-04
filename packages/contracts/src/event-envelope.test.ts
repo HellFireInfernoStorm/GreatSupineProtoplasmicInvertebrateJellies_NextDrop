@@ -85,8 +85,18 @@ describe("fixtures", () => {
 });
 
 describe("upcasters", () => {
-  it("returns payload unchanged when the shared registry is empty", () => {
+  it("returns payload unchanged when no upcaster is registered for the type", () => {
     const payload = { foo: 1 };
     expect(upcastPayload("ORDER_PLACED", 1, payload)).toEqual(payload);
+  });
+
+  it("upcasts LOAD_DAMAGED v1 payloads missing reasonCode to OTHER", () => {
+    const legacy = { lines: [{ lineId: "L1", qty: 1 }], photoRef: "blob-1" };
+    expect(upcastPayload("LOAD_DAMAGED", 1, legacy)).toEqual({ ...legacy, reasonCode: "OTHER" });
+  });
+
+  it("preserves an existing LOAD_DAMAGED reasonCode when upcasting", () => {
+    const legacy = { lines: [{ lineId: "L1", qty: 2 }], reasonCode: "CRUSHED" };
+    expect(upcastPayload("LOAD_DAMAGED", 1, legacy)).toEqual(legacy);
   });
 });
