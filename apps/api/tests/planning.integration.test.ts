@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DEMO_PASSWORD, DISPATCHER_LOGIN_ID } from "../prisma/seed/accounts";
 import { runSeed } from "../prisma/seed/index";
 import { PEAK_DAY_WORKSHOP } from "../prisma/seed/peak-day";
+import { HILL_RUN_WORKSHOP } from "../prisma/seed/story";
 import { createDatabase, type Database } from "../src/lib/database";
 import { CSRF_HEADER, hashSecret, SESSION_COOKIE } from "../src/modules/auth";
 import { fuelUsedThisWeek } from "../src/modules/planning";
@@ -232,7 +233,9 @@ describe.skipIf(!url)("planning API (PostgreSQL)", () => {
     const fleet = res.json() as ApiDto<"fleetResponse">;
     expect(fleet.items).toHaveLength(60);
     const workshop = fleet.items.filter((i) => i.availability.status === "IN_WORKSHOP");
-    expect(workshop.map((i) => i.vehicle.displayId).sort()).toEqual(PEAK_DAY_WORKSHOP.map((w) => w.vehicleId).sort());
+    expect(workshop.map((i) => i.vehicle.displayId).sort()).toEqual(
+      [...PEAK_DAY_WORKSHOP, ...HILL_RUN_WORKSHOP].map((w) => w.vehicleId).sort(),
+    );
     const veh039 = fleet.items.find((i) => i.vehicle.displayId === "VEH039")!;
     expect(veh039.vehicle.driver.name).toBe("Sampath");
     expect(veh039.availability).toEqual({ status: "AVAILABLE", reason: null, note: null, changedAt: null });

@@ -84,6 +84,7 @@ The picker reads only the approved reference CSVs and takes candidates in ID ord
 - No outlet can be identified as Wellawatte, and every Colombo outlet is the same distance from Peliyagoda. The peak-day store is therefore the first Colombo Fresh outlet, by ID, that a Peliyagoda reefer truck can serve. This skips the `van_only` street outlets.
 - The walkthrough vehicle is the first Kandy reefer truck whose Fresh trip 1 to Nuwara Eliya takes 4 of that district's Fresh outlets, added in ID order while the trip stays clean. The trip carries a chilled order at every stop and a dry order at the store stop, since step 13 needs two orders at one store. The Booklet counts trip time per order, so that is 5 orders (ADR 0030). The 4 stops serve steps 8 to 11: stop 1 is delivered online, stops 2 and 3 offline (the dispatcher then cancels stop 3), and stop 4 is edited.
 - The hill store is stop 2, the first stop delivered offline.
+- The other Kandy reefer trucks, `VEH040` to `VEH043`, are in the workshop (`SERVICE`) on the story date, so proposing the Kandy plan puts the hill trip on the walkthrough vehicle. The allocator takes the first reefer truck that fits, so all four are out. The reefer vans stay available and Kandy still serves every story order (ADR 0048).
 - Driver display IDs follow the vehicle number (`DRV001` drives `VEH001`). The Kandy loader is `LDR002`. The trip's display ID is assigned by the plan, so the fixtures pin the trip as vehicle, trip number, brand, district and stops.
 
 Picks on the committed CSVs (#24, re-picked in #30):
