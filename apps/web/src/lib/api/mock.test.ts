@@ -8,6 +8,9 @@ import {
 } from "@nextdrop/contracts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockRespond } from "./mock";
+import { mockDispatchRespond } from "./mockDispatch";
+import { mockStoreRespond } from "./mockStore";
+import { buildOutlook } from "../../roles/dispatcher/outlook-model";
 
 /** The mock keeps its session in sessionStorage, which Node does not have. */
 function memoryStorage(): Storage {
@@ -77,4 +80,26 @@ it("renews a cold field session using its request role and remembers the renewed
   expect(mockRespond("reauth", request).status).toBe(200);
   expect(apiSchemas.sessionResponse.parse(mockRespond("me", undefined).body).user.role).toBe("DRIVER");
   expect(mockRespond("reauth", { ...request, role: "LOADER" }).status).toBe(401);
+});
+
+it("gives the D5 outlook seven flagged weeks with one over capacity and tight payday weeks", () => {
+  const now = Date.parse("2026-10-04T12:00:00.000Z");
+  const request = (name: ApiRouteName, url: string) => ({ name, url, body: undefined, headers: {} });
+  const outlook = mockDispatchRespond(
+    request("outlook", "/api/dispatch/outlook?depot=Peliyagoda&from=2026-10-05&weeks=7"),
+    now,
+  )!;
+  const calendar = mockStoreRespond(request("calendar", "/api/reference/calendar?from=2026-10-05&to=2026-11-22"), now)!;
+  const model = buildOutlook(
+    "2026-10-05",
+    apiSchemas.outlookResponse.parse(outlook.body).items,
+    apiSchemas.calendarResponse.parse(calendar.body).items,
+  )!;
+  expect(model.weeks.map((week) => week.isoWeek)).toEqual([41, 42, 43, 44, 45, 46, 47]);
+  expect(model.peak).toMatchObject({ isoWeek: 45, level: "over", chilledLevel: "over" });
+  expect(model.peak.festival).toEqual({ name: "deepavali", date: "2026-11-08" });
+  expect(model.paydayWeeks.map((week) => [week.isoWeek, week.level])).toEqual([
+    [43, "tight"],
+    [44, "tight"],
+  ]);
 });

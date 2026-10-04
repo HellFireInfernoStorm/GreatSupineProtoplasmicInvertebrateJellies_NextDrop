@@ -187,7 +187,10 @@ export const outlookResponseSchema = z.strictObject({
       brand: orderSchema.shape.brand,
       demandVolumeL: count,
       chilledVolumeL: count,
+      /** Usable fleet volume for the week: max trips per vehicle on operating days, capped by weekly fuel quota (ADR 0055). */
       capacityVolumeL: count,
+      /** The same over reefer vehicles, the limit for chilled demand. */
+      reeferCapacityVolumeL: count,
     }),
   ),
   serverTime: isoDateTime,

@@ -9,6 +9,7 @@ import {
   nextOperatingDate,
   orderingGuidance,
 } from "@nextdrop/rules";
+import { MOCK_CALENDAR } from "./mockCalendar";
 import type { RawResponse, TransportRequest } from "./types";
 
 // Mock answers for the Store flow (VITE_API_MOCK=true). The contract fixtures hold one product and one order, which is
@@ -162,7 +163,8 @@ export function mockStoreRespond(
       const to = query.get("to");
       if (!from || !to) return null;
       const days = Math.min(Math.max(dayNumber(to) - dayNumber(from), 0), 60);
-      const items = Array.from({ length: days + 1 }, (_, i) => calendarDay(addDays(from, i), calendar));
+      // Paydays and festivals are marked for the dispatcher's outlook; operating days are those of `calendar`.
+      const items = Array.from({ length: days + 1 }, (_, i) => calendarDay(addDays(from, i), MOCK_CALENDAR));
       return { status: 200, body: { items } };
     }
     case "storeCutoff": {
