@@ -53,6 +53,7 @@ describe("locale files", () => {
   it("has English for every namespace, as plain strings", () => {
     expect(Object.keys(english).sort()).toEqual(
       [
+        "dispatcher/deferrals",
         "dispatcher/login",
         "dispatcher/planning",
         "driver/login",
