@@ -9,12 +9,12 @@ import { useOrder } from "../data";
 import { Icon } from "../icons";
 import { PhoneScreen } from "../StoreLayout";
 import { timelineSteps } from "../tracking/timeline";
-import { ISSUE_KINDS, issueRequest, type IssueKind } from "./receipt";
+import { canReport, ISSUE_KINDS, issueRequest, type IssueKind } from "./receipt";
 import { useSend } from "./useSend";
 
 /**
  * S3 Report an issue: short, damaged, warm or something else, about one item or the whole order. Phone: Figma
- * `235:1029`. Desktop draws it as a dialog (`234:893`); the build gives it a page of its own (ADR 0042).
+ * `235:1029`. Desktop draws it as a dialog (`234:893`); the build gives it a page of its own (ADR 0045).
  */
 export function IssuePage() {
   const { t } = useTranslation("store/receipt");
@@ -34,8 +34,9 @@ export function IssuePage() {
   if (detail.isError) return <Navigate to={home} replace />;
   if (!detail.data) return null;
   const { order } = detail.data;
-  // An issue is about a delivery, so there must be one. Once sent, the order is Disputed and the screen closes.
-  if (order.status !== "DELIVERED" && order.status !== "RECEIVED" && !pending) return <Navigate to={home} replace />;
+  // An issue is about a delivery, so there must be one. A Disputed order can take another report: the server records
+  // a second issue without changing the status (ADR 0045).
+  if (!canReport(order.status)) return <Navigate to={home} replace />;
 
   const picked = order.lines.find((line) => line.id === (lineId ?? order.lines[0]!.id)) ?? order.lines[0]!;
   const whole = lineId === "";

@@ -8,6 +8,7 @@ import { useDeliveries, useOrder, useOutlet } from "../data";
 import { dateInstant } from "../dates";
 import { Icon } from "../icons";
 import { PhoneScreen } from "../StoreLayout";
+import { canReport } from "../receipt/receipt";
 import { timelineSteps, type OrderDetail, type Step } from "./timeline";
 
 const day = (date: string) => formatDay(dateInstant(date));
@@ -181,7 +182,7 @@ export function OrderPage() {
       ? t("order.subtitleOutlet", { id: order.displayId, temp, outlet: outlet.displayId })
       : t("order.subtitle", { id: order.displayId, temp })
     : undefined;
-  const actions = order && (order.status === "DELIVERED" || order.status === "RECEIVED") && (
+  const actions = order && canReport(order.status) && (
     <div className="flex flex-col gap-2 lg:flex-row">
       {order.status === "DELIVERED" && (
         <Button size="lg" className="w-full lg:w-auto" onClick={() => void navigate(`/store/orders/${id}/receipt`)}>

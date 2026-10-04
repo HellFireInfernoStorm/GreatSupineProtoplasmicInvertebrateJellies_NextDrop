@@ -34,3 +34,7 @@ export function issueRequest(
     ...(text ? { note: text } : {}),
   };
 }
+
+/** An issue can be reported once the delivery has been made, and again after that: each report is its own dispute. */
+export const canReport = (status: Order["status"]): boolean =>
+  status === "DELIVERED" || status === "RECEIVED" || status === "DISPUTED";

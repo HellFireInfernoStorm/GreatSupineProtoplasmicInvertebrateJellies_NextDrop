@@ -1,6 +1,6 @@
 import { apiFixtures } from "@nextdrop/contracts";
 import { describe, expect, it } from "vitest";
-import { asDelivered, issueRequest, receiptRequest, receivedQty } from "./receipt";
+import { asDelivered, canReport, issueRequest, receiptRequest, receivedQty } from "./receipt";
 
 const line = (id: string, qtyOrdered: number, qtyDelivered: number) => ({
   ...apiFixtures.order.lines[0]!,
@@ -44,5 +44,19 @@ describe("reporting an issue", () => {
   });
   it("can be about the whole order, with no note", () => {
     expect(issueRequest("OTHER", null, 0, "  ")).toEqual({ kind: "OTHER" });
+  });
+});
+
+describe("when an issue can be reported", () => {
+  it("is open after delivery, after receipt, and again on a Disputed order", () => {
+    expect(["DELIVERED", "RECEIVED", "DISPUTED"].map((status) => canReport(status as "DELIVERED"))).toEqual([
+      true,
+      true,
+      true,
+    ]);
+  });
+  it("is closed before the delivery is made", () => {
+    expect(canReport("OUT_FOR_DELIVERY")).toBe(false);
+    expect(canReport("DEFERRED")).toBe(false);
   });
 });
