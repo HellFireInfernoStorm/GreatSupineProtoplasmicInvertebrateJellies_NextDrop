@@ -23,7 +23,12 @@ export type Resource =
   | { kind: "order"; outletId: string; depot: string; vehicleIds: readonly string[] }
   /** `outletIds`: outlets with a stop on this trip. */
   | { kind: "trip"; depot: string; vehicleId: string; outletIds: readonly string[] }
-  | { kind: "vehicle"; vehicleId: string; depot: string };
+  | { kind: "vehicle"; vehicleId: string; depot: string }
+  /**
+   * A photo or signature, through the event that references it. Readers: the depot's dispatcher, the outlet's store,
+   * and the user who recorded the event. Null fields match nobody (an unlinked blob is unreadable).
+   */
+  | { kind: "blob"; depot: string | null; outletId: string | null; uploaderUserId: string | null };
 
 /** Resolve the resource after request validation. Throw `notFound()` when it does not exist. */
 export type ResourceResolver = (request: FastifyRequest) => Resource | Promise<Resource>;

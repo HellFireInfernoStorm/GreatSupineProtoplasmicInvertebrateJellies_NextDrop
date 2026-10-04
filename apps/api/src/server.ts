@@ -8,6 +8,7 @@ import { createDatabase, type Database } from "./lib/database";
 import { rateLimited, registerErrorHandling } from "./lib/errors";
 import type { Readiness } from "./lib/readiness";
 import { registerWebApp } from "./lib/web-app";
+import { registerBlobs } from "./modules/blobs";
 import { authConfigFromEnv, registerAuth, type AuthConfig } from "./modules/auth";
 import { demoRoutes } from "./modules/demo";
 import { feedRoutes } from "./modules/feed";
@@ -83,6 +84,7 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
   await registerPlanning(app, { prisma, clock });
   // Field facts are received on business time too (receivedAt, confirmed-after-sync, serverTime).
   await registerField(app, { prisma, now: clock.now });
+  await registerBlobs(app, { prisma });
   // Demo tooling needs the database: the clock offset, the tick and the reset all live there.
   if (prisma) {
     await app.register(demoRoutes, {

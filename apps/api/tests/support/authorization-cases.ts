@@ -75,6 +75,23 @@ export const resources: readonly { name: string; resource: Resource; owners: rea
     resource: { kind: "vehicle", depot: "Foreign depot", vehicleId: "foreign-vehicle" },
     owners: [],
   },
+  // Blobs (ADR 0035): the depot's dispatcher, the outlet's store, the uploading user; a loader's depot is not enough.
+  {
+    name: "own outlet's blob, uploaded by someone else",
+    resource: { kind: "blob", depot: "Own depot", outletId: "own-outlet", uploaderUserId: "other-user" },
+    owners: ["STORE", "DISPATCHER"],
+  },
+  {
+    name: "own upload in a foreign depot",
+    resource: { kind: "blob", depot: "Foreign depot", outletId: "foreign-outlet", uploaderUserId: "own-user" },
+    owners: HUMAN_ROLES,
+  },
+  {
+    name: "foreign blob",
+    resource: { kind: "blob", depot: "Foreign depot", outletId: "foreign-outlet", uploaderUserId: "other-user" },
+    owners: [],
+  },
+  { name: "unlinked blob", resource: { kind: "blob", depot: null, outletId: null, uploaderUserId: null }, owners: [] },
 ];
 
 export const routes = Object.entries(apiRoutes) as [ApiRouteName, ApiRouteDefinition][];
@@ -125,6 +142,7 @@ export const expectedRoles = {
   snapshot: field,
   syncEvents: field,
   uploadBlob: field,
+  blob: all,
   heartbeat: field,
   changes: all,
   stream: all,

@@ -34,6 +34,16 @@ export const fieldSupportRoutes = {
     request: { params: "idParams", headers: "blobHeaders", body: "blobBody" },
     responses: { 200: "blobResponse", 413: "apiError" },
   },
+  /** Blob bytes for authorised readers: the depot's dispatcher, the outlet's store, the uploading user (ADR 0035). */
+  blob: {
+    method: "GET",
+    path: "/api/blobs/:id",
+    roles: HUMAN_ROLES,
+    access: "session",
+    transport: "binary",
+    request: { params: "idParams" },
+    responses: { 200: "blobBody", 404: "apiError" },
+  },
   heartbeat: {
     method: "POST",
     path: "/api/sync/heartbeat",
