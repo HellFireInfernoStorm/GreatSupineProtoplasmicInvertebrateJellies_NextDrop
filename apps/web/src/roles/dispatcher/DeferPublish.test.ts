@@ -46,8 +46,8 @@ describe("D3 deferral screen", () => {
     expect(html).toContain("Unavoidable");
     expect(html).toContain("Next delivery");
     expect(html).toContain("0 now planned · 1 deferred again");
-    expect(html).toContain("Preview only. This notice is sent when you publish.");
-    expect(html).toContain("Order to defer:");
+    expect(html).toContain("Preview notice for order");
+    expect(html).toContain(`Order deferred: ${order.displayId}`);
     expect(html).toContain("Version history");
     expect(html).toContain("Capacity: weight");
     expect(html).toContain(order.displayId);

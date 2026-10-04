@@ -40,12 +40,14 @@ export function DeferPublish(props: Props) {
   const { day, data, outlets, reference, unavailable, breakdown, disabled, onEditingChange } = props;
   const { t } = useTranslation("dispatcher/deferrals");
   const [edits, setEdits] = useState<DraftData | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const session = props.session;
   const publication = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const { busy, error, uncertain } = publication;
   const published = publication.response?.plan ?? null;
   const [toast, setToast] = useState(false);
   const rows = buildDeferralReview(edits ?? data, day, reference, unavailable, breakdown);
+  const preview = rows.find((row) => row.order.id === previewId) ?? rows.find((row) => row.repeat) ?? rows[0];
   const candidate = reviewDraft(edits ?? data, rows);
   const validation = evaluate(
     candidate,
@@ -335,16 +337,25 @@ export function DeferPublish(props: Props) {
               <img src={deferralsIcon} alt="" />
               {t("storesDeferred", { count: rows.length })}
             </div>
-            {rows[0] && (
+            {preview && (
               <div className="dispatch-notice-preview">
                 <h3>{t("preview")}</h3>
-                <small>{t("previewHint")}</small>
-                <strong>{t("noticeTitle", { order: rows[0].order.displayId })}</strong>
+                <label>
+                  <span className="sr-only">{t("previewOrder")}</span>
+                  <select value={preview.order.id} onChange={(event) => setPreviewId(event.target.value)}>
+                    {rows.map((row) => (
+                      <option key={row.order.id} value={row.order.id}>
+                        {row.order.displayId}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <strong>{t("noticeTitle", { order: preview.order.displayId })}</strong>
                 <p>
                   {t("noticeBody", {
                     from: formatDay(`${day.date}T12:00:00+05:30`),
-                    to: formatDay(`${rows[0].explanation.nextServiceableDate}T12:00:00+05:30`),
-                    reason: t(`reasons.${rows[0].reasonCode}`),
+                    to: formatDay(`${preview.explanation.nextServiceableDate}T12:00:00+05:30`),
+                    reason: t(`reasons.${preview.reasonCode}`),
                   })}
                 </p>
               </div>
