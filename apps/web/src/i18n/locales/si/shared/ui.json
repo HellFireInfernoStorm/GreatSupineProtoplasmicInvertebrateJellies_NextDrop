@@ -149,6 +149,14 @@
       "text": "{{used}} / {{capacity}} {{unit}}",
       "review": "draft"
     },
+    "summary": {
+      "text": "{{capacity}} {{unit}} න් · {{percent}} · {{remaining}} {{unit}} ඉතිරි",
+      "review": "draft"
+    },
+    "summaryOver": {
+      "text": "{{capacity}} {{unit}} න් · {{percent}} · {{remaining}} {{unit}} වැඩිපුර",
+      "review": "draft"
+    },
     "unavailable": {
       "text": "ධාරිතාව නොමැත",
       "review": "draft"

@@ -32,6 +32,8 @@ Run the existing Compose stack, with the `public` profile, on one DigitalOcean d
 
 Redeploying is `git pull` and `docker compose up -d --build` in `/opt/nextdrop`. The seed is idempotent (ADR 0030), so a redeploy keeps the demo state.
 
+Amended 2026-10-04 by [ADR 0054](0054-redeploy-resets-demo.md): the init script and redeploys run `docker/redeploy.sh`, which resets the demo to a preset after the stack starts.
+
 ## Alternatives considered
 
 - **Free PaaS tiers** (Render, Koyeb, Hugging Face Spaces, Cloud Run): they sleep or scale to zero. That drops the in-process SSE hub and pauses the pg-boss tick.

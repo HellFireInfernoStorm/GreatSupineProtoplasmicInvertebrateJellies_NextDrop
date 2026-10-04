@@ -157,13 +157,19 @@ To set up a new droplet, paste [`docker/droplet-init.sh`](docker/droplet-init.sh
 2. installs Docker;
 3. clones this repository to `/opt/nextdrop`;
 4. writes `.env` with `COMPOSE_PROFILES=public`, the hostname, generated secrets and `DEMO_MODE=true`. The hostname is `DOMAIN` from the top of the script, or `<ip>.sslip.io` when `DOMAIN` is empty;
-5. starts the stack.
+5. runs `docker/redeploy.sh`, which starts the stack and resets the demo.
 
-To redeploy, run this over SSH. The seed is idempotent, so the demo state survives a redeploy (ADR 0030).
+To redeploy, run this over SSH:
 
 ```bash
-cd /opt/nextdrop && git pull && docker compose up -d --build
+/opt/nextdrop/docker/redeploy.sh
 ```
+
+It pulls, rebuilds and restarts the stack, waits for the API, then resets the demo with the script key (ADR 0054). Every deploy therefore opens on the seeded story day: Mon 28 Sep 2026 14:00 on the demo clock, with the Peliyagoda peak day and the Kandy story orders waiting for Tue 29 Sep. A failed build stops the script before the reset, and the old container keeps serving.
+
+- To start from another preset, pass it: `docker/redeploy.sh orders-closed`. To make it the default, set `DEMO_DEPLOY_PRESET` in `.env`. A preset that is not built yet fails with a 409.
+- To deploy without touching the demo state, pass `--keep`.
+- A plain restart, such as a reboot, never resets: the seed keeps the demo progress (ADR 0030).
 
 Other tasks on the droplet:
 
@@ -232,10 +238,11 @@ Loader recording and Undo ([ADR 0052](agent-docs/adr/0052-loader-recording-and-u
 
 Recorded decisions:
 
-- **No SMS.** Notifications are in-app (change feed and SSE hint). Web Push is optional (ADR 0013, #65).
+- **No SMS.** Notifications are in-app (change feed and SSE hint) (ADR 0013).
+- **No Web Push.** It was optional and last in tier S, to be attempted only after the full walkthrough passed (ADR 0013, #65), and it is left out. In-app is the only `NotificationChannel`. The `VAPID_*` variables in `.env.example` are placeholders: nothing reads them.
 - **No optimisation sidecar.** The greedy allocator in `packages/rules` is the only planning engine (ADR 0014).
 
-> **TODO (#20):** list each tier S item that was not built. The authorization matrix test (#58) is built. Still open: capacity outlook (#55), remaining demo presets and panel (#56), load reversal (#60), fleet and breakdowns (#63), Sinhala and Tamil strings (#57), Web Push (#65).
+> **TODO (#20):** list each tier S item that was not built. The authorization matrix test (#58) is built. Web Push (#65) is recorded above as left out. Still open: capacity outlook (#55), remaining demo presets and panel (#56), load reversal (#60), fleet and breakdowns (#63), Sinhala and Tamil strings (#57).
 >
 ### Draft Sinhala and Tamil strings (#22, #57)
 
@@ -251,7 +258,7 @@ flowchart TB
     S[Store manager] --- D[Dispatcher] --- L[Loader] --- R[Driver]
   end
   subgraph API["Modular monolith API (apps/api, Fastify)"]
-    M["orders · planning · sync · feed · notify · auth · jobs · demo · monitor"]
+    M["reference · orders · planning · shortfalls · field · conflicts · blobs<br/>feed · notifications · auth · policy · monitor · jobs · demo"]
   end
   Rules["packages/rules<br/>validator · allocator · trip time · fuel · reducer"]
   Contracts["packages/contracts<br/>zod DTOs · event envelope · error codes"]
@@ -372,6 +379,7 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0049 D | AA contrast on four Store and Dispatcher elements |
 | 0050 D | Driver run, proof and recovery |
 | 0051 | Public hosting on a DigitalOcean droplet |
+| 0054 | A redeploy resets the public demo to a preset |
 | 0052 D | Loader recording, Undo and plan review |
 
 ## Submission documents

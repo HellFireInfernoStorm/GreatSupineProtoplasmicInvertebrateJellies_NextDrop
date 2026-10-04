@@ -39,7 +39,11 @@
     "text": "සම්බන්ධතාව එනතුරු රැඳී ඇත",
     "review": "draft"
   },
-  "offlineSaved": {
+  "offlineSaved_one": {
+    "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
+    "review": "draft"
+  },
+  "offlineSaved_other": {
     "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
     "review": "draft"
   },
@@ -277,7 +281,11 @@
     "text": "බෙදාහැරීමේ හෝ පිවිසීමේ ගැටලුවේ ඡායාරූපයක් අවශ්‍යයි",
     "review": "draft"
   },
-  "photosSaved": {
+  "photosSaved_one": {
+    "text": "ඡායාරූප {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
+    "review": "draft"
+  },
+  "photosSaved_other": {
     "text": "ඡායාරූප {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
     "review": "draft"
   },
@@ -345,7 +353,11 @@
     "text": "සුරැකි සාක්ෂි ඡායාරූපය",
     "review": "draft"
   },
-  "proofRefs": {
+  "proofRefs_one": {
+    "text": "සාක්ෂි යොමු {{count}} ක් රැකේ",
+    "review": "draft"
+  },
+  "proofRefs_other": {
     "text": "සාක්ෂි යොමු {{count}} ක් රැකේ",
     "review": "draft"
   },
@@ -483,7 +495,11 @@
     "text": "සේවාදායකයට ලැබී ඇත. තහවුරු කිරීමට යාවත්කාලීන ගමන් වාරය එනතුරු රැඳී සිටින්න.",
     "review": "draft"
   },
-  "failedCount": {
+  "failedCount_one": {
+    "text": "සටහන් හෝ ඡායාරූප {{count}} කට අවධානය අවශ්‍යයි",
+    "review": "draft"
+  },
+  "failedCount_other": {
     "text": "සටහන් හෝ ඡායාරූප {{count}} කට අවධානය අවශ්‍යයි",
     "review": "draft"
   },
@@ -523,7 +539,11 @@
     "text": "සමමුහුර්ත විස්තර",
     "review": "draft"
   },
-  "heldCount": {
+  "heldCount_one": {
+    "text": "සටහන් {{count}} ක් සැලසුම්කරුගේ තීරණය බලා සිටී",
+    "review": "draft"
+  },
+  "heldCount_other": {
     "text": "සටහන් {{count}} ක් සැලසුම්කරුගේ තීරණය බලා සිටී",
     "review": "draft"
   },
@@ -563,14 +583,6 @@
   },
   "flagSaved": {
     "text": "ගැටලුව මෙම දුරකථනයේ සුරැකී ඇත · සමමුහුර්ත වනතුරු රැඳී ඇත",
-    "review": "draft"
-  },
-  "offlineSaved_one": {
-    "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
-    "review": "draft"
-  },
-  "offlineSaved_other": {
-    "text": "සම්බන්ධතාව නැත — බෙදාහැරීම් {{count}} ක් මෙම දුරකථනයේ සුරැකී ඇත",
     "review": "draft"
   },
   "capturedOnly": {

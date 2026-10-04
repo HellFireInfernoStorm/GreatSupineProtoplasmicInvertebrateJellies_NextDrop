@@ -149,6 +149,14 @@
       "text": "{{used}} / {{capacity}} {{unit}}",
       "review": "draft"
     },
+    "summary": {
+      "text": "{{capacity}} {{unit}} இல் · {{percent}} · {{remaining}} {{unit}} மீதம்",
+      "review": "draft"
+    },
+    "summaryOver": {
+      "text": "{{capacity}} {{unit}} இல் · {{percent}} · {{remaining}} {{unit}} அதிகம்",
+      "review": "draft"
+    },
     "unavailable": {
       "text": "கொள்ளளவு கிடைக்கவில்லை",
       "review": "draft"

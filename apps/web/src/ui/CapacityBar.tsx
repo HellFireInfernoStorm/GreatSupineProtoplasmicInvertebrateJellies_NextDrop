@@ -31,6 +31,18 @@ export function CapacityBar({
     ratio === null
       ? t("capacity.unavailable")
       : t("capacity.value", { used: number.format(used), capacity: number.format(capacity as number), unit });
+  // The summary headline already shows the used amount, so its detail line gives capacity, share and headroom.
+  const detail =
+    ratio === null
+      ? value
+      : t(used > (capacity as number) ? "capacity.summaryOver" : "capacity.summary", {
+          capacity: number.format(capacity as number),
+          percent: new Intl.NumberFormat(i18n.resolvedLanguage, { style: "percent" }).format(
+            used / (capacity as number),
+          ),
+          remaining: number.format(Math.abs((capacity as number) - used)),
+          unit,
+        });
   return (
     <div className="nd-capacity" data-tone={displayTone} data-used={used} data-presentation={presentation}>
       <div className="nd-capacity-header">
@@ -50,7 +62,7 @@ export function CapacityBar({
           <span className="nd-capacity-fill" style={{ width: `${ratio * 100}%` }} />
         </div>
       )}
-      {presentation === "summary" && <small>{value}</small>}
+      {presentation === "summary" && <small>{detail}</small>}
     </div>
   );
 }
