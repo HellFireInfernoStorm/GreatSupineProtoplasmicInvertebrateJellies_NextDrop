@@ -426,6 +426,14 @@ export function unresolvedShortLines(state: OrderState): readonly ShortLine[] {
 }
 
 /**
+ * Short lines that keep a trip from `TRIP_READY`: unresolved, or resolved `HOLD_TRIP` (ADR 0005, event catalogue).
+ * A trip may be marked ready only when no order on it has any.
+ */
+export function shortLinesBlockingReady(state: OrderState): readonly ShortLine[] {
+  return state.short.filter((l) => l.resolution === null || l.resolution === "HOLD_TRIP");
+}
+
+/**
  * Orders a `TRIP_DEPARTED` takes out for delivery: those assigned to the trip that are PLANNED or LOADED (ADR 0019).
  * The server derives one `ORDER_OUT_FOR_DELIVERY` per order returned.
  */

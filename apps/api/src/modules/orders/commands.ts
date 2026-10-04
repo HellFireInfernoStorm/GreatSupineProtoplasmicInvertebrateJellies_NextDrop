@@ -38,7 +38,12 @@ const illegal = (params: Record<string, string>) =>
   new ApiHttpError(409, "ILLEGAL_TRANSITION", "orders.illegalTransition", params);
 
 /** One feed row per order change, visible to everyone whose scope covers the order (ADR 0029). */
-function orderChanged(order: { id: string; outletId: string; depot: string; vehicleId: string | null }): FeedRowInput {
+export function orderChanged(order: {
+  id: string;
+  outletId: string;
+  depot: string;
+  vehicleId: string | null;
+}): FeedRowInput {
   return {
     kind: "order_changed",
     entity: { type: "order", id: order.id },

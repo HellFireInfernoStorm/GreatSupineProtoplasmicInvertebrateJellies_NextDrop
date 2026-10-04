@@ -35,4 +35,16 @@ Response: `{ results: [{ clientEventId, status, index?, code?, conflictId?, serv
 
 One bad event never fails the batch. Later events that depend on a rejected one are rejected with `ILLEGAL_TRANSITION` and shown grouped with it.
 
+Ingest details (ADR 0034):
+- **Device and identity.** The batch must name the session's own device (403 otherwise). A wrong actor or a type the role does not author is `FORBIDDEN`.
+- **Dependency.** An event about an order, trip or vehicle already rejected in the batch depends on it.
+- **Sequence.** A reused `(deviceId, deviceSeq)` under a new id is `REJECTED DUPLICATE`.
+- **Scope codes.** A missing subject is `NOT_FOUND`. A loader outside its depot is `FORBIDDEN`. A driver off the order, trip or vehicle, or a stop or load fact on an unassigned order, is `NOT_ASSIGNED`.
+- **Writes.** Status moves by compare-and-set and the event by `createMany({ skipDuplicates: true })`; a lost race retries. An unexpected server error fails the request (5xx) so the client retries the whole, idempotent batch.
+- **Illegal transitions.** Until conflict classification lands, an illegal transition is rejected, and a late earlier-stage fact is recorded without moving status.
+- **Trip facts.**
+  - `TRIP_READY` moves PLANNED to READY. It is refused while `rules.shortLinesBlockingReady` reports lines.
+  - `TRIP_DEPARTED` moves PLANNED or READY to DEPARTED and derives `ORDER_OUT_FOR_DELIVERY` for `rules.ordersGoingOut`.
+- **Line quantities.** `LOAD_CONFIRMED` sets loaded quantities. A delivering `STOP_OUTCOME` sets delivered quantities and the order's confirmed-after-sync time.
+
 The result DTO is discriminated by status: ACCEPTED carries its serverEventId, HELD_CONFLICT carries conflictId, and REJECTED requires code and the original zero-based batch index. Only REJECTED permits clientEventId null, when the input ID is missing or invalid; preserve a valid ID even when another field is invalid. The client uses index to correlate such rejections to the submitted batch instead of silently retrying them. Non-rejected results require a valid UUID. DUPLICATE can include the original serverEventId/code. Every result has receivedAt; feedHead is a decimal string, preserving feed sequence precision. String cursor and result-detail conventions are part of the accepted #29 wire contracts.
