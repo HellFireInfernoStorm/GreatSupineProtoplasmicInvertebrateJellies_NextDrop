@@ -16,6 +16,7 @@ export {
   toTripDto,
   tripInclude,
   type OrderRecord,
+  type TripRecord,
 } from "./projection";
 export { NO_SIGNAL_AFTER_MIN, orderResource } from "./routes";
 export { insertOrder, orderChanged, type NewOrder } from "./commands";

@@ -3,10 +3,12 @@
 import type { FastifyInstance } from "fastify";
 import type { PrismaClient } from "../../generated/prisma/client";
 import type { Clock } from "../../lib/clock";
+import { createNotifier } from "../notifications";
 import { createReferenceSource } from "./reference";
 import { planningRoutes } from "./routes";
 
 export { fuelUsedThisWeek, loadDayInputs, QUEUE_STATUSES, toDraftData, toRulesPlan, type DayInputs } from "./inputs";
+export { publishDay, type PublishDependencies, type PublishInput } from "./publish";
 export { createReferenceSource, type Reference, type ReferenceSource } from "./reference";
 export { loadCalendar, orderableDate, tickPlanningDays } from "./tick";
 
@@ -17,5 +19,6 @@ export async function registerPlanning(app: FastifyInstance, deps: { prisma: Pri
     prisma: deps.prisma,
     clock: deps.clock,
     reference: createReferenceSource(deps.prisma),
+    notifier: createNotifier(),
   });
 }
