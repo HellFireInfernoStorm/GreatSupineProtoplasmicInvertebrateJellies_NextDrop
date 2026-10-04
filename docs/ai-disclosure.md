@@ -2,7 +2,7 @@
 
 Which work was AI-assisted, which was not, and how the tools were used. Two parts: the Designathon disclosure from Figma, then the Hackathon pull requests.
 
-Compiled on 4 Oct 2026 from the Figma page recorded in `agent-docs/design/figma-reference.md` §4.8 (node `559:19610`) and from the **AI assistance** section of every pull request then on GitHub (82 pull requests, #2 through #176). The pull request that adds this compilation is not in that list. This file was drafted in Cursor from those sections. Nothing here invents a tool or a review that a pull request did not record.
+Compiled on 4 Oct 2026 from the Figma page recorded in `agent-docs/design/figma-reference.md` §4.8 (node `559:19610`) and from the **AI assistance** section of every pull request then on GitHub (92 pull requests, #2 through #193). This file was drafted in Cursor from those sections (#193) and extended with Claude Code to the pull requests merged after #176. Nothing here invents a tool or a review that a pull request did not record.
 
 ## Designathon
 
@@ -21,7 +21,7 @@ The hi-fi frames, style guide and cross-user flow in Figma were produced with Cl
 
 Every pull request records an AI coding harness. None records `None` for the tools field. The usual split is: a person wrote the issue, the acceptance criteria and the owner decisions; the harness wrote the code, tests, ADR or spec edits, and the pull request text; a person merged it. Several sections say there was no line-by-line human reading of the diff before merge. Where a section says that, the catalogue below keeps it.
 
-Harnesses named across the 82 pull requests:
+Harnesses named across the 92 pull requests:
 
 - **Claude Code** (Claude Opus 5.5, and on a few early pulls Claude Sonnet 5.5), in the desktop app, a git worktree, or a cloud session. Most of the rules core, API modules, seed, Compose, CI, store and dispatcher follow-ups, and the README outline.
 - **OpenAI Codex** (desktop), often with GitHub CLI, Vitest, Prisma and a read-only Figma connector. Contracts follow-ups, the database foundation, the offline client, the component kit, the driver and loader apps, deferral review, and later-stop edits.
@@ -41,7 +41,7 @@ Figma's MCP server was used read-only, to check frames while writing design note
 
 The harness was given the issue, the spec files it links, and the repository instructions, and it implemented that issue on a branch. People corrected it when CI failed, when an ADR number collided, or when a screen did not match the Figma frame. Property tests and the Playwright walkthrough are the check on generated planning and UI code: a proposed plan must pass the validator, and the fourteen judge steps run in CI against `docker compose up`.
 
-Two pull requests in the catalogue are not on `main`: #104 was closed without merging (a jobs-shutdown fix, replaced by #105), and #172 was still open when this list was compiled (window ordering before departure).
+One pull request in the catalogue is not on `main`: #104 was closed without merging (a jobs-shutdown fix, replaced by #105).
 
 ## Catalogue
 
@@ -603,7 +603,7 @@ One entry per pull request, in number order. The three fields are the pull reque
 
 ### #172 Restore window ordering before departure
 
-- **State:** open · **Author:** Deeshan-Liyanage
+- **State:** merged · **Author:** Deeshan-Liyanage
 - **Tools and harnesses:** OpenAI Codex, PowerShell, GitHub CLI and repository test tools.
 - **What the AI produced:** shared helper, adapter changes, regression tests, ADR/spec amendments and PR text.
 - **What a human wrote or reviewed:** repository owner wrote the issue acceptance criteria; human review of this PR is requested from @HellFireInfernoStorm.
@@ -622,3 +622,72 @@ One entry per pull request, in number order. The three fields are the pull reque
 - **What the AI produced:** the bug search, the locale change and this PR.
 - **What a human wrote or reviewed:** Dinura reviews and merges.
 
+### #178 Refresh the architecture and data model docs
+
+- **State:** merged · **Author:** HellFireInfernoStorm
+- **Tools and harnesses:** Claude Code (Claude Opus 5.5)
+- **What the AI produced:** the audit against the code and all edits in this PR
+- **What a human wrote or reviewed:** Dinura asked for the check; review pending
+
+### #180 Pluralise Driver Sync and Settings counts
+
+- **State:** merged · **Author:** HellFireInfernoStorm
+- **Tools and harnesses:** Claude Code (Claude Opus 5.5)
+- **What the AI produced:** the bug search, the locale change and this PR.
+- **What a human wrote or reviewed:** Dinura reviews and merges.
+
+### #181 Reset the public demo to a preset on every redeploy
+
+- **State:** merged · **Author:** HellFireInfernoStorm
+- **Tools and harnesses:** Claude Code (Opus 5.5)
+- **What the AI produced:** the redeploy script, init script change, ADR 0054, spec, README and `.env.example` edits, and the local test runs
+- **What a human wrote or reviewed:** Dinura asked for the behaviour; review pending
+
+### #183 Record Web Push as left out in the README
+
+- **State:** merged · **Author:** LAKWAN194
+- **Tools and harnesses:** Claude Code (Claude Opus 5.5).
+- **What the AI produced:** the two README lines and this description.
+- **What a human wrote or reviewed:** the direction (record it as left out) came from Dinura's comment on #65. Lakwan reviewed the diff before opening the PR.
+
+### #184 Show capacity headroom on dispatcher capacity tiles
+
+- **State:** merged · **Author:** HellFireInfernoStorm
+- **Tools and harnesses:** Claude Code (Claude Opus 5.5)
+- **What the AI produced:** the bug search against Figma, the change, tests and this PR.
+- **What a human wrote or reviewed:** Dinura reviews and merges.
+
+### #187 Pluralise Publish checks warnings count
+
+- **State:** merged · **Author:** HellFireInfernoStorm
+- **Tools and harnesses:** Claude Code, Claude Opus 5.5
+- **What the AI produced:** the issue, the locale and test regex change, and this PR
+- **What a human wrote or reviewed:** Dinura reviews
+
+### #188 Pluralise Defer review days and deferrals
+
+- **State:** merged · **Author:** HellFireInfernoStorm
+- **Tools and harnesses:** Claude Code, Claude Opus 5.5
+- **What the AI produced:** the issue, the locale and component change, the test assertions, and this description.
+- **What a human wrote or reviewed:** Dinura reviews.
+
+### #189 Reset the public demo every hour
+
+- **State:** merged · **Author:** HellFireInfernoStorm
+- **Tools and harnesses:** Claude Code (Opus 5.5)
+- **What the AI produced:** `docker/reset-demo.sh`, the `redeploy.sh` and init script changes, ADR 0055, the spec, README and `.env.example` edits, and the local and container tests
+- **What a human wrote or reviewed:** Dinura asked for an hourly reset; review pending
+
+### #191 Build the plan-published demo preset and reset to it hourly
+
+- **State:** merged · **Author:** HellFireInfernoStorm
+- **Tools and harnesses:** Claude Code (Opus 5.5)
+- **What the AI produced:** the preset, the test, the script default and doc edits
+- **What a human wrote or reviewed:** Dinura asked for it; review pending
+
+### #193 Fill the README and submission docs for the judge walkthrough
+
+- **State:** merged · **Author:** PraveenAkaash
+- **Tools and harnesses:** Cursor Agent (Composer)
+- **What the AI produced:** the README walkthrough and scope fill-in, `docs/ai-disclosure.md` catalogue, architecture and draft-string refresh, and this PR body
+- **What a human wrote or reviewed:** issue #22 acceptance criteria; user asked to check confidence and merge to main
