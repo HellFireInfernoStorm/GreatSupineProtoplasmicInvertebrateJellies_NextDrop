@@ -353,7 +353,11 @@
     "text": "சேமித்த சான்றுப் படம்",
     "review": "draft"
   },
-  "proofRefs": {
+  "proofRefs_one": {
+    "text": "{{count}} சான்றுக் குறிப்புகள் பாதுகாக்கப்பட்டன",
+    "review": "draft"
+  },
+  "proofRefs_other": {
     "text": "{{count}} சான்றுக் குறிப்புகள் பாதுகாக்கப்பட்டன",
     "review": "draft"
   },
@@ -491,7 +495,11 @@
     "text": "சேவையகம் பெற்றது. உறுதிப்படுத்த புதுப்பித்த பயணத்திற்காகக் காத்திருக்கவும்.",
     "review": "draft"
   },
-  "failedCount": {
+  "failedCount_one": {
+    "text": "{{count}} பதிவுகள் அல்லது படங்களுக்கு கவனம் தேவை",
+    "review": "draft"
+  },
+  "failedCount_other": {
     "text": "{{count}} பதிவுகள் அல்லது படங்களுக்கு கவனம் தேவை",
     "review": "draft"
   },
@@ -531,7 +539,11 @@
     "text": "ஒத்திசைவு விவரங்கள்",
     "review": "draft"
   },
-  "heldCount": {
+  "heldCount_one": {
+    "text": "{{count}} பதிவுகள் அனுப்புநரின் முடிவுக்காகக் காத்திருக்கின்றன",
+    "review": "draft"
+  },
+  "heldCount_other": {
     "text": "{{count}} பதிவுகள் அனுப்புநரின் முடிவுக்காகக் காத்திருக்கின்றன",
     "review": "draft"
   },
