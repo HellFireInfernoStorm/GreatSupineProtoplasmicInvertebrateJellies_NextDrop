@@ -2,7 +2,7 @@
 
 - Status: proposed
 - Date: 2026-10-04
-- Issue / PR: #145
+- Issue / PR: #145, #159
 - Designathon departure: no
 
 ## Context
@@ -11,7 +11,7 @@ ADR 0037 froze all departed stops, preventing walkthrough step 10 and the remove
 
 ## Decision
 
-This amends ADR 0037's locked-stop rule. A stop is locked when an applied or accepted-held STOP_ARRIVED, STOP_OUTCOME or POD_CAPTURED is in effect, its trip is COMPLETE, or its LOADED order is pinned without a pending reversal (ADR 0004). Locked stops keep vehicle, trip number and sequence.
+This amends ADR 0037's locked-stop rule. A stop is locked when an applied or accepted-held STOP_ARRIVED, STOP_OUTCOME or POD_CAPTURED is in effect, its trip is COMPLETE, or its LOADED order is pinned without a pending reversal (ADR 0004). Locked stops keep vehicle and trip number, and keep relative order among locked stops on that trip. Removing or moving earlier unlocked stops may compact their numeric sequence. COMPLETE trips cannot change.
 
 On a DEPARTED trip, unreported stops may be removed/deferred or resequenced after every locked stop. They cannot move to another vehicle or trip. New cargo cannot be added to a departed trip. Publish rejects illegal edits atomically with 409 STOP_LOCKED. LOADED-order reversal checks remain authoritative.
 

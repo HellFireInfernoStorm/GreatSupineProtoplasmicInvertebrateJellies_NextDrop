@@ -216,11 +216,7 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
             actor,
             at: now,
           });
-          if (
-            order.status !== "PLANNED" &&
-            order.status !== "OUT_FOR_DELIVERY" &&
-            ["ORDERED", "DEFERRED", "FAILED"].includes(order.status)
-          )
+          if (["ORDERED", "DEFERRED", "FAILED"].includes(order.status))
             await tx.order.update({ where: { id: orderId }, data: { status: "PLANNED" } });
         }
         if (before) {

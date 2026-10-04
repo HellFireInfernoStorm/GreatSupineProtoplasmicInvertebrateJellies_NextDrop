@@ -16,16 +16,18 @@ export function lockedStopChange(current: readonly PublishedStop[], next: readon
   for (const stop of current) {
     const after = placements.get(stop.orderId);
     const sameTrip = after?.vehicleId === stop.vehicleId && after.tripNo === stop.tripNo;
-    if (stop.locked && (!sameTrip || after?.seq !== stop.seq)) return stop.orderId;
-    if (stop.departed && after) {
-      const lastLocked = Math.max(
-        0,
-        ...current
-          .filter((s) => s.locked && s.vehicleId === stop.vehicleId && s.tripNo === stop.tripNo)
-          .map((s) => s.seq),
-      );
-      if (!sameTrip || (!stop.locked && after.seq !== stop.seq && after.seq <= lastLocked)) return stop.orderId;
+    if (stop.locked && !sameTrip) return stop.orderId;
+    if (stop.locked && after) {
+      // Relative order survives removing earlier unlocked stops, regardless of input row order.
+      const crossed = current.some((other) => {
+        if (other.vehicleId !== stop.vehicleId || other.tripNo !== stop.tripNo) return false;
+        const placement = placements.get(other.orderId);
+        if (!placement || other.seq <= stop.seq) return false;
+        return (other.locked || other.departed) && placement.seq <= after.seq;
+      });
+      if (crossed) return stop.orderId;
     }
+    if (stop.departed && after && !sameTrip) return stop.orderId;
   }
   const cargo = new Map(current.map((stop) => [stop.orderId, stop]));
   for (const stop of next) {
