@@ -460,6 +460,17 @@ function explainWith(
   };
 }
 
+/** A repeat deferral or an OTHER reason requires a justification. */
+export function deferralNoteRequired({
+  reasonCode,
+  deferredLastRun,
+}: {
+  readonly reasonCode?: ReasonCode;
+  readonly deferredLastRun: boolean;
+}): boolean {
+  return reasonCode === "OTHER" || deferredLastRun;
+}
+
 /**
  * Explains why `order` is not in `finalPlan` (a proposal or the dispatcher's draft). An order that would still fit
  * somewhere was deferred by `CHOICE`.

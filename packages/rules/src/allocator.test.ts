@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import type { AllocationInput, AllocationResult } from "./allocator";
-import { explainDeferral, proposePlan, REASON_CODES } from "./allocator";
+import { deferralNoteRequired, explainDeferral, proposePlan, REASON_CODES } from "./allocator";
 import { DEFAULT_RULES_CONFIG } from "./config";
 import type { PlanTrip } from "./plan";
 import type { AllocationOrder } from "./ranking";
@@ -13,6 +13,17 @@ import { validatePlan } from "./validator";
 const ref = loadReferenceData();
 const calendar = ref.calendar;
 const DATE = PEAK_DATE;
+
+describe("deferral justification", () => {
+  it.each([
+    { reasonCode: "CAPACITY_WEIGHT" as const, deferredLastRun: false, required: false },
+    { reasonCode: "OTHER" as const, deferredLastRun: false, required: true },
+    { reasonCode: "CAPACITY_WEIGHT" as const, deferredLastRun: true, required: true },
+    { reasonCode: "OTHER" as const, deferredLastRun: true, required: true },
+  ])("requires a note for $reasonCode with previous-run deferral=$deferredLastRun", ({ required, ...input }) => {
+    expect(deferralNoteRequired(input)).toBe(required);
+  });
+});
 
 function ao(id: string, outletId: string, extra: Partial<AllocationOrder> = {}): AllocationOrder {
   const outlet = ref.outlets.get(outletId);

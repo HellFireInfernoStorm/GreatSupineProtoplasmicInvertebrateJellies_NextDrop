@@ -28,11 +28,19 @@ export function ValidationChecks({
   const { t, i18n } = useTranslation("dispatcher/planning");
   const number = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 3 });
   const hard = result.violations.filter((v) => v.severity === "HARD");
+  const warnings = result.violations.filter((v) => v.severity !== "HARD");
+  const lateRisks = result.violations.filter((v) => v.code === "LATE_RISK");
+  const lateOrders = new Set(lateRisks.flatMap((v) => v.orderIds));
+  const lateTrips = [...new Set(lateRisks.map((v) => v.tripRef).filter(Boolean))];
   return (
     <section className="dispatch-checks">
       <h3>{t("checks")}</h3>
       <p className={hard.length ? "dispatch-danger" : "dispatch-muted"}>
-        {hard.length ? t("failCount", { count: hard.length }) : t("allPass")}
+        {hard.length
+          ? t("failCount", { count: hard.length })
+          : warnings.length
+            ? t("passWithWarnings", { count: warnings.length })
+            : t("allPass")}
       </p>
       <ul>
         {groups.map(([key, codes]) => {
@@ -84,14 +92,23 @@ export function ValidationChecks({
           );
         })}
       </ul>
+      {lateRisks.length > 0 && (
+        <div className="dispatch-warning">
+          <p>{t("lateRiskSummary", { count: lateOrders.size })}</p>
+          <details>
+            <summary>{t("lateRiskTrips", { count: lateTrips.length })}</summary>
+            <p>{lateTrips.join(", ")}</p>
+            <p>{t("lateRiskHint")}</p>
+          </details>
+        </div>
+      )}
       {result.violations
-        .filter((v) => !groups.some(([, codes]) => codes.includes(v.code)))
+        .filter((v) => v.code !== "LATE_RISK" && !groups.some(([, codes]) => codes.includes(v.code)))
         .map((v, i) => (
           <p key={i} className={v.severity === "HARD" ? "dispatch-danger" : "dispatch-warning"}>
             {t(`validator.${v.code}`)}
           </p>
         ))}
-      <p className="dispatch-muted">{t(serverVerified ? "serverVerified" : "serverPending")}</p>
     </section>
   );
 }

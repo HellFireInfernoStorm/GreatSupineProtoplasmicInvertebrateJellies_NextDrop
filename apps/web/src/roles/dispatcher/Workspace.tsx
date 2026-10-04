@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Button, Banner, Toast } from "../../ui";
 import { callApi, ApiRequestError } from "../../lib/api";
@@ -11,6 +11,8 @@ import { Dashboard } from "./Dashboard";
 import { OrderQueue } from "./OrderQueue";
 import { PlanBoard } from "./PlanBoard";
 import { ValidationChecks } from "./ValidationChecks";
+import { DeferPublish } from "./DeferPublish";
+import { PublishSession } from "./publish-session";
 
 function subscribeOnline(onChange: () => void) {
   window.addEventListener("online", onChange);
@@ -68,6 +70,16 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
       ),
   );
   const snapshot = useSyncExternalStore(editor.subscribe, editor.getSnapshot, editor.getSnapshot);
+  const [publishSession] = useState(() => new PublishSession());
+  const publication = useSyncExternalStore(
+    publishSession.subscribe,
+    publishSession.getSnapshot,
+    publishSession.getSnapshot,
+  );
+  const route = useRef(pathname);
+  useLayoutEffect(() => {
+    route.current = pathname;
+  }, [pathname]);
   const [toast, setToast] = useState(0);
   const [editing, setEditing] = useState(false);
   const [editPath, setEditPath] = useState(pathname);
@@ -84,11 +96,17 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
       editing ||
       snapshot.busy ||
       snapshot.candidate ||
-      snapshot.error
+      snapshot.error ||
+      publication.busy ||
+      publication.uncertain
     )
       return;
     lastSynced.current = incoming;
+    // A successful save is already installed in the editor. Replacing that identical
+    // snapshot would remount D3 and erase its publish confirmation/toast.
+    if (JSON.stringify(incoming.draft) === JSON.stringify(snapshot.draft)) return;
     if ((incoming.draft?.revision ?? 0) < (snapshot.draft?.revision ?? 0)) return;
+    publishSession.reset();
     editor.replace(
       incoming.draft,
       day.queue.map((order) => order.id),
@@ -102,6 +120,9 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
     snapshot.draft,
     editor,
     day.queue,
+    publication.busy,
+    publication.uncertain,
+    publishSession,
   ]);
   const writable = ["CLOSED", "PLANNING", "PUBLISHED", "IN_PROGRESS"].includes(day.state);
   const networkFailed = [
@@ -133,8 +154,9 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
       },
     });
     if (ok) {
+      if (!publication.busy) publishSession.reset();
       queryClient.setQueryData(["dispatch", depot, date, "draft"], { draft: editor.getSnapshot().draft });
-      setToast((value) => value + 1);
+      if (page !== "defer") setToast((value) => value + 1);
       void queries.day.refetch();
     }
     if (
@@ -145,11 +167,12 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
     return ok;
   }
   async function propose() {
-    if (disabled || editing) return;
+    if (disabled || editing || publication.busy || publication.uncertain) return;
     const ok = await editor.propose(
       async (revision) => (await callApi("propose", { params: { date }, query: { depot }, body: { revision } })).draft,
     );
     if (ok) {
+      publishSession.reset();
       queryClient.setQueryData(["dispatch", depot, date, "draft"], { draft: editor.getSnapshot().draft });
       setToast((value) => value + 1);
       void queries.day.refetch();
@@ -158,6 +181,7 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
   async function reload() {
     const result = await queries.draft.refetch();
     if (result.isSuccess && result.data) {
+      publishSession.reset();
       setEditing(false);
       editor.replace(
         result.data.draft,
@@ -197,10 +221,15 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
           <ValidationChecks result={snapshot.validation} serverVerified />
         </section>
       )}
-      <div className="dispatch-page-actions">
+      <div className="dispatch-page-actions" data-defer={page === "defer"}>
+        {page === "defer" && (
+          <Link className="nd-button" data-variant="secondary" to="/dispatch/plan">
+            {t("back", { ns: "dispatcher/deferrals" })}
+          </Link>
+        )}
         <Button
           variant="secondary"
-          disabled={snapshot.busy}
+          disabled={snapshot.busy || editing || publication.busy || publication.uncertain}
           onClick={() => {
             void reload();
             for (const q of [queries.fleet, queries.outlets, queries.vehicles, queries.calendar]) void q.refetch();
@@ -211,7 +240,7 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
         {["dashboard", "queue", "plan"].includes(page) && (
           <Button
             loading={snapshot.busy}
-            disabled={disabled || editing}
+            disabled={disabled || editing || publication.busy || publication.uncertain}
             onClick={() => {
               void propose();
             }}
@@ -243,10 +272,55 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
           context={context}
           unavailable={unavailable}
           date={date}
-          disabled={disabled}
+          disabled={disabled || publication.busy || publication.uncertain}
           busy={snapshot.busy}
           onSave={save}
           onEditingChange={setEditing}
+        />
+      ) : page === "defer" ? (
+        <DeferPublish
+          key={snapshot.generation}
+          day={day}
+          data={snapshot.data}
+          outlets={outlets}
+          reference={reference}
+          unavailable={unavailable}
+          breakdown={
+            new Set(
+              queries.fleet
+                .data!.items.filter(
+                  (item) => item.availability.status === "IN_WORKSHOP" && item.availability.reason === "BREAKDOWN",
+                )
+                .map((item) => item.vehicle.displayId),
+            )
+          }
+          disabled={disabled}
+          session={publishSession}
+          versions={queries.versions.data?.items ?? null}
+          historyFailed={queries.versions.isError}
+          onHistoryRetry={() => {
+            void queries.versions.refetch();
+          }}
+          onReload={() => {
+            void reload();
+          }}
+          onSave={async (data) => ((await save(data)) ? editor.getSnapshot().draft : null)}
+          onPublish={async (revision) => {
+            const response = await callApi("publish", { params: { date }, query: { depot }, body: { revision } });
+            queryClient.setQueryData(["dispatch", depot, date, "versions"], {
+              items: [
+                response.plan,
+                ...(queries.versions.data?.items ?? []).filter((v) => v.version !== response.plan.version),
+              ],
+            });
+            void queries.day.refetch();
+            void queries.versions.refetch();
+            void queries.runs.refetch();
+            return response;
+          }}
+          onEditingChange={(value) => {
+            if (route.current.split("/")[2] === "defer") setEditing(value);
+          }}
         />
       ) : (
         <section className="dispatch-card">

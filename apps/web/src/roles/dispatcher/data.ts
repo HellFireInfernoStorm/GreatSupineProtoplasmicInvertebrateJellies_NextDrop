@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { callApi } from "../../lib/api";
+import { addDays } from "@nextdrop/rules";
 
 /** Today's runs (D4 and the dashboard share the cache). The change feed refreshes it; the interval is the fallback. */
 export const runsQuery = (depot: string) => ({
@@ -32,7 +33,14 @@ export function usePlanningData(depot: string, date: string) {
   });
   const calendar = useQuery({
     queryKey: ["dispatch", date, "calendar"],
-    queryFn: ({ signal }) => callApi("calendar", { query: { from: date, to: date }, signal }),
+    queryFn: async ({ signal }) => {
+      // The reference API allows 366 inclusive dates; rules search up to 366 days after today.
+      const [today, future] = await Promise.all([
+        callApi("calendar", { query: { from: date, to: date }, signal }),
+        callApi("calendar", { query: { from: addDays(date, 1), to: addDays(date, 366) }, signal }),
+      ]);
+      return { items: [...today.items, ...future.items] };
+    },
   });
   const fleet = useQuery({
     queryKey: ["dispatch", depot, date, "fleet"],
@@ -40,6 +48,10 @@ export function usePlanningData(depot: string, date: string) {
   });
   const runs = useQuery(runsQuery(depot));
   const exceptions = useQuery(exceptionsQuery(depot));
-  return { day, draft, outlets, vehicles, calendar, fleet, runs, exceptions };
+  const versions = useQuery({
+    queryKey: ["dispatch", depot, date, "versions"],
+    queryFn: ({ signal }) => callApi("versions", { params: { date }, query: { depot }, signal }),
+  });
+  return { day, draft, outlets, vehicles, calendar, fleet, runs, exceptions, versions };
 }
 export type PlanningQueries = ReturnType<typeof usePlanningData>;
