@@ -123,13 +123,23 @@ export function evaluate(
   const trips = new Map(
     plan.trips.map((trip) => [trip.ref, validateTrip(trip, reference.ref, { ...ctx, date, siblingTrips: plan.trips })]),
   );
-  const lockedOrderId = lockedStopChange(
+  const lockedOrderId = lockedDraftChange(data, reference, context);
+  return { ...whole, ok: whole.ok && lockedOrderId === null, lockedOrderId, trips, plan };
+}
+
+/** Menu filtering needs only placement locks, without recalculating schedules or capacity for every option. */
+export function lockedDraftChange(data: DraftData, reference: BrowserReference, context: ValidationContext) {
+  return lockedStopChange(
     context.publishedStops ?? [],
-    plan.trips.flatMap((t) =>
-      t.orders.map((o, index) => ({ orderId: o.id, vehicleId: t.vehicleId, tripNo: t.tripNo, seq: index + 1 })),
+    data.trips.flatMap((t) =>
+      t.orderIds.map((orderId, index) => ({
+        orderId,
+        vehicleId: reference.vehicleDisplay.get(t.vehicleId) ?? t.vehicleId,
+        tripNo: t.tripNo,
+        seq: index + 1,
+      })),
     ),
   );
-  return { ...whole, ok: whole.ok && lockedOrderId === null, lockedOrderId, trips, plan };
 }
 
 /** Only wire UUIDs enter the browser; rules context consistently uses reference display IDs. */

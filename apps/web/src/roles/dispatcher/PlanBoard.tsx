@@ -7,6 +7,7 @@ import { Pill } from "../../ui/StatusPill";
 import {
   moveOrder,
   evaluate,
+  lockedDraftChange,
   type DraftData,
   type Order,
   type Outlet,
@@ -61,8 +62,7 @@ export function PlanBoard({
     const outlet = outlets.find((out) => out.id === order.outletId);
     const locked = context.publishedStops?.some((s) => s.orderId === order.id && s.locked) ?? false;
     const allowed = (destination: string | null) =>
-      evaluate(moveOrder(data, order.id, destination), orders, date, reference, unavailable, context).lockedOrderId ===
-      null;
+      lockedDraftChange(moveOrder(data, order.id, destination), reference, context) === null;
     return (
       <div className="dispatch-order-card" key={order.id}>
         <strong>
