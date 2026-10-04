@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { REASON_CODES } from "@nextdrop/rules";
 import type { ApiDto } from "@nextdrop/contracts";
 import { ApiRequestError, type ApiResponse } from "../../lib/api";
-import { formatDay, formatTime } from "../../lib/time";
+import { formatDay, formatTime, formatWeekday } from "../../lib/time";
 import { Button, Banner, Toast } from "../../ui";
 import { Pill } from "../../ui/StatusPill";
 import { evaluate, validationContext, type BrowserReference, type DraftData, type Outlet } from "./planning";
@@ -38,7 +38,7 @@ interface Props {
 }
 export function DeferPublish(props: Props) {
   const { day, data, outlets, reference, unavailable, breakdown, disabled, onEditingChange } = props;
-  const { t } = useTranslation("dispatcher/deferrals");
+  const { t, i18n } = useTranslation("dispatcher/deferrals");
   const [edits, setEdits] = useState<DraftData | null>(null);
   const session = props.session;
   const publication = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
@@ -259,10 +259,10 @@ export function DeferPublish(props: Props) {
                             <strong>{formatDay(`${row.explanation.nextServiceableDate}T12:00:00+05:30`)}</strong>
                             <small>
                               {t("nextDelivery", {
-                                day: new Intl.DateTimeFormat("en", {
-                                  weekday: "long",
-                                  timeZone: "Asia/Colombo",
-                                }).format(new Date(`${row.explanation.nextServiceableDate}T12:00:00+05:30`)),
+                                day: formatWeekday(
+                                  `${row.explanation.nextServiceableDate}T12:00:00+05:30`,
+                                  i18n.resolvedLanguage,
+                                ),
                               })}
                             </small>
                             <small>

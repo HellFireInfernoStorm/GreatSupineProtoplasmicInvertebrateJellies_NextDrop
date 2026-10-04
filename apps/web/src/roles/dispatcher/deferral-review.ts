@@ -1,5 +1,5 @@
 import type { ApiDto } from "@nextdrop/contracts";
-import { DEFAULT_RULES_CONFIG, explainDeferral } from "@nextdrop/rules";
+import { DEFAULT_RULES_CONFIG, deferralNoteRequired, explainDeferral } from "@nextdrop/rules";
 import { toPlan, validationContext, type BrowserReference, type DraftData } from "./planning";
 
 /** Wire/reference adaptation only: classification and consequences belong to shared rules. */
@@ -40,9 +40,22 @@ export function buildDeferralReview(
       const reasonCode = chosen.get(order.id)?.reasonCode ?? explanation.reasonCode;
       const note = chosen.get(order.id)?.note ?? "";
       const repeat = state?.deferredLastRun ?? false;
-      return { order, explanation, reasonCode, note, repeat, needsNote: repeat || reasonCode === "OTHER" };
+      return {
+        order,
+        explanation,
+        reasonCode,
+        note,
+        repeat,
+        needsNote: deferralNoteRequired({ reasonCode, deferredLastRun: repeat }),
+      };
     })
-    .sort((a, b) => Number(b.repeat) - Number(a.repeat) || a.order.displayId.localeCompare(b.order.displayId));
+    .sort(
+      (a, b) =>
+        Number(b.repeat) - Number(a.repeat) ||
+        b.explanation.daysUnserved - a.explanation.daysUnserved ||
+        b.explanation.consecutiveDeferrals - a.explanation.consecutiveDeferrals ||
+        a.order.displayId.localeCompare(b.order.displayId),
+    );
 }
 export type DeferralReviewRow = ReturnType<typeof buildDeferralReview>[number];
 

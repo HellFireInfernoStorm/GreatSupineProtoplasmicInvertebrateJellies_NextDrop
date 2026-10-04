@@ -56,6 +56,7 @@ describe("locale files", () => {
         "dispatcher/deferrals",
         "dispatcher/login",
         "dispatcher/planning",
+        "dispatcher/runs",
         "driver/login",
         "loader/login",
         "shared/common",

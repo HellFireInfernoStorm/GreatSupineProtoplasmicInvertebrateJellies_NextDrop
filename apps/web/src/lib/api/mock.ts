@@ -11,6 +11,7 @@ import {
 } from "@nextdrop/contracts";
 import { isFieldRole } from "../fieldRoles";
 import { mockDeliveriesRespond } from "./mockDeliveries";
+import { mockDispatchRespond } from "./mockDispatch";
 import { mockStoreRespond } from "./mockStore";
 import { readStored, writeStored } from "../storage";
 import type { RawResponse, Transport } from "./types";
@@ -135,6 +136,9 @@ export const mockTransport: Transport = async (request) => {
   await new Promise((resolve) => setTimeout(resolve, LATENCY_MS));
   const nowMs = Date.now();
   return (
-    mockDeliveriesRespond(request, nowMs) ?? mockStoreRespond(request, nowMs) ?? mockRespond(request.name, request.body)
+    mockDeliveriesRespond(request, nowMs) ??
+    mockStoreRespond(request, nowMs) ??
+    mockDispatchRespond(request, nowMs) ??
+    mockRespond(request.name, request.body)
   );
 };

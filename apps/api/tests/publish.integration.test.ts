@@ -8,8 +8,9 @@ import { reduceOrder, type OrderEvent } from "@nextdrop/rules";
 import type { LightMyRequestResponse } from "fastify";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { DEMO_PASSWORD, DISPATCHER_LOGIN_ID } from "../prisma/seed/accounts";
+import { DEMO_PASSWORD, DEMO_PIN, DISPATCHER_LOGIN_ID } from "../prisma/seed/accounts";
 import { runSeed } from "../prisma/seed/index";
+import { WALKTHROUGH_DRIVER_ID, WALKTHROUGH_TRIP, WALKTHROUGH_VEHICLE_ID } from "../prisma/seed/story-fixtures";
 import { createDatabase, type Database } from "../src/lib/database";
 import { CSRF_HEADER, SESSION_COOKIE } from "../src/modules/auth";
 import { toRulesEvent } from "../src/modules/orders";
@@ -292,5 +293,33 @@ describe.skipIf(!url)("publish transaction (PostgreSQL)", () => {
     } finally {
       holder.release();
     }
+  }, 60000);
+
+  it("puts the Kandy hill trip on the walkthrough vehicle, where its driver sees it (ADR 0048)", async () => {
+    const proposed = await call("POST", day("/propose", "Kandy"), { revision: 0 });
+    expect(proposed.statusCode, proposed.body).toBe(200);
+    const kandy = (proposed.json() as ApiDto<"proposeResponse">).draft;
+    expect(kandy.data.unassignedOrderIds).toEqual([]);
+    const published = await call("POST", day("/publish", "Kandy"), { revision: kandy.revision });
+    expect(published.statusCode, published.body).toBe(200);
+
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { role: "DRIVER", loginId: WALKTHROUGH_DRIVER_ID, pin: DEMO_PIN, deviceId: randomUUID() },
+      headers: { [CSRF_HEADER]: "1" },
+    });
+    expect(login.statusCode, login.body).toBe(200);
+    const snapshot = await app.inject({
+      method: "GET",
+      url: `/api/field/snapshot?date=${DATE}`,
+      cookies: { [SESSION_COOKIE]: login.cookies.find((c) => c.name === SESSION_COOKIE)!.value },
+    });
+    expect(snapshot.statusCode, snapshot.body).toBe(200);
+    const scope = snapshot.json().scope as { vehicle: { displayId: string }; trips: ApiDto<"trip">[] };
+    expect(scope.vehicle.displayId).toBe(WALKTHROUGH_VEHICLE_ID);
+    const hill = scope.trips.find((t) => t.tripNo === WALKTHROUGH_TRIP.tripNo)!;
+    expect(hill).toMatchObject({ brand: WALKTHROUGH_TRIP.brand, district: WALKTHROUGH_TRIP.district });
+    expect([...new Set(hill.stops.map((s) => s.outlet.displayId))]).toEqual([...WALKTHROUGH_TRIP.stopOutletIds]);
   }, 60000);
 });

@@ -6,6 +6,7 @@ import {
   computeFuel,
   computeRunSchedule,
   DEFAULT_RULES_CONFIG,
+  deferralNoteRequired,
   effectiveWindow,
   etaBand,
   explainDeferral,
@@ -131,7 +132,7 @@ async function publishOnce(deps: PublishDependencies, input: PublishInput): Prom
       const unassigned = inputs.allocation.orders.filter((o) => !planned.has(o.id));
       const missing = unassigned.filter((o) => {
         const d = reasons.get(o.id);
-        const needsNote = d?.reasonCode === "OTHER" || repeat.has(o.id);
+        const needsNote = deferralNoteRequired({ reasonCode: d?.reasonCode, deferredLastRun: repeat.has(o.id) });
         return !d?.reasonCode || (needsNote && !d.note?.trim());
       });
       if (missing.length > 0) {

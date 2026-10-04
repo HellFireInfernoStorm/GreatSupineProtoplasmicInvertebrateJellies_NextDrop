@@ -142,8 +142,6 @@
   "tripLimit": "Max {{count}} trips per vehicle",
   "windows": "Delivery windows",
   "fuelCheck": "Weekly fuel quota",
-  "serverPending": "Local checks use the loaded planning context. The server rechecks each save.",
-  "serverVerified": "Verified by the server for this edit.",
   "over": "{{amount}} {{unit}} over",
   "checkFailed": "{{check}} failed",
   "pass": "Pass",

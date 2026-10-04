@@ -8,12 +8,14 @@ export default [
       "scripts/agent-context/**",
       "apps/api/src/generated/**",
       ".pnpm-store/**",
+      "e2e/test-results/**",
+      "e2e/playwright-report/**",
     ],
   },
   ...base,
   ...node.map((c) => ({
     ...c,
-    files: ["apps/api/**", "packages/**", "*.{js,ts}", "**/*.config.{js,ts}", "scripts/docs/**"],
+    files: ["apps/api/**", "packages/**", "e2e/**", "*.{js,ts}", "**/*.config.{js,ts}", "scripts/docs/**"],
   })),
   ...react.map((c) => ({ ...c, files: ["apps/web/src/**/*.{ts,tsx}"] })),
   ...rulesPurity.map((c) => ({

@@ -184,6 +184,6 @@ const conflictRoutes: FastifyPluginAsyncZod<{ prisma: PrismaClient; conflicts: C
 
 export async function registerConflicts(app: FastifyInstance, deps: { prisma: PrismaClient | null; now: () => Date }) {
   if (!deps.prisma) return;
-  const conflicts = createConflicts({ prisma: deps.prisma, now: deps.now, notifier: createNotifier() });
+  const conflicts = createConflicts({ prisma: deps.prisma, now: deps.now, notifier: createNotifier(deps.now) });
   await app.register(conflictRoutes, { prisma: deps.prisma, conflicts });
 }

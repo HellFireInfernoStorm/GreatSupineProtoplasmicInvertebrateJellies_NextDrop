@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatDay, formatTime } from "./time";
+import { formatDay, formatTime, formatWeekday } from "./time";
 
 describe("display formats", () => {
+  it("localizes the weekday in the Colombo display zone", () => {
+    expect(formatWeekday("2026-09-28T19:00:00.000Z")).toBe("Tuesday");
+    expect(formatWeekday("2026-09-28T19:00:00.000Z", "fr")).toBe("mardi");
+  });
   it("shows 24-hour Colombo time whatever the device zone", () => {
     expect(formatTime("2026-09-29T00:42:00.000Z")).toBe("06:12");
     expect(formatTime(new Date("2026-09-29T15:40:00.000Z"))).toBe("21:10");

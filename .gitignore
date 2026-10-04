@@ -31,6 +31,10 @@ Test Data/
 Submission Templates/
 check_allocation.py
 
+# Playwright output (pnpm e2e)
+e2e/test-results/
+e2e/playwright-report/
+
 # generated Prisma client (pnpm db:generate)
 apps/api/src/generated/
 .pnpm-store/

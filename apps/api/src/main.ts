@@ -24,7 +24,7 @@ if (process.env.SEED_ON_START === "true") {
 // Hooks must be added before listen(): Fastify refuses addHook on a listening instance.
 const prisma = app.prisma;
 if (prisma && process.env.DATABASE_URL && process.env.JOBS_ENABLED !== "false") {
-  const notifier = createNotifier();
+  const notifier = createNotifier(app.clock.now);
   const jobs = await startJobs({
     connectionString: process.env.DATABASE_URL,
     tick: () => tickPlanningDays(prisma, app.clock.now(), notifier),
