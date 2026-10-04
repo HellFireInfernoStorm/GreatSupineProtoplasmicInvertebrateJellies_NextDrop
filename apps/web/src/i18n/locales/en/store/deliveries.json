@@ -1,0 +1,139 @@
+{
+  "title": "My deliveries",
+  "eyebrow": "My deliveries · {{day}}",
+  "greeting": {
+    "morning": "Good morning, {{name}}",
+    "afternoon": "Good afternoon, {{name}}",
+    "evening": "Good evening, {{name}}"
+  },
+  "intro_zero": "Nothing is due today.",
+  "intro_one": "{{count}} order is due today. Plan unloading staff around the ETA window.",
+  "intro_other": "{{count}} orders are due today. Plan unloading staff around the ETA window.",
+  "placeOrder": "Place order",
+  "temp": {
+    "ambient": "Dry",
+    "chilled": "Chilled"
+  },
+  "hero": {
+    "eyebrow": {
+      "planned": "Arriving today",
+      "onway": "Arriving today",
+      "nosignal": "Arriving today",
+      "delivered": "Delivered today",
+      "closed": "Today's delivery"
+    },
+    "band": "{{from}}–{{to}}",
+    "line": "ETA window · Trip {{trip}} · you are stop {{seq}}",
+    "lineShort": "Trip {{trip}} · you are stop {{seq}}",
+    "stage": {
+      "PLANNED": "On tonight's plan",
+      "LOADED": "Loaded at the depot",
+      "OUT_FOR_DELIVERY": "Out for delivery",
+      "DELIVERED": "Delivered",
+      "RECEIVED": "Received",
+      "DISPUTED": "Issue reported",
+      "FAILED": "Delivery failed"
+    },
+    "departs": "Leaves the depot {{time}}",
+    "updated": "updated {{time}}",
+    "heard": "Last heard {{time}}",
+    "neverHeard": "No contact yet",
+    "delivered": "Delivered {{time}} on the driver's phone",
+    "confirmed": "Confirmed {{time}} after sync",
+    "unload": "Unload",
+    "units": {
+      "ambient_one": "{{count}} unit dry",
+      "ambient_other": "{{count}} units dry",
+      "chilled_one": "{{count}} unit chilled",
+      "chilled_other": "{{count}} units chilled"
+    },
+    "timeline": "Order timeline",
+    "timelineShort": "Timeline",
+    "details": "Details",
+    "refresh": "Refresh",
+    "confirm": "Confirm delivery",
+    "confirmWaiting": "Confirm after the driver syncs",
+    "noSignal": "No signal",
+    "none": {
+      "title": "Nothing arriving today",
+      "body": "Orders placed before the cutoff arrive on their delivery date."
+    },
+    "waiting": {
+      "title": "Waiting for tonight's plan",
+      "body": "Your order is in. The ETA shows here once the dispatcher publishes the plan."
+    }
+  },
+  "noSignal": {
+    "title": "Not late, just out of signal",
+    "body": "Your ETA still holds. Already signed for the delivery? It is saved on the driver's phone with that time and shows here after sync.",
+    "link": "Late or lost? How to read this"
+  },
+  "lateOrLost": {
+    "title": "Late or lost?",
+    "grey": "No signal",
+    "greyBody": "The driver's phone is out of coverage. The ETA still holds.",
+    "amber": "Running late",
+    "amberBody": "The run is behind its plan. You get a new ETA.",
+    "nothingLost": "Nothing is lost",
+    "nothingLostBody": "A delivery made without signal is saved on the driver's phone. It shows here with the time it happened, and the time it was confirmed, once the phone reconnects.",
+    "close": "Got it"
+  },
+  "alerts": {
+    "title": "Alerts",
+    "count": "{{count}} new",
+    "none": "No alerts for today.",
+    "partial": {
+      "title": "Expect partial delivery · {{temp}}",
+      "body": "{{id}}: {{expected}} of {{ordered}} units coming. {{lines}} short at the dock."
+    },
+    "shortLine": "{{qty}} × {{name}}",
+    "deferred": {
+      "title": "Deferred · {{temp}}",
+      "body": "{{id}} moved to {{to}}. Reason: {{reason}}."
+    }
+  },
+  "orders": {
+    "title": "Today's orders",
+    "titleOn": "{{day}}",
+    "trip": "{{day}} · Trip {{trip}}",
+    "full": "{{count}} units · coming in full",
+    "short": "{{ordered}} ordered · expect {{expected}}",
+    "handedOver": "{{expected}} of {{ordered}} delivered",
+    "received": "{{expected}} of {{ordered}} · received",
+    "disputed": "{{expected}} of {{ordered}} · issue reported",
+    "deferredFrom": "deferred from {{day}}",
+    "shortPill": "Short {{count}}",
+    "planned": "ETA {{from}}–{{to}} · Trip {{trip}}",
+    "waiting": "Waiting for the plan",
+    "movedTo": "Moved to {{day}} · {{reason}}",
+    "timeline": "Timeline",
+    "view": "View order",
+    "deferralNotice": "View deferral notice",
+    "hint": "Confirm receipt opens once the driver's delivery record reaches you.",
+    "none": "No orders are due today."
+  },
+  "next": {
+    "eyebrow": "Next order · {{day}}",
+    "left": "left to order · cutoff {{day}} {{time}}",
+    "repeat": "Repeat last {{weekday}}'s order",
+    "place": "Place a new order",
+    "phoneTitle": "{{day}} order",
+    "phoneLeft": "closes in {{left}}",
+    "order": "Order"
+  },
+  "reasons": {
+    "CAPACITY_WEIGHT": "the vehicles were full by weight",
+    "CAPACITY_VOLUME": "the vehicles were full",
+    "REEFER_SHORTAGE": "no chilled vehicle had room",
+    "VAN_SHORTAGE": "no van was free",
+    "TIME_BUDGET": "the run had no time left",
+    "FUEL_QUOTA": "the fuel quota was used up",
+    "WINDOW_INFEASIBLE": "it could not arrive inside your delivery window",
+    "VEHICLE_IN_WORKSHOP": "a vehicle is in the workshop",
+    "VEHICLE_BREAKDOWN": "a vehicle broke down",
+    "MOVED_BY_POLICY": "it was moved under the ordering policy",
+    "OTHER": "the dispatcher moved it"
+  },
+  "loadFailed": "The deliveries could not be loaded.",
+  "retry": "Try again"
+}

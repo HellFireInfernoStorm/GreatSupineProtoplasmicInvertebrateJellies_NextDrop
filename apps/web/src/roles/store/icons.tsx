@@ -16,6 +16,9 @@ const PATHS = {
   chevronRight: "M9 6l6 6-6 6",
   arrowLeft: "M19 12H5M11 6l-6 6 6 6",
   checkCircle: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 12.3l2.4 2.4 4.6-5",
+  flag: "M6 21V4M6 5h11l-2 4 2 4H6",
+  minusCircle: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8 12h8",
+  refresh: "M20 11a8 8 0 0 0-14.5-4M4 4v4h4M4 13a8 8 0 0 0 14.5 4M20 20v-4h-4",
 } as const;
 
 export type IconName = keyof typeof PATHS;

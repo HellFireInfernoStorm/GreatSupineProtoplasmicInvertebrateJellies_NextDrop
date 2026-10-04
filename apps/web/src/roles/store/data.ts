@@ -53,3 +53,22 @@ export function useLastWeekOrders(date: LocalDate | null) {
     staleTime: 5 * 60_000,
   });
 }
+
+/** The outlet's deliveries for a date: each order with its trip, and whether the driver is in contact. */
+export function useDeliveries(date: LocalDate) {
+  return useQuery({
+    queryKey: ["store", "deliveries", date],
+    queryFn: () => callApi("storeDeliveries", { query: { date } }),
+    // The polling fallback of spec/sync/change-feed.md; a feed row refreshes it sooner.
+    refetchInterval: 30_000,
+  });
+}
+
+/** Orders the dispatcher has moved to a later day and not yet planned again. */
+export function useDeferredOrders() {
+  return useQuery({
+    queryKey: ["store", "orders", "deferred"],
+    queryFn: async () => (await callApi("storeOrders", { query: { status: "DEFERRED" } })).items,
+    refetchInterval: 60_000,
+  });
+}

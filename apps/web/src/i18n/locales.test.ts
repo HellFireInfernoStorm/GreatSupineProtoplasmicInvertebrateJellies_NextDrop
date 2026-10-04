@@ -58,6 +58,7 @@ describe("locale files", () => {
         "loader/login",
         "shared/common",
         "shared/ui",
+        "store/deliveries",
         "store/login",
         "store/order",
         "store/shell",
