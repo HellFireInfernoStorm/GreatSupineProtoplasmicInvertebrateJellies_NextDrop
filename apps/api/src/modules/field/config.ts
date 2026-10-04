@@ -1,35 +1,10 @@
-import { PROBLEM_KINDS, type ApiDto } from "@nextdrop/contracts";
-import { DEFAULT_RULES_CONFIG, REASON_CODES } from "@nextdrop/rules";
+import type { ApiDto } from "@nextdrop/contracts";
+import { DEFAULT_RULES_CONFIG } from "@nextdrop/rules";
 import { NO_SIGNAL_AFTER_MIN } from "../orders";
+import { reasonLists } from "../reference";
 
 /** `BEHIND_GRACE_MIN` (spec/assumptions.md): past ETA by this much, a run is behind. */
 export const LATE_GRACE_MIN = 15;
-
-/**
- * Loader short-sheet and driver failed-stop reason chips (ADR 0034). The design draws chips but does not list them;
- * these are the build's codes, each with an i18n key `<list>.<code>`.
- */
-export const LOAD_SHORT_REASONS = ["STOCK_SHORT", "DAMAGED_AT_DOCK", "PICKING_ERROR", "OTHER"] as const;
-export const STOP_OUTCOME_REASONS = [
-  "STORE_CLOSED",
-  "REFUSED_BY_STORE",
-  "NO_ACCESS",
-  "VEHICLE_BREAKDOWN",
-  "OTHER",
-] as const;
-
-const list = <C extends string>(group: string, codes: readonly C[]) =>
-  codes.map((code) => ({ code, message_key: `${group}.${code}` }));
-
-/** The reason lists shared by `/ref/reasons` and the field snapshot. */
-export function reasonLists(): ApiDto<"reasonsResponse"> {
-  return {
-    deferral: list("deferral", REASON_CODES),
-    problems: list("problems", PROBLEM_KINDS),
-    loadShort: list("loadShort", LOAD_SHORT_REASONS),
-    stopOutcome: list("stopOutcome", STOP_OUTCOME_REASONS),
-  };
-}
 
 export function snapshotConfig(): ApiDto<"snapshotConfig"> {
   return {

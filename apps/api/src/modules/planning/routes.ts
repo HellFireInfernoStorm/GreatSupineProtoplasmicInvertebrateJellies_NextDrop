@@ -9,27 +9,33 @@ import {
   mutationHeadersSchema,
   proposeRequestSchema,
   proposeResponseSchema,
+  publishRequestSchema,
+  publishResponseSchema,
   saveDraftRequestSchema,
   validateRequestSchema,
   validationResultSchema,
+  versionsResponseSchema,
   type ApiDto,
 } from "@nextdrop/contracts";
 import { cutoffAt, proposePlan, validatePlan, type LocalDate, type ValidationResult } from "@nextdrop/rules";
 import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import type { PlanDraft, PlanningDay, PrismaClient } from "../../generated/prisma/client";
+import type { PlanDraft, PlanningDay, PlanVersion, PrismaClient } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 import type { Clock } from "../../lib/clock";
 import { ApiHttpError, forbidden } from "../../lib/errors";
 import { dateOnly, toOrderDto } from "../orders";
+import type { Notifier } from "../notifications";
 import { collectionResource, type Resource } from "../policy";
 import { loadDayInputs, toDraftData, toRulesPlan, type DayInputs } from "./inputs";
+import { publishDay } from "./publish";
 import type { ReferenceSource } from "./reference";
 
 export interface PlanningRouteDependencies {
   prisma: PrismaClient;
   clock: Clock;
   reference: ReferenceSource;
+  notifier: Notifier;
 }
 
 type DraftData = ApiDto<"draftData">;
@@ -223,6 +229,60 @@ export const planningRoutes: FastifyPluginAsyncZod<PlanningRouteDependencies> = 
     async (request) => {
       const day = await inputs(request.query.depot, request.params.date);
       return validatePlan(toRulesPlan(request.body.data, day), day.reference.ref, day.validation);
+    },
+  );
+
+  /** A stored version as the wire DTO: the immutable snapshot plus its identity and summary. */
+  function toVersionDto(v: PlanVersion): ApiDto<"planVersion"> {
+    const snapshot = v.snapshot as Pick<ApiDto<"planVersion">, "trips" | "deferrals">;
+    return {
+      version: v.version,
+      publishedAt: v.publishedAt.toISOString(),
+      publishedBy: v.publishedBy,
+      trips: snapshot.trips,
+      deferrals: snapshot.deferrals,
+      summary: v.summary as ApiDto<"planVersion">["summary"],
+    };
+  }
+
+  app.post(
+    "/api/dispatch/days/:date/publish",
+    {
+      schema: {
+        params: dateParamsSchema,
+        querystring: dayQuerySchema,
+        headers: mutationHeadersSchema,
+        body: publishRequestSchema,
+        response: { 200: publishResponseSchema },
+      },
+      config: { policy: { action: "publish", resourceResolver: depotResource } },
+    },
+    async (request) => {
+      const version = await publishDay(
+        { prisma, clock, reference: deps.reference, notifier: deps.notifier },
+        {
+          depot: request.query.depot,
+          date: request.params.date,
+          revision: request.body.revision,
+          actorUserId: actorId(request),
+        },
+      );
+      return { plan: toVersionDto(version), serverTime: clock.now().toISOString() };
+    },
+  );
+
+  app.get(
+    "/api/dispatch/days/:date/versions",
+    {
+      schema: { params: dateParamsSchema, querystring: dayQuerySchema, response: { 200: versionsResponseSchema } },
+      config: { policy: { action: "versions", resourceResolver: depotResource } },
+    },
+    async (request) => {
+      const versions = await prisma.planVersion.findMany({
+        where: { planningDay: { depot: request.query.depot, date: dateOnly(request.params.date) } },
+        orderBy: { version: "asc" },
+      });
+      return { items: versions.map(toVersionDto) };
     },
   );
 

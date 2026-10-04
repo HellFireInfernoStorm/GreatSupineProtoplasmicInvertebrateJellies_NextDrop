@@ -16,7 +16,7 @@ import {
   type PlanOrder,
   type ValidationContext,
 } from "@nextdrop/rules";
-import type { PrismaClient } from "../../generated/prisma/client";
+import type { Prisma } from "../../generated/prisma/client";
 import { dateOnly, localDateOf, orderInclude, toOrderDto, type OrderRecord } from "../orders";
 import type { Reference } from "./reference";
 
@@ -38,7 +38,7 @@ export interface DayInputs {
 }
 
 export async function loadDayInputs(
-  prisma: PrismaClient,
+  prisma: Prisma.TransactionClient,
   reference: Reference,
   depot: string,
   date: LocalDate,
@@ -121,7 +121,10 @@ export async function loadDayInputs(
  * Fuel each vehicle used on the published, non-cancelled trips of the other days of `date`'s ISO week (ADR 0006).
  * Keyed by vehicle UUID, in millilitres.
  */
-export async function fuelUsedThisWeek(prisma: PrismaClient, date: LocalDate): Promise<Map<string, number>> {
+export async function fuelUsedThisWeek(
+  prisma: Prisma.TransactionClient,
+  date: LocalDate,
+): Promise<Map<string, number>> {
   const monday = addDays(date, -dayOfWeek(date));
   const trips = await prisma.trip.findMany({
     where: {

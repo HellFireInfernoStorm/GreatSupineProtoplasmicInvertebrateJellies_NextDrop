@@ -11,7 +11,9 @@ import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { PrismaClient } from "../../generated/prisma/client";
 import { forbidden } from "../../lib/errors";
-import { readFeedHint } from "../feed";
+import { colomboLocal } from "@nextdrop/rules";
+import { appendFeed, readFeedHint } from "../feed";
+import { dateOnly, NO_SIGNAL_AFTER_MIN } from "../orders";
 import { collectionResource, type Actor } from "../policy";
 import type { Ingest } from "./ingest";
 import { buildSnapshot } from "./snapshot";
@@ -77,18 +79,54 @@ export const fieldRoutes: FastifyPluginAsyncZod<FieldRouteDependencies> = async 
     },
     async (request) => {
       const body = request.body;
-      ownDevice(request, body.deviceId);
+      const actor = ownDevice(request, body.deviceId);
       const now = deps.now();
-      // lastHeardAt for D4 and the store's no-signal view comes from here and from accepted events.
-      await prisma.device.update({
-        where: { id: body.deviceId },
-        data: {
-          lastSeenAt: now,
-          appVersion: body.appVersion,
-          pendingCount: body.pendingCount,
-          lastSyncAt: body.lastSyncAt ? new Date(body.lastSyncAt) : null,
-          lastKnownStop: body.lastKnownStop,
-        },
+      const lastSyncAt = body.lastSyncAt ? new Date(body.lastSyncAt) : null;
+      await prisma.$transaction(async (tx) => {
+        const before = await tx.device.findUnique({
+          where: { id: body.deviceId },
+          select: { lastSeenAt: true, pendingCount: true, lastSyncAt: true },
+        });
+        // lastHeardAt for D4 and the store's no-signal view comes from here and from accepted events.
+        await tx.device.update({
+          where: { id: body.deviceId },
+          data: {
+            lastSeenAt: now,
+            appVersion: body.appVersion,
+            pendingCount: body.pendingCount,
+            lastSyncAt,
+            lastKnownStop: body.lastKnownStop,
+          },
+        });
+        // Hint the driver's runs only when the monitor would show something new: the run is heard again after a
+        // silence, or the pending count or last sync moved (ADR 0041). A steady heartbeat writes no feed rows.
+        if (actor.role !== "DRIVER" || !before) return;
+        const changed =
+          now.getTime() - before.lastSeenAt.getTime() > NO_SIGNAL_AFTER_MIN * 60_000 ||
+          before.pendingCount !== body.pendingCount ||
+          (before.lastSyncAt?.getTime() ?? null) !== (lastSyncAt?.getTime() ?? null);
+        if (!changed) return;
+        const trips = await tx.trip.findMany({
+          where: {
+            vehicleId: actor.vehicleId,
+            status: { not: "CANCELLED" },
+            planningDay: { date: dateOnly(colomboLocal(now.getTime()).date) },
+          },
+          select: { id: true, planningDay: { select: { depot: true } } },
+        });
+        if (trips.length === 0) return;
+        await appendFeed(
+          tx,
+          trips.map((trip) => ({
+            kind: "run_updated" as const,
+            entity: { type: "trip", id: trip.id },
+            audience: {
+              roles: ["DISPATCHER", "LOADER", "DRIVER"] as const,
+              depot: trip.planningDay.depot,
+              vehicleId: actor.vehicleId,
+            },
+          })),
+        );
       });
       const hint = await readFeedHint(prisma);
       return { serverTime: now.toISOString(), feedHead: hint.head, resetEpoch: hint.resetEpoch };

@@ -174,11 +174,11 @@ export const apiFixtures = {
   runsResponse: { items: [run], serverTime: MOCK_TIME },
   conflict,
   issue,
-  exception: { type: "CONFLICT", conflict },
+  exception: { type: "CONFLICT", conflict, evidence: [MOCK_ID] },
   exceptionsResponse: {
     items: [
-      { type: "CONFLICT", conflict },
-      { type: "ISSUE", issue },
+      { type: "CONFLICT", conflict, evidence: [MOCK_ID] },
+      { type: "ISSUE", issue, evidence: [] },
     ],
   },
   resolveConflictRequest: { resolution: "ACCEPT_FACT", note: "Mock resolution" },

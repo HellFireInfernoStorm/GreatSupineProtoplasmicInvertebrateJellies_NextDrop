@@ -14,9 +14,10 @@ describe("API projections backed by the merged data model", () => {
     expect(c).toHaveProperty("apiConflictFixtures");
     for (const fixture of Object.values(c.apiConflictFixtures)) {
       expect(c.conflictSchema.parse(fixture)).toEqual(fixture);
-      expect(c.exceptionSchema.parse({ type: "CONFLICT", conflict: fixture })).toEqual({
+      expect(c.exceptionSchema.parse({ type: "CONFLICT", conflict: fixture, evidence: [] })).toEqual({
         type: "CONFLICT",
         conflict: fixture,
+        evidence: [],
       });
     }
     expect(c.apiConflictFixtures.tripLevel.orderId).toBeNull();

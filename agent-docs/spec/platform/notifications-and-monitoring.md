@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §11
+sources: guide §11; ADR 0041
 ---
 
 # Real-time, notifications, monitoring
@@ -11,5 +11,6 @@ sources: guide §11
 - **Live run monitor (D4)** is built on delivery events, not GPS. Per trip: stops done/total, `lastHeardAt`, `lastSyncAt`, `pendingCount`, late-risk, and a state label:
   `ON_TRACK`, `NO_SIGNAL` (no contact for `NO_SIGNAL_AFTER_MIN` while a run is active; shown grey with "last heard ..."), `BEHIND` (past ETA + grace), `ESCALATED` (no signal **and** behind schedule), `DONE`.
   `lastHeardAt` comes from `Device` heartbeats (`POST /sync/heartbeat`, sent when online) and from any accepted event.
+  Exact rules (ADR 0041): a run is one vehicle's trips for today (Colombo date on the server clock). A stop is done once its order has an outcome. `BEHIND` is measured from the next open stop's planned ETA plus the grace, and `lateRisk` from the ETA itself. `NO_SIGNAL` needs a departed trip. Order facts, and heartbeats that change what D4 shows, emit `run_updated`. Time-only changes are computed on read.
 - **Store view of a silent driver**: neutral "No signal, last heard 05:48" (not "late", not "lost"), with the delivered/confirmed double timestamp after sync.
 - **Logging**: pino JSON with request ID; Driver/Loader settings include a sync diagnostics screen.
