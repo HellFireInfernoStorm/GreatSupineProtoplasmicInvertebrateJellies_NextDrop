@@ -70,7 +70,7 @@ dependency-cruiser enforces these rules (`pnpm deps:check`, `.dependency-cruiser
 
 ## Build status
 
-As of 4 Oct 2026, 17:00. "Built" means merged to `main`. **TODO (before submission):** refresh this table.
+As of 4 Oct 2026, 17:15. "Built" means merged to `main`. **TODO (before submission):** refresh this table.
 
 | Part | Status |
 | --- | --- |
@@ -91,7 +91,7 @@ As of 4 Oct 2026, 17:00. "Built" means merged to `main`. **TODO (before submissi
 | Web: shared component kit | Built (#39) |
 | Web: offline core (IndexedDB storage, outbox, sync, session recovery) | Built (#40) |
 | Web: Store app (place order, my deliveries, tracking, timeline, receipt, issues, history, notifications) | Built (#43, #44) |
-| Web: Dispatcher app | Dashboard, queue and plan board in review (#46). Deferral review and publish (#49), delivery progress and inbox (#61), capacity outlook (#55): planned |
+| Web: Dispatcher app | Dashboard, order queue and plan board: built (#46). Deferral review and publish (#49), delivery progress and inbox (#61), capacity outlook (#55): planned |
 | Web: Loader and Driver apps | Planned (#52, #53) |
 | Story fixture picker (`pnpm seed:pick-fixtures`) | Built |
 | Docker Compose, Dockerfile, `.env.example` | Built (#31) |

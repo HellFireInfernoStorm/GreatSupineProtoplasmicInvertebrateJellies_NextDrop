@@ -50,14 +50,14 @@ Each login screen has quick-login chips for these four accounts, under "Demo acc
 
 > **TODO (#62):** this numbered walkthrough must match, step for step, the Playwright test in `e2e/`. The test is not written yet. The Store steps (1, 6 and 13) are written from the built screens. The other steps are still the **planned outline** (`agent-docs/spec/data/seed-and-demo.md` §15.4): replace each with the exact clicks once its screens merge and the test passes against the deployed build. Driver and Loader are meant to be judged at phone width.
 
-Status as of 4 Oct 2026, 17:00.
+Status as of 4 Oct 2026, 17:15.
 
 | # | Role | Step | Status |
 | --- | --- | --- | --- |
 | 1 | Store | At phone width, open `/login/store` and sign in as `OUT004` (or tap the **Store manager** chip under "Demo accounts"). Tap **Place order**: the banner shows the cutoff for the next delivery day and the time left. Tap **Add items from the catalogue**, tap **Add** on a dry item, switch to the **Chilled** tab, tap **Add** on a chilled item, then tap **Done**. Tap **Review 2 orders**, then **Submit 2 orders**. The "2 orders placed" screen shows one order ID for the dry order and one for the chilled order. | Built (#43). Run on the Compose stack on desktop. The step should start from a reset to `before-cutoff`, which has no control in the app yet (#56). |
 | 2 | (demo clock) | Move the demo clock past 16:00. Orders close. | Planned. The clock API is built (#38); it has no control in the app yet (#56). |
-| 3 | Dispatcher | Open the queue, see demand exceed capacity, **Propose plan**, inspect trips and capacity bars. | Planned. Waits on #46. |
-| 4 | Dispatcher | Try a rule-breaking move (a chilled order onto an ambient truck): blocked, with the reason. Make a valid edit. | Planned. Waits on #46. |
+| 3 | Dispatcher | Open the queue, see demand exceed capacity, **Propose plan**, inspect trips and capacity bars. | Screens built (#46). The exact clicks are not written here yet. |
+| 4 | Dispatcher | Try a rule-breaking move (a chilled order onto an ambient truck): blocked, with the reason. Make a valid edit. | Screens built (#46). The exact clicks are not written here yet. |
 | 5 | Dispatcher | Review deferrals (reason codes, unavoidable vs choice, outlets skipped yesterday pinned). **Publish**. | Planned. Waits on #49. |
 | 6 | Store | Open **My deliveries**. The card for the next delivery day lists each order: a planned order shows its ETA band and trip, and a deferred order shows "Moved to" its new day with the reason. Tap **View deferral notice** to open the deferred order: the notice names the new day and the reason, above the order's timeline. The bell shows the deferral as an unread notification. | Built (#44). Checked against mock data only; needs steps 3 to 5 to run on the real stack. |
 | 7 | Loader | Accept the plan, open the trip, load in reverse stop order, flag a shortfall, hold to mark ready. | Planned. Waits on #52. |
@@ -191,7 +191,7 @@ These depart from the Day 5 design as submitted. Each is recorded in an ADR in `
    - the issue kinds are Short, Damaged, Warm on arrival and Something else, where the frame has "Wrong item";
    - quantities are shown as "units", because an order's lines can have different unit labels.
 
-**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:00. This list covers the ADRs up to 0045. The Dispatcher, Loader and Driver screens are not merged yet: their issues are labelled as departures (#46, #52, #61) and each needs a line here once its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
+**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:15. This list covers the ADRs up to 0046. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). The Loader, Driver and Dispatcher D4 screens are not merged yet: their issues are labelled as departures (#52, #61) and each needs a line here once its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
 
 ## Scope: what is not built
 
@@ -329,6 +329,7 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0043 | Conflict outcomes for field devices |
 | 0044 | Historical context for field conflicts |
 | 0045 D | Store deliveries, tracking, receipt and issues: routes and departures |
+| 0046 | Dispatcher planning validation context |
 
 ## Submission documents
 
