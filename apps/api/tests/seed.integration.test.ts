@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ACCOUNTS, DEMO_PASSWORD, DEMO_PIN } from "../prisma/seed/accounts";
 import { runSeed, type SeedSummary } from "../prisma/seed/index";
 import { PEAK_DAY_WORKSHOP } from "../prisma/seed/peak-day";
-import { STORY_CHILLED_ORDER_ID } from "../prisma/seed/story";
+import { HILL_RUN_WORKSHOP, STORY_CHILLED_ORDER_ID } from "../prisma/seed/story";
 import { uuidv7 } from "uuidv7";
 import { createDatabase, type Database } from "../src/lib/database";
 import { CSRF_HEADER } from "../src/modules/auth";
@@ -79,7 +79,7 @@ describe.skipIf(!url)("seed (PostgreSQL)", () => {
     expect(await count("road_conditions")).toBeGreaterThan(10000);
     expect(await count("users")).toBe(ACCOUNTS.length);
     expect(await count("orders")).toBe(94);
-    expect(await count("vehicle_availability")).toBe(PEAK_DAY_WORKSHOP.length);
+    expect(await count("vehicle_availability")).toBe(PEAK_DAY_WORKSHOP.length + HILL_RUN_WORKSHOP.length);
     expect(await count("outlet_service_states")).toBe(120);
     expect(await count("weekly_demand_history")).toBe(72);
     expect(await count("demo_state")).toBe(1);

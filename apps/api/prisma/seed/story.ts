@@ -11,6 +11,21 @@ import { HILL_STORE_OUTLET_ID, STORY_DATE, WALKTHROUGH_TRIP } from "./story-fixt
 export const STORY_CHILLED_ORDER_ID = "ORD10412";
 export const STORY_DRY_ORDER_ID = "ORD10468";
 
+/**
+ * The other Kandy reefer trucks, in the workshop on the story date so that proposing the Kandy plan puts the hill trip
+ * on the walkthrough vehicle (ADR 0048, issue #133). The allocator takes the first reefer truck that fits, so all four
+ * are out; the reefer vans stay available, and Kandy still serves every story order.
+ */
+export const HILL_RUN_WORKSHOP: readonly {
+  readonly vehicleId: string;
+  readonly reason: "SERVICE" | "BREAKDOWN";
+}[] = [
+  { vehicleId: "VEH040", reason: "SERVICE" },
+  { vehicleId: "VEH041", reason: "SERVICE" },
+  { vehicleId: "VEH042", reason: "SERVICE" },
+  { vehicleId: "VEH043", reason: "SERVICE" },
+];
+
 /** Every order ID the story uses; the bulk generator skips them. */
 export function storyOrderIds(calendar: Calendar): ReadonlySet<string> {
   return new Set(storyOrders(calendar).map((o) => o.displayId));

@@ -18,8 +18,9 @@ import { seedOrderSpecs } from "./index";
 import { eventsOf, quantitiesOf, statusOf, type OrderSpec } from "./orders";
 import { bulkOrderIds, generatePeakDay, PEAK_DAY_ORDER_COUNT, PEAK_DAY_WORKSHOP } from "./peak-day";
 import { loadReference } from "./pick-fixtures";
-import { STORY_CHILLED_ORDER_ID, STORY_DRY_ORDER_ID, storyOrderIds, storyOrders } from "./story";
+import { HILL_RUN_WORKSHOP, STORY_CHILLED_ORDER_ID, STORY_DRY_ORDER_ID, storyOrderIds, storyOrders } from "./story";
 import {
+  HILL_RUN_DEPOT,
   HILL_STORE_OUTLET_ID,
   PEAK_DAY_DEPOT,
   PEAK_STORE_OUTLET_ID,
@@ -204,6 +205,26 @@ describe("the Kandy story orders", () => {
     expect([...new Set(onTrip.map((o) => o.outletId))].sort()).toEqual([...WALKTHROUGH_TRIP.stopOutletIds].sort());
     const trip = { ref: "T-hill", vehicleId: WALKTHROUGH_VEHICLE_ID, tripNo: 1, orders: onTrip.map(allocationOrder) };
     expect(validateTrip(trip, ref, { date: STORY_DATE }).violations).toEqual([]);
+  });
+
+  it("put the hill trip on the walkthrough vehicle when the Kandy plan is proposed (ADR 0048)", () => {
+    const workshop = HILL_RUN_WORKSHOP.map((w) => w.vehicleId);
+    for (const id of workshop) expect(ref.vehicles.get(id)?.depot).toBe(HILL_RUN_DEPOT);
+    const result = proposePlan(
+      {
+        date: STORY_DATE,
+        depot: HILL_RUN_DEPOT,
+        orders: kandy.map(allocationOrder),
+        unavailableVehicleIds: new Set(workshop),
+        breakdownVehicleIds: new Set(),
+      },
+      ref,
+    );
+    expect(result.stats.deferred).toBe(0);
+    const hill = result.trips.filter((t) => t.orders.some((o) => o.outletId === HILL_STORE_OUTLET_ID));
+    expect(hill).toHaveLength(1);
+    expect(hill[0]).toMatchObject({ vehicleId: WALKTHROUGH_VEHICLE_ID, tripNo: WALKTHROUGH_TRIP.tripNo });
+    expect([...new Set(hill[0]!.orders.map((o) => o.outletId))]).toEqual([...WALKTHROUGH_TRIP.stopOutletIds]);
   });
 
   it("give the hill store a chilled and a dry order: ORD10412 (carried over) and ORD10468", () => {
