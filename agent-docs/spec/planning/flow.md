@@ -21,3 +21,7 @@ The scoped day response includes `planningContext` from the server day-input loa
 
 Planning reads also retain current published-trip orders beyond the allocatable queue. planningContext.publishedStops lists their orderId, vehicleId, tripNo, 1-based seq, locked and departed flags. Locked stops show a lock label and cannot move; unreported departed stops can move to the end of their own trip or to Unassigned for D3 review. New cargo and cross-trip moves on departed trips are refused. Propose is refused after departure; edit the retained draft instead (ADR 0053).
 
+
+## Unassigned panel paging (issue 126, ADR 0054)
+
+D2 displays four unassigned cards per page in the existing queue order. The heading retains the full total; Previous/Next and a visible range/total identify the page. An empty list shows 0–0 of 0 and the empty message; boundary controls disable, including both on zero or one page. Moving or refreshing within the same scope clamps the page so remaining orders never yield an empty page. A new depot/day/draft scope resets to the first page. This only changes presentation; the same Move to actions and shared validators govern every order across all pages.
