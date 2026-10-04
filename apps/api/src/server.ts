@@ -16,6 +16,7 @@ import { registerField } from "./modules/field";
 import { createNotifier, notificationRoutes } from "./modules/notifications";
 import { registerOrders } from "./modules/orders";
 import { registerPlanning } from "./modules/planning";
+import { registerReference } from "./modules/reference";
 import { registerShortfalls } from "./modules/shortfalls";
 
 export interface ServerDependencies {
@@ -87,6 +88,7 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
   await registerField(app, { prisma, now: clock.now });
   await registerShortfalls(app, { prisma, now: clock.now });
   await registerBlobs(app, { prisma });
+  await registerReference(app, { prisma });
   // Demo tooling needs the database: the clock offset, the tick and the reset all live there.
   if (prisma) {
     await app.register(demoRoutes, {

@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §12; issues 29, 78; accepted ADRs 0024, 0026
+sources: guide §12; issues 29, 78, 110; accepted ADRs 0024, 0026, 0038
 ---
 
 # API wire DTOs
@@ -54,7 +54,7 @@ Login body is discriminated by `role`:
 
 Login, me and reauth return `{ user, expiresAt, serverTime, csrfToken }`. User variants include common id/displayName/locale and the required role scope: store outlet, dispatcher depots, loader depot, driver vehicle. Reauth takes `{ role, pin, deviceId }` for loader/driver and uses the `expired-session` policy above; missing/revoked identity requires normal login. Logout returns `{ ok: true, serverTime }`.
 
-Reference lists wrap `{ items }`. Optional depot query selection never overrides authorization. Calendar requires `from` and `to`. Reasons returns separate deferral, problem, load-short, and stop-outcome lists of `{ code, message_key }`.
+Reference lists wrap `{ items }`. Optional depot query selection never overrides authorization: a depot outside the caller's scope returns an empty list (ADR 0038). A store sees its own brand's products; other roles see the whole catalogue. Calendar requires `from` and `to` and returns every date in that inclusive range, at most 366 days, with `from` not after `to`; otherwise 400 `SCHEMA_INVALID`. Reasons returns separate deferral, problem, load-short, and stop-outcome lists of `{ code, message_key }`.
 
 ## Store
 
