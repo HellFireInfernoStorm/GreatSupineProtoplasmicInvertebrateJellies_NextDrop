@@ -89,6 +89,9 @@ jobs:
           done
           echo "::error::/api/readyz did not return 200 within 5 minutes"
           exit 1
+      # The chips are compiled in by VITE_DEMO_MODE at build time (#108); DEMO_MODE defaults to true here.
+      - name: The quick-login chips are built into the web app
+        run: docker compose exec -T app grep -rq "nimal@waypoint.test" /repo/apps/web/dist/assets
       - name: The PWA is served from the same origin
         run: |
           headers=$(curl -fsS -D - -o /tmp/index.html http://localhost:8080/)
