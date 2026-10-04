@@ -84,7 +84,7 @@ dependency-cruiser enforces these rules (`pnpm deps:check`, `.dependency-cruiser
 
 ## Build status
 
-As of 4 Oct 2026, 22:50 (`main` at `8d49e6b`). "Built" means merged to `main`. **TODO (before submission):** refresh this table if more merges land.
+As of `main` on 4 Oct 2026 (`234f273`). "Built" means merged to `main`.
 
 | Part | Status |
 | --- | --- |
@@ -96,18 +96,18 @@ As of 4 Oct 2026, 22:50 (`main` at `8d49e6b`). "Built" means merged to `main`. *
 | API: auth (login, sessions, CSRF, lockout) and policy (`can()`, `scoped()`), with authorization matrix tests | Built (#35, #58) |
 | API: store orders (cutoff, place, track, cancel, receipt, issues) and reference data | Built (#42, #110) |
 | API: planning (day, propose, draft, validate, fleet), publish and plan versions, dock shortfalls | Built (#45, #48, #51) |
-| API: change feed, SSE hint and notifications | Built (#41) |
+| API: change feed, SSE hint and notifications | Built (#41). In-app only; Web Push left out (ADR 0013, #65) |
 | API: field snapshot, sync ingest, heartbeat and blob upload | Built (#47, #50). `TRIP_READY` is refused until every Loader checklist line is checked (#115) |
 | API: sync conflicts (classification, held facts, resolution, outcomes for field devices) | Built (#54, #97, #117) |
 | API: run monitor, exceptions inbox, dispute resolution and capacity outlook | Built (#59, #55) |
-| API: server clock, planning-day tick and demo reset | Built (#38). Presets `before-cutoff` and `orders-closed` are built; the other presets and the demo panel are planned (#56) |
+| API: server clock, planning-day tick and demo reset | Built (#38). Presets `before-cutoff` and `orders-closed` work. `plan-published`, `loading`, `mid-run` and `clash-ready`, and the in-app demo panel, are not built (#56) |
 | Web: routes, login and the four role shells | Built (#36) |
 | Web: shared component kit | Built (#39) |
 | Web: offline core (IndexedDB storage, outbox, sync, session recovery) | Built (#40) |
 | Web: Store app (place order, my deliveries, tracking, timeline, receipt, issues, history, notifications) | Built (#43, #44) |
-| Web: Dispatcher app (dashboard, order queue, plan board, deferral review and publish, delivery progress and exceptions inbox, capacity outlook) | Built (#46, #49, #61, #55) |
-| Web: Loader app (dock trips, load checklist, short and damaged lines, hand-over, offline) | Built (#52) |
-| Web: Driver app (today's run, stop and proof of delivery, offline switch, clash cards, recovery) | Built (#53) |
+| Web: Dispatcher app (dashboard, order queue, plan board, deferral review and publish, delivery progress, exceptions inbox, capacity outlook) | Built (#46, #49, #61, #55) |
+| Web: Loader app (dock trips, reverse-stop checklist, short and damaged, hold to mark ready, offline) | Built (#52) |
+| Web: Driver app (today's run, proof of delivery, offline switch, clash cards, recovery) | Built (#53) |
 | Web: Sinhala and Tamil field strings | Drafts only, not yet checked by a native speaker ([field-locale-drafts.md](field-locale-drafts.md), #57) |
 | Story fixture picker (`pnpm seed:pick-fixtures`) | Built |
 | Docker Compose, Dockerfile, `.env.example` | Built (#31) |
@@ -117,4 +117,6 @@ As of 4 Oct 2026, 22:50 (`main` at `8d49e6b`). "Built" means merged to `main`. *
 | Public deployment | Built: https://nextdrop.duckdns.org on a DigitalOcean droplet (#33, #67, ADR 0051) |
 | Fleet screen and vehicle breakdowns | Not built (#63) |
 | Load reversal for loaded orders | Not built (#60) |
-| Web Push notifications (optional) | Not built (#65). Notifications are in-app only (ADR 0013) |
+| Unassigned-panel pagination | Not built (#126) |
+| Web Push notifications (optional) | Left out (#65). Notifications are in-app only (ADR 0013) |
+| Solver sidecar | Not built (ADR 0014) |

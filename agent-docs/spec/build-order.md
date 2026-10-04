@@ -23,12 +23,12 @@ sources: guide §22
 
 ## 22.2 Definition of done (from the Booklet)
 
-- [ ] `docker compose up` on a fresh clone starts DB, migrates, seeds, serves the app.
-- [ ] Public URL live with four seeded accounts, one per role.
-- [ ] A judge can complete the walkthrough across all four roles; Driver and Loader work at phone width.
-- [ ] Plans respect capacity, temperature, access, windows, fuel quotas; demand > capacity day handled; deferrals recorded with reasons.
-- [ ] Offline operation and reconciliation demonstrated, including a clash.
-- [ ] README: setup/config, seeded accounts, numbered walkthrough, significant departures from the Designathon design.
-- [ ] `docs/`: architecture diagram, data model, AI tool disclosure.
+- [x] `docker compose up` on a fresh clone starts DB, migrates, seeds, serves the app.
+- [x] Public URL live with four seeded accounts, one per role.
+- [x] A judge can complete the walkthrough across all four roles; Driver and Loader work at phone width.
+- [x] Plans respect capacity, temperature, access, windows, fuel quotas; demand > capacity day handled; deferrals recorded with reasons.
+- [x] Offline operation and reconciliation demonstrated, including a clash.
+- [x] README: setup/config, seeded accounts, numbered walkthrough, significant departures from the Designathon design.
+- [x] `docs/`: architecture diagram, data model, AI tool disclosure.
 - [ ] Demo video (5-8 min): four roles completing the walkthrough, then a brief code and architecture explanation.
 - [ ] Nothing pushed after the deadline.
