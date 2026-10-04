@@ -32,13 +32,26 @@ export type OrderRecord = Prisma.OrderGetPayload<{ include: typeof orderInclude 
 const iso = (ms: number) => new Date(ms).toISOString();
 const grams = (kg: Prisma.Decimal) => kg.mul(1000).toNumber();
 
-function latestApplied<T extends OrderEvent["type"]>(
-  events: readonly OrderRecord["orderEvent_orderId"][number][],
-  types: readonly T[],
-) {
-  return [...events]
-    .reverse()
-    .find((e) => e.disposition === "APPLIED" && (types as readonly string[]).includes(e.type));
+type EventRow = OrderRecord["orderEvent_orderId"][number];
+
+/**
+ * Events in effect: applied at insert, or held and then accepted by the dispatcher (ADR 0040). `disposition` is
+ * immutable, so acceptance is read from the `CONFLICT_RESOLVED` events.
+ */
+export function inEffect(events: readonly EventRow[]): (event: EventRow) => boolean {
+  const accepted = new Set(
+    events
+      .filter((e) => e.type === "CONFLICT_RESOLVED")
+      .map((e) => e.payload as { resolution?: unknown; heldEventId?: unknown })
+      .filter((p) => p.resolution === "ACCEPT_FACT" && typeof p.heldEventId === "string")
+      .map((p) => p.heldEventId as string),
+  );
+  return (event) => event.disposition === "APPLIED" || accepted.has(event.id);
+}
+
+function latestApplied<T extends OrderEvent["type"]>(events: readonly EventRow[], types: readonly T[]) {
+  const effective = inEffect(events);
+  return [...events].reverse().find((e) => effective(e) && (types as readonly string[]).includes(e.type));
 }
 
 export function toOrderDto(order: OrderRecord): OrderDto {
@@ -161,11 +174,12 @@ export function toTripDto(trip: TripRecord): TripDto {
       const events = stop.order.orderEvent_orderId;
       const arrived = latestApplied(events, ["STOP_ARRIVED"]);
       // Delivered on the driver's phone (capturedAt) and confirmed when the server received it, never merged.
+      const effective = inEffect(events);
       const delivered = [...events]
         .reverse()
         .find(
           (e) =>
-            e.disposition === "APPLIED" &&
+            effective(e) &&
             e.type === "STOP_OUTCOME" &&
             ["FULL", "PARTIAL"].includes(String((e.payload as { outcome?: unknown }).outcome)),
         );

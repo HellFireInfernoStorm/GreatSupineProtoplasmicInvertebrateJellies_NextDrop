@@ -9,6 +9,7 @@ import { orderRoutes } from "./routes";
 export { createCalendarSource, dateOnly, localDateOf, type CalendarSource } from "./calendar";
 export { appendServerEvent, insertionOrder, toEnvelope, toRulesEvent } from "./events";
 export {
+  inEffect,
   orderInclude,
   outletInclude,
   toOrderDto,

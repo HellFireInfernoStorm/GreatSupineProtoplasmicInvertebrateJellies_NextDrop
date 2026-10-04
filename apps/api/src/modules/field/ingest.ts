@@ -1,17 +1,35 @@
 import {
   parseClientEvent,
   type ClientEvent,
+  type ConflictKind,
   type ErrorCode,
   type FieldEventType,
   type SyncEventResult,
 } from "@nextdrop/contracts";
-import { applyEvent, ordersGoingOut, reduceOrder, shortLinesBlockingReady, type OrderEvent } from "@nextdrop/rules";
+import {
+  applyEvent,
+  colomboLocal,
+  ordersGoingOut,
+  reduceOrder,
+  shortLinesBlockingReady,
+  type OrderEvent,
+} from "@nextdrop/rules";
 import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { linkArrivedBlobs } from "../blobs";
 import { appendFeed, readFeedHint, type FeedRowInput } from "../feed";
 import type { NotificationInput, Notifier } from "../notifications";
-import { appendServerEvent, orderChanged, orderInclude, toRulesEvent, type OrderRecord } from "../orders";
+import {
+  appendServerEvent,
+  dateOnly,
+  inEffect,
+  orderChanged,
+  orderInclude,
+  toRulesEvent,
+  type OrderRecord,
+} from "../orders";
 import type { Actor } from "../policy";
+import { classifyFact, HOLDABLE_FACTS, type PlanContext, type Slot } from "./classify";
+import { isDelivering, projectFact } from "./effects";
 
 type FieldActor = Extract<Actor, { role: "LOADER" | "DRIVER" }>;
 
@@ -60,36 +78,106 @@ function isUniqueViolation(error: unknown): boolean {
 
 interface Subjects {
   order: OrderRecord | null;
-  trip: { id: string; status: string; vehicleId: string; depot: string } | null;
+  trip: { id: string; status: string; vehicleId: string; depot: string; planningDayId: string } | null;
   vehicleId: string | null;
+  /** The plan the device saw and what changed since (holdable order facts only). */
+  plan: PlanContext | null;
+}
+
+/** What one ingested event became. */
+type Stored = { id: string; conflictId: string | null } | null;
+
+/** The trip and vehicle a published snapshot (`PlanVersion.snapshot.trips`, TripDto[]) puts the order on. */
+function slotIn(snapshot: unknown, orderId: string): Slot | null {
+  const trips = (snapshot as { trips?: unknown } | null)?.trips;
+  if (!Array.isArray(trips)) return null;
+  for (const trip of trips as { id?: unknown; vehicleId?: unknown; stops?: { order?: { id?: unknown } }[] }[]) {
+    if (typeof trip.id !== "string" || typeof trip.vehicleId !== "string") continue;
+    if (trip.stops?.some((stop) => stop.order?.id === orderId)) return { tripId: trip.id, vehicleId: trip.vehicleId };
+  }
+  return null;
 }
 
 /** `POST /sync/events` (spec/sync/push-protocol.md): each event in its own short transaction, in deviceSeq order. */
 export function createIngest(deps: IngestDependencies) {
   const { prisma, notifier } = deps;
 
+  /**
+   * The plan version the device worked from (`basedOnPlanVersion = v`) and the changes to this order since, on the
+   * fact's planning day: the subject trip's day, else the order's depot on the Colombo capture date (ADR 0040).
+   */
+  async function planContext(
+    order: OrderRecord,
+    event: ClientEvent,
+    trip: Subjects["trip"],
+  ): Promise<PlanContext | null> {
+    const v = event.basedOnPlanVersion;
+    if (v === undefined) return null;
+    const day = trip
+      ? await prisma.planningDay.findUnique({ where: { id: trip.planningDayId } })
+      : await prisma.planningDay.findUnique({
+          where: {
+            depot_date: {
+              depot: order.outlet.depot,
+              date: dateOnly(colomboLocal(Date.parse(event.capturedAt)).date),
+            },
+          },
+        });
+    if (!day || day.currentVersion <= v) return null;
+    const [atV, changes] = await Promise.all([
+      prisma.planVersion.findUnique({
+        where: { planningDayId_version: { planningDayId: day.id, version: v } },
+        select: { snapshot: true },
+      }),
+      prisma.planVersionChange.findMany({
+        where: {
+          orderId: order.id,
+          planVersion: { planningDayId: day.id, version: { gt: v, lte: day.currentVersion } },
+        },
+        select: { change: true },
+      }),
+    ]);
+    return { slotAtV: slotIn(atV?.snapshot, order.id), changes: changes.map((c) => c.change) };
+  }
+
   async function resolveSubjects(actor: FieldActor, event: ClientEvent): Promise<Subjects> {
     const { orderId, vehicleId } = event.subject;
     const tripId = event.subject.tripId ?? ("tripId" in event.payload ? (event.payload.tripId as string) : undefined);
+    let trip: Subjects["trip"] = null;
+    if (tripId) {
+      const row = await prisma.trip.findUnique({
+        where: { id: tripId },
+        select: {
+          id: true,
+          status: true,
+          vehicleId: true,
+          planningDayId: true,
+          planningDay: { select: { depot: true } },
+        },
+      });
+      if (!row) throw new Refusal("NOT_FOUND");
+      trip = {
+        id: row.id,
+        status: row.status,
+        vehicleId: row.vehicleId,
+        depot: row.planningDay.depot,
+        planningDayId: row.planningDayId,
+      };
+      if (actor.role === "LOADER" && trip.depot !== actor.depot) throw new Refusal("FORBIDDEN");
+      if (actor.role === "DRIVER" && trip.vehicleId !== actor.vehicleId) throw new Refusal("NOT_ASSIGNED");
+    }
     let order: OrderRecord | null = null;
+    let plan: PlanContext | null = null;
     if (orderId) {
       order = await prisma.order.findUnique({ where: { id: orderId }, include: orderInclude });
       if (!order) throw new Refusal("NOT_FOUND");
       const assigned = order.tripStop_orderId[0]?.trip.vehicleId ?? null;
       if (actor.role === "LOADER" && order.outlet.depot !== actor.depot) throw new Refusal("FORBIDDEN");
-      if (actor.role === "DRIVER" && assigned !== actor.vehicleId) throw new Refusal("NOT_ASSIGNED");
-      if (NEEDS_ASSIGNMENT.has(event.type) && assigned === null) throw new Refusal("NOT_ASSIGNED");
-    }
-    let trip: Subjects["trip"] = null;
-    if (tripId) {
-      const row = await prisma.trip.findUnique({
-        where: { id: tripId },
-        select: { id: true, status: true, vehicleId: true, planningDay: { select: { depot: true } } },
-      });
-      if (!row) throw new Refusal("NOT_FOUND");
-      trip = { id: row.id, status: row.status, vehicleId: row.vehicleId, depot: row.planningDay.depot };
-      if (actor.role === "LOADER" && trip.depot !== actor.depot) throw new Refusal("FORBIDDEN");
-      if (actor.role === "DRIVER" && trip.vehicleId !== actor.vehicleId) throw new Refusal("NOT_ASSIGNED");
+      if (HOLDABLE_FACTS.has(event.type)) plan = await planContext(order, event, trip);
+      // A stop a newer plan moved or removed still belongs to the device that had it at version v (§9.5).
+      const hadIt = plan?.slotAtV != null && (actor.role === "LOADER" || plan.slotAtV.vehicleId === actor.vehicleId);
+      if (actor.role === "DRIVER" && assigned !== actor.vehicleId && !hadIt) throw new Refusal("NOT_ASSIGNED");
+      if (NEEDS_ASSIGNMENT.has(event.type) && assigned === null && !hadIt) throw new Refusal("NOT_ASSIGNED");
     }
     if (vehicleId) {
       const row = await prisma.vehicle.findUnique({ where: { id: vehicleId }, select: { depot: true } });
@@ -97,7 +185,7 @@ export function createIngest(deps: IngestDependencies) {
       if (actor.role === "LOADER" && row.depot !== actor.depot) throw new Refusal("FORBIDDEN");
       if (actor.role === "DRIVER" && vehicleId !== actor.vehicleId) throw new Refusal("NOT_ASSIGNED");
     }
-    return { order, trip, vehicleId: vehicleId ?? null };
+    return { order, trip, vehicleId: vehicleId ?? null, plan };
   }
 
   /** Every line id in the payload belongs to the order. */
@@ -108,7 +196,13 @@ export function createIngest(deps: IngestDependencies) {
     if (lines.some((l) => typeof l.lineId !== "string" || !known.has(l.lineId))) throw new Refusal("SCHEMA_INVALID");
   }
 
-  function storedEvent(actor: FieldActor, event: ClientEvent, receivedAt: Date, subjects: Subjects) {
+  function storedEvent(
+    actor: FieldActor,
+    event: ClientEvent,
+    receivedAt: Date,
+    subjects: Subjects,
+    disposition: "APPLIED" | "HELD" = "APPLIED",
+  ) {
     return {
       clientEventId: event.clientEventId,
       deviceId: event.deviceId,
@@ -122,7 +216,7 @@ export function createIngest(deps: IngestDependencies) {
       clockOffsetMs: event.clockOffsetMs === undefined ? null : BigInt(event.clockOffsetMs),
       receivedAt,
       basedOnPlanVersion: event.basedOnPlanVersion ?? null,
-      disposition: "APPLIED" as const,
+      disposition,
       payload: event.payload as Prisma.InputJsonValue,
       orderId: subjects.order?.id ?? null,
       tripId: subjects.trip?.id ?? null,
@@ -189,7 +283,12 @@ export function createIngest(deps: IngestDependencies) {
   }
 
   /** An order fact: reduce, compare-and-set the status, record, project lines, notify, feed last. */
-  async function ingestOrderEvent(actor: FieldActor, event: ClientEvent, subjects: Subjects, receivedAt: Date) {
+  async function ingestOrderEvent(
+    actor: FieldActor,
+    event: ClientEvent,
+    subjects: Subjects,
+    receivedAt: Date,
+  ): Promise<Stored> {
     const order = subjects.order!;
     checkLines(order, event);
     const state = reduceOrder(order.id, order.orderEvent_orderId.map(toRulesEvent));
@@ -199,14 +298,24 @@ export function createIngest(deps: IngestDependencies) {
       subject: event.subject,
       payload: event.payload,
     } as OrderEvent);
-    // Until conflict classification (#54) lands, every legal fact is applied; an illegal one is rejected.
-    if (next.outcome.kind === "ILLEGAL_TRANSITION") throw new Refusal("ILLEGAL_TRANSITION");
+    const stop = order.tripStop_orderId[0];
+    const effective = inEffect(order.orderEvent_orderId);
+    const verdict = classifyFact({
+      type: event.type,
+      plan: subjects.plan,
+      current: stop ? { tripId: stop.tripId, vehicleId: stop.trip.vehicleId } : null,
+      appliedSameTypeDevices: order.orderEvent_orderId
+        .filter((e) => e.type === event.type && effective(e))
+        .map((e) => e.deviceId),
+      deviceId: event.deviceId,
+      outcome: next.outcome,
+    });
+    if (verdict.kind === "REJECT") throw new Refusal("ILLEGAL_TRANSITION");
+    if (verdict.kind === "HOLD") return ingestHeld(actor, event, subjects, receivedAt, verdict.conflict);
+
     const status = next.state.status ?? order.status;
-    const delivered =
-      event.type === "STOP_OUTCOME" &&
-      next.outcome.kind === "APPLIED" &&
-      (event.payload.outcome === "FULL" || event.payload.outcome === "PARTIAL");
-    const assignedVehicle = order.tripStop_orderId[0]?.trip.vehicleId ?? null;
+    const delivered = next.outcome.kind === "APPLIED" && isDelivering(event.type, event.payload);
+    const assignedVehicle = stop?.trip.vehicleId ?? null;
 
     return prisma.$transaction(async (tx) => {
       const { count } = await tx.order.updateMany({
@@ -218,32 +327,85 @@ export function createIngest(deps: IngestDependencies) {
       const id = await insertOnce(tx, storedEvent(actor, event, receivedAt, subjects));
       if (id === null) return null;
       await linkArrivedBlobs(tx, id, event.payload);
-      if (event.type === "LOAD_CONFIRMED") {
-        for (const line of event.payload.lines) {
-          await tx.orderLine.update({ where: { id: line.lineId }, data: { qtyLoaded: line.qtyLoaded } });
-        }
-      }
-      if (event.type === "STOP_OUTCOME") {
-        const reported = new Map((event.payload.lines ?? []).map((l) => [l.lineId, l.qtyDelivered]));
-        for (const line of order.orderLine_orderId) {
-          // A FULL delivery without line detail delivers what was loaded (or ordered, if loading was not recorded).
-          const qty =
-            reported.get(line.id) ??
-            (event.payload.outcome === "FULL" ? (line.qtyLoaded > 0 ? line.qtyLoaded : line.qtyOrdered) : undefined);
-          if (qty !== undefined) await tx.orderLine.update({ where: { id: line.id }, data: { qtyDelivered: qty } });
-        }
-      }
+      await projectFact(tx, order, event.type, event.payload);
       const feed: FeedRowInput[] = [
         orderChanged({ id: order.id, outletId: order.outletId, depot: order.outlet.depot, vehicleId: assignedVehicle }),
       ];
       for (const input of notificationsFor(event, subjects)) feed.push(...(await notifier.notify(tx, input)));
       await appendFeed(tx, feed);
-      return id;
+      return { id, conflictId: null };
+    }, TX);
+  }
+
+  /**
+   * A clash (§9.5): store the fact as HELD with its evidence, open a Conflict, emit CONFLICT_OPENED and tell the
+   * dispatcher. The order does not move; the reducer skips the fact until the dispatcher decides.
+   */
+  async function ingestHeld(
+    actor: FieldActor,
+    event: ClientEvent,
+    subjects: Subjects,
+    receivedAt: Date,
+    kind: ConflictKind,
+  ): Promise<Stored> {
+    const order = subjects.order!;
+    const tripId = subjects.trip?.id ?? subjects.plan?.slotAtV?.tripId ?? order.tripStop_orderId[0]?.tripId ?? null;
+    return prisma.$transaction(async (tx) => {
+      // The CAS on status serialises this with any other writer of the order.
+      const { count } = await tx.order.updateMany({
+        where: { id: order.id, status: order.status },
+        data: { status: order.status },
+      });
+      if (count === 0) throw new LostRace();
+      const id = await insertOnce(tx, storedEvent(actor, event, receivedAt, subjects, "HELD"));
+      if (id === null) return null;
+      await linkArrivedBlobs(tx, id, event.payload);
+      const conflict = await tx.conflict.create({
+        data: { kind, orderId: order.id, tripId, heldEventId: id, openedBy: actor.userId, openedAt: receivedAt },
+      });
+      await appendServerEvent(tx, {
+        type: "CONFLICT_OPENED",
+        payload: { conflictId: conflict.id, kind, heldEventId: id },
+        orderId: order.id,
+        actor: { userId: actor.userId, role: actor.role },
+        at: receivedAt,
+      });
+      const depot = order.outlet.depot;
+      const feed: FeedRowInput[] = [
+        {
+          kind: "conflict_opened",
+          entity: { type: "conflict", id: conflict.id },
+          audience: {
+            roles: ["DISPATCHER", actor.role],
+            depot,
+            ...(actor.role === "DRIVER" ? { vehicleId: actor.vehicleId } : {}),
+          },
+        },
+        orderChanged({
+          id: order.id,
+          outletId: order.outletId,
+          depot,
+          vehicleId: order.tripStop_orderId[0]?.trip.vehicleId ?? null,
+        }),
+        ...(await notifier.notify(tx, {
+          kind: "conflict_opened",
+          audience: { role: "DISPATCHER", depot },
+          params: { order: order.displayId, kind },
+          entity: { type: "conflict", id: conflict.id },
+        })),
+      ];
+      await appendFeed(tx, feed);
+      return { id, conflictId: conflict.id };
     }, TX);
   }
 
   /** TRIP_READY and TRIP_DEPARTED move the trip; a departure takes its PLANNED and LOADED orders out (ADR 0019). */
-  async function ingestTripEvent(actor: FieldActor, event: ClientEvent, subjects: Subjects, receivedAt: Date) {
+  async function ingestTripEvent(
+    actor: FieldActor,
+    event: ClientEvent,
+    subjects: Subjects,
+    receivedAt: Date,
+  ): Promise<Stored> {
     const trip = subjects.trip!;
     if (trip.status === "CANCELLED") throw new Refusal("ILLEGAL_TRANSITION");
     const stops = await prisma.tripStop.findMany({
@@ -305,12 +467,17 @@ export function createIngest(deps: IngestDependencies) {
         );
       }
       await appendFeed(tx, feed);
-      return id;
+      return { id, conflictId: null };
     }, TX);
   }
 
   /** Facts with no order to move (a trip acknowledgement, a vehicle problem): record, notify, feed last. */
-  async function ingestRecordOnly(actor: FieldActor, event: ClientEvent, subjects: Subjects, receivedAt: Date) {
+  async function ingestRecordOnly(
+    actor: FieldActor,
+    event: ClientEvent,
+    subjects: Subjects,
+    receivedAt: Date,
+  ): Promise<Stored> {
     return prisma.$transaction(async (tx) => {
       const id = await insertOnce(tx, storedEvent(actor, event, receivedAt, subjects));
       if (id === null) return null;
@@ -318,8 +485,27 @@ export function createIngest(deps: IngestDependencies) {
       const feed: FeedRowInput[] = subjects.trip ? [runUpdated(subjects.trip)] : [];
       for (const input of notificationsFor(event, subjects)) feed.push(...(await notifier.notify(tx, input)));
       await appendFeed(tx, feed);
-      return id;
+      return { id, conflictId: null };
     }, TX);
+  }
+
+  const findStored = (clientEventId: string) =>
+    prisma.orderEvent.findUnique({
+      where: { clientEventId },
+      select: { id: true, actorUserId: true, conflict_heldEventId: { select: { id: true } } },
+    });
+
+  /** A retried event: a held one reports its conflict again so a device that lost the response still learns it. */
+  function repeated(
+    existing: NonNullable<Awaited<ReturnType<typeof findStored>>>,
+    clientEventId: string,
+    at: string,
+  ): SyncEventResult {
+    const conflictId = existing.conflict_heldEventId?.id;
+    if (conflictId) {
+      return { status: "HELD_CONFLICT", clientEventId, conflictId, serverEventId: existing.id, receivedAt: at };
+    }
+    return { status: "DUPLICATE", clientEventId, serverEventId: existing.id, receivedAt: at };
   }
 
   async function ingestOne(
@@ -341,13 +527,10 @@ export function createIngest(deps: IngestDependencies) {
 
     if (event.actor.userId !== actor.userId || event.actor.role !== actor.role) return reject("FORBIDDEN");
     if (!AUTHORED_BY[actor.role].has(event.type)) return reject("FORBIDDEN");
-    const existing = await prisma.orderEvent.findUnique({
-      where: { clientEventId: event.clientEventId },
-      select: { id: true, actorUserId: true },
-    });
+    const existing = await findStored(event.clientEventId);
     if (existing) {
       if (existing.actorUserId !== actor.userId) return reject("FORBIDDEN");
-      return { status: "DUPLICATE", clientEventId: event.clientEventId, serverEventId: existing.id, receivedAt: at };
+      return repeated(existing, event.clientEventId, at);
     }
     if (subjectIds.some((id) => rejectedSubjects.has(id))) return reject("ILLEGAL_TRANSITION");
     const seqTaken = await prisma.orderEvent.count({
@@ -359,16 +542,22 @@ export function createIngest(deps: IngestDependencies) {
       try {
         const subjects = await resolveSubjects(actor, event);
         const isTripFact = event.type === "TRIP_READY" || event.type === "TRIP_DEPARTED";
-        const id = isTripFact
+        const stored = isTripFact
           ? await ingestTripEvent(actor, event, subjects, receivedAt)
           : subjects.order
             ? await ingestOrderEvent(actor, event, subjects, receivedAt)
             : await ingestRecordOnly(actor, event, subjects, receivedAt);
-        if (id === null) {
-          const winner = await prisma.orderEvent.findUniqueOrThrow({ where: { clientEventId: event.clientEventId } });
-          return { status: "DUPLICATE", clientEventId: event.clientEventId, serverEventId: winner.id, receivedAt: at };
+        if (stored === null) return repeated((await findStored(event.clientEventId))!, event.clientEventId, at);
+        if (stored.conflictId) {
+          return {
+            status: "HELD_CONFLICT",
+            clientEventId: event.clientEventId,
+            conflictId: stored.conflictId,
+            serverEventId: stored.id,
+            receivedAt: at,
+          };
         }
-        return { status: "ACCEPTED", clientEventId: event.clientEventId, serverEventId: id, receivedAt: at };
+        return { status: "ACCEPTED", clientEventId: event.clientEventId, serverEventId: stored.id, receivedAt: at };
       } catch (error) {
         if (error instanceof Refusal) return reject(error.code);
         if ((error instanceof LostRace || isUniqueViolation(error)) && attempt < MAX_ATTEMPTS) continue;
