@@ -25,14 +25,22 @@ import { useSubmitOrders } from "./useSubmitOrders";
 
 const hasLastWeek = (model: OrderModel) => Object.keys(model.lastQty).length > 0;
 
-function RepeatButton({ model, className = "" }: { model: OrderModel; className?: string }) {
+function RepeatButton({
+  model,
+  className = "",
+  disabled = false,
+}: {
+  model: OrderModel;
+  className?: string;
+  disabled?: boolean;
+}) {
   const { t } = useTranslation("store/order");
   return (
     <Button
       variant="secondary"
       className={className}
       icon={<Icon name="repeat" />}
-      disabled={!hasLastWeek(model)}
+      disabled={disabled || !hasLastWeek(model)}
       onClick={() => draft.fill(model.lastQty, model.products)}
     >
       {t("repeat", { weekday: weekdayLong(model.date) })}
@@ -126,10 +134,11 @@ export function PlaceOrderPage() {
           <h1 className="mt-2 text-3xl leading-[1.25] font-bold tracking-[-0.01em]">{t("title")}</h1>
           <p className="mt-2 text-sm text-muted">{t("intro")}</p>
         </div>
-        {ready && <RepeatButton model={model} />}
+        {ready && <RepeatButton model={model} disabled={pending} />}
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_392px] items-start gap-6">
-        <div className="flex flex-col gap-5">
+        {/* Locked while the orders are being sent: what is on screen is what was submitted. */}
+        <fieldset disabled={pending} className="flex min-w-0 flex-col gap-5">
           <CutoffHero model={model} />
           <GuidanceNotice model={model} />
           <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6">
@@ -154,7 +163,7 @@ export function PlaceOrderPage() {
               <p className="text-xs text-muted">{t("items.separate")}</p>
             </div>
           </section>
-        </div>
+        </fieldset>
         <div className="flex flex-col gap-4">
           <SubmitFailureBanner failure={failure} />
           <OrderSummary

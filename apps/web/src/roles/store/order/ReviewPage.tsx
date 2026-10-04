@@ -78,9 +78,12 @@ export function ReviewPage() {
             )}
           </div>
           <LineList lines={draftLineItems(order.lines)} />
-          <Link to={`/store/order/items?order=${order.temp}`} className="self-start py-2 text-sm font-semibold">
-            {t(`review.edit.${order.temp}`)}
-          </Link>
+          {/* No editing while the orders are being sent. */}
+          {!pending && (
+            <Link to={`/store/order/items?order=${order.temp}`} className="self-start py-2 text-sm font-semibold">
+              {t(`review.edit.${order.temp}`)}
+            </Link>
+          )}
         </section>
       ))}
       <p className="text-xs leading-[1.5] text-muted">{t("review.hint")}</p>
