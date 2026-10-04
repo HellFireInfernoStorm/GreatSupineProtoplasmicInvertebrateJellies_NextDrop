@@ -44,7 +44,7 @@ One account per role, as the Booklet requires, created by the seed (`agent-docs/
 
 Extra accounts, with the same credentials: driver `DRV001` (Ruwan S., `VEH001`, Peliyagoda), loader `LDR002` (Pradeep, Kandy dock) and store manager `OUT104` (Ishara, the hill store on Sampath's trip).
 
-The login screens will have quick-login chips for the four seeded accounts. **TODO (#36, #56):** confirm once they ship.
+Each login screen has quick-login chips for these four accounts, under "Demo accounts": one click signs in as that role. The chips are part of demo mode and are compiled into the web app when the image is built, so they follow `DEMO_MODE` at build time (`docker compose up --build` after changing it).
 
 ## Judge walkthrough
 
