@@ -41,6 +41,11 @@ export function can(actor: Actor | null, action: Action, resource: Resource): bo
     case "vehicle":
       if (actor.role === "DRIVER") return actor.vehicleId === resource.vehicleId;
       return inDepot(actor, resource.depot);
+    case "blob":
+      if (resource.uploaderUserId !== null && resource.uploaderUserId === actor.userId) return true;
+      if (actor.role === "STORE") return resource.outletId !== null && actor.outletId === resource.outletId;
+      if (actor.role === "DISPATCHER") return resource.depot !== null && actor.depots.includes(resource.depot);
+      return false;
     default:
       return false;
   }

@@ -124,6 +124,10 @@ export const apiRouteFixtures = {
     request: { headers, body: f.syncEventsRequest },
     responses: { 200: f.syncEventsResponse, 413: tooLarge },
   },
+  blob: {
+    request: { params },
+    responses: { 200: f.blobBody, 404: { ...error, code: "NOT_FOUND", message_key: "errors.not_found" } },
+  },
   uploadBlob: {
     request: { params, headers: f.blobHeaders, body: f.blobBody },
     responses: { 200: f.blobResponse, 413: tooLarge },
