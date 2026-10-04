@@ -245,17 +245,19 @@ describe.skipIf(!testDatabaseUrl)("dock shortfall resolution against PostgreSQL 
         seq: 0,
       };
     }
-    // The loader flags 4 milk crates short on both orders.
+    // The loader flags 4 milk crates short on both orders and confirms the remaining 8.
     for (const [orderId, lineId] of [
       [ids.orderA, lines.aMilk],
       [ids.orderB, lines.bMilk],
     ] as const) {
-      const res = await loaderPush(
+      const short = await loaderPush(
         "LOAD_SHORT",
         { orderId },
         { lines: [{ lineId, qtyShort: 4 }], reasonCode: "STOCK_SHORT" },
       );
-      expect(res.json().results[0].status).toBe("ACCEPTED");
+      expect(short.json().results[0].status).toBe("ACCEPTED");
+      const load = await loaderPush("LOAD_CONFIRMED", { orderId }, { lines: [{ lineId, qtyLoaded: 8 }] });
+      expect(load.json().results[0].status).toBe("ACCEPTED");
     }
   });
   afterAll(async () => {
