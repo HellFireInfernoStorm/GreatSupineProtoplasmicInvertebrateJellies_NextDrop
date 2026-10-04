@@ -60,6 +60,7 @@ describe("locale files", () => {
         "driver/login",
         "driver/run",
         "loader/login",
+        "loader/dock",
         "shared/common",
         "shared/ui",
         "store/deliveries",

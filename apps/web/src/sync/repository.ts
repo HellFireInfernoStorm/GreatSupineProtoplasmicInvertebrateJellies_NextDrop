@@ -97,7 +97,9 @@ export class FieldRepository {
           if (
             row.key.startsWith("fieldReceipt:") ||
             row.key.startsWith("driverPlan:") ||
-            row.key.startsWith("driverDraft:")
+            row.key.startsWith("driverDraft:") ||
+            row.key.startsWith("loaderDraft:") ||
+            row.key.startsWith("loaderPlan:")
           )
             await this.db.meta.delete(row.key);
         await this.db.set("resetNotice", { resetEpoch: epoch, lastResetBy: null, lastResetAt: null });
@@ -168,6 +170,7 @@ export class FieldRepository {
       let state: OrderState = {
         ...emptyOrderState(orderId),
         status: order.status,
+        loaded: order.lines.map((line) => ({ lineId: line.id, qtyLoaded: line.qtyLoaded })),
         deferralCount: order.deferredCount,
         assignment: order.assignment ? { ...order.assignment, planVersion: version } : null,
         short: order.flags.short.map((line) => ({ ...line, resolution: line.resolution ?? null })),

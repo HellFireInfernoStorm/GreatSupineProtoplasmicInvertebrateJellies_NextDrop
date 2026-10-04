@@ -1,0 +1,402 @@
+{
+  "title": {
+    "text": "Dock trips",
+    "review": "draft"
+  },
+  "dock": {
+    "text": "Loading dock",
+    "review": "draft"
+  },
+  "departsIn": {
+    "text": "in {{minutes}} min",
+    "review": "draft"
+  },
+  "overdue": {
+    "text": "{{minutes}} min overdue",
+    "review": "draft"
+  },
+  "tripNumber": {
+    "text": "Trip {{number}}",
+    "review": "draft"
+  },
+  "stops": {
+    "text": "{{count}} stops",
+    "review": "draft"
+  },
+  "orders": {
+    "text": "orders",
+    "review": "draft"
+  },
+  "open": {
+    "text": "Open ›",
+    "review": "draft"
+  },
+  "trips": {
+    "text": "‹ Trips",
+    "review": "draft"
+  },
+  "checklist": {
+    "text": "‹ Checklist",
+    "review": "draft"
+  },
+  "checked": {
+    "text": "Checked",
+    "review": "draft"
+  },
+  "checkedCount": {
+    "text": "{{count}} of {{total}} checked",
+    "review": "draft"
+  },
+  "weightLoaded": {
+    "text": "Weight loaded",
+    "review": "draft"
+  },
+  "volumeLoaded": {
+    "text": "Volume loaded",
+    "review": "draft"
+  },
+  "kg": {
+    "text": "kg",
+    "review": "draft"
+  },
+  "m3": {
+    "text": "m³",
+    "review": "draft"
+  },
+  "loaded": {
+    "text": "Loaded",
+    "review": "draft"
+  },
+  "short": {
+    "text": "Short",
+    "review": "draft"
+  },
+  "damaged": {
+    "text": "Damaged",
+    "review": "draft"
+  },
+  "loadedUnits": {
+    "text": "{{count}} loaded",
+    "review": "draft"
+  },
+  "shortUnits": {
+    "text": "{{count}} short",
+    "review": "draft"
+  },
+  "damagedUnits": {
+    "text": "{{count}} damaged",
+    "review": "draft"
+  },
+  "orderedUnits": {
+    "text": "{{count}} units ordered",
+    "review": "draft"
+  },
+  "summaryUnits": {
+    "text": "{{loaded}} loaded · {{short}} short · {{damaged}} damaged",
+    "review": "draft"
+  },
+  "waitingDispatch": {
+    "text": "Waiting on dispatcher",
+    "review": "draft"
+  },
+  "loadThisOrder": {
+    "text": "Load in this order — last stop first",
+    "review": "draft"
+  },
+  "loadInstruction": {
+    "text": "Position 1 goes in first, next to the cab. Stop 1 is delivered first.",
+    "review": "draft"
+  },
+  "cabFirst": {
+    "text": "CAB · loads first",
+    "review": "draft"
+  },
+  "rearDoors": {
+    "text": "REAR DOORS · last stop in first",
+    "review": "draft"
+  },
+  "stopNumber": {
+    "text": "Stop {{number}}",
+    "review": "draft"
+  },
+  "checkEveryRow": {
+    "text": "Check every line before handing over.",
+    "review": "draft"
+  },
+  "reviewReady": {
+    "text": "Review & mark ready ›",
+    "review": "draft"
+  },
+  "markReady": {
+    "text": "Mark ready · {{trip}}",
+    "review": "draft"
+  },
+  "readyInstruction": {
+    "text": "Confirm what is on the truck, then hand it to the driver.",
+    "review": "draft"
+  },
+  "holdReady": {
+    "text": "Hold to mark ready",
+    "review": "draft"
+  },
+  "handedOver": {
+    "text": "Handed over to driver",
+    "review": "draft"
+  },
+  "uncheckedLines": {
+    "text": "{{count}} lines still unchecked",
+    "review": "draft"
+  },
+  "issues": {
+    "text": "Short and damaged items",
+    "review": "draft"
+  },
+  "undoWindow": {
+    "text": "Finishing the five-second Undo window.",
+    "review": "draft"
+  },
+  "reportShort": {
+    "text": "Report short",
+    "review": "draft"
+  },
+  "reportDamaged": {
+    "text": "Report damaged",
+    "review": "draft"
+  },
+  "quantity": {
+    "text": "How many are missing or damaged?",
+    "review": "draft"
+  },
+  "reportRemainder": {
+    "text": "Sending this report also confirms the remaining units as loaded.",
+    "review": "draft"
+  },
+  "all": {
+    "text": "All {{count}}",
+    "review": "draft"
+  },
+  "half": {
+    "text": "Half",
+    "review": "draft"
+  },
+  "why": {
+    "text": "Why?",
+    "review": "draft"
+  },
+  "takePhoto": {
+    "text": "Take photo",
+    "review": "draft"
+  },
+  "photoRequired": {
+    "text": "Photo required for damaged goods.",
+    "review": "draft"
+  },
+  "photoOptional": {
+    "text": "Photo optional for short goods.",
+    "review": "draft"
+  },
+  "photoEvidence": {
+    "text": "Loading evidence photo",
+    "review": "draft"
+  },
+  "sendReport": {
+    "text": "Save report for dispatcher",
+    "review": "draft"
+  },
+  "draftSaved": {
+    "text": "Saved on this device · Undo available for 5 seconds",
+    "review": "draft"
+  },
+  "undo": {
+    "text": "Undo",
+    "review": "draft"
+  },
+  "staleDraft": {
+    "text": "Plan changed before this unsent report was recorded. Review it before continuing.",
+    "review": "draft"
+  },
+  "discardDraft": {
+    "text": "Discard unsent report",
+    "review": "draft"
+  },
+  "saved": {
+    "text": "Saved on this device",
+    "review": "draft"
+  },
+  "confirmed": {
+    "text": "Confirmed after sync",
+    "review": "draft"
+  },
+  "held": {
+    "text": "Needs dispatcher · saved record kept",
+    "review": "draft"
+  },
+  "failed": {
+    "text": "Not accepted · check connection details",
+    "review": "draft"
+  },
+  "awaitingSnapshot": {
+    "text": "Received · waiting for updated plan",
+    "review": "draft"
+  },
+  "recordedAt": {
+    "text": "Recorded {{time}}",
+    "review": "draft"
+  },
+  "receivedAt": {
+    "text": "Received {{time}}",
+    "review": "draft"
+  },
+  "planChanged": {
+    "text": "Plan changed · review loading order",
+    "review": "draft"
+  },
+  "reviewPlan": {
+    "text": "Review plan",
+    "review": "draft"
+  },
+  "reviewVersion": {
+    "text": "Current plan v{{version}} · load the last stop first.",
+    "review": "draft"
+  },
+  "ackPending": {
+    "text": "Plan review saved · awaiting acceptance",
+    "review": "draft"
+  },
+  "acceptPlan": {
+    "text": "Accept plan",
+    "review": "draft"
+  },
+  "planNotPublished": {
+    "text": "Plan not published yet.",
+    "review": "draft"
+  },
+  "noTrips": {
+    "text": "No trips in this loading plan.",
+    "review": "draft"
+  },
+  "noSnapshot": {
+    "text": "No loading plan saved on this device yet. Connect to download it.",
+    "review": "draft"
+  },
+  "loading": {
+    "text": "Loading saved plan…",
+    "review": "draft"
+  },
+  "offline": {
+    "text": "Offline · your work stays saved on this device",
+    "review": "draft"
+  },
+  "saveError": {
+    "text": "Could not save. Your existing work is kept. Try again.",
+    "review": "draft"
+  },
+  "connection": {
+    "text": "Connection & loader account",
+    "review": "draft"
+  },
+  "syncNow": {
+    "text": "Sync now",
+    "review": "draft"
+  },
+  "forceOffline": {
+    "text": "Simulate offline",
+    "review": "draft"
+  },
+  "switchUser": {
+    "text": "Switch loader",
+    "review": "draft"
+  },
+  "switchUserNote": {
+    "text": "Each report is recorded under the signed-in loader. Sign out and use the PIN sign-in to switch.",
+    "review": "draft"
+  },
+  "signOutError": {
+    "text": "Could not sign out. Connect and try again.",
+    "review": "draft"
+  },
+  "chilled": {
+    "text": "Chilled",
+    "review": "draft"
+  },
+  "dockType": {
+    "street": {
+      "text": "Street",
+      "review": "draft"
+    },
+    "rear_dock": {
+      "text": "Rear dock",
+      "review": "draft"
+    },
+    "mall_bay": {
+      "text": "Mall bay",
+      "review": "draft"
+    }
+  },
+  "resolution": {
+    "SHIP_PARTIAL": {
+      "text": "Ship partial · approved",
+      "review": "draft"
+    },
+    "HOLD_TRIP": {
+      "text": "Hold trip · waiting on dispatcher",
+      "review": "draft"
+    },
+    "BACKORDER": {
+      "text": "Backorder · approved",
+      "review": "draft"
+    }
+  },
+  "loadShort": {
+    "STOCK_SHORT": {
+      "text": "Out of stock",
+      "review": "draft"
+    },
+    "DAMAGED_AT_DOCK": {
+      "text": "Damaged at dock",
+      "review": "draft"
+    },
+    "PICKING_ERROR": {
+      "text": "Picking error",
+      "review": "draft"
+    },
+    "OTHER": {
+      "text": "Other",
+      "review": "draft"
+    }
+  },
+  "loadDamaged": {
+    "CRUSHED": {
+      "text": "Crushed / broken",
+      "review": "draft"
+    },
+    "LEAKING": {
+      "text": "Leaking",
+      "review": "draft"
+    },
+    "OTHER": {
+      "text": "Other",
+      "review": "draft"
+    },
+    "TORN_PACKAGING": {
+      "text": "Torn packaging",
+      "review": "draft"
+    },
+    "CONTAMINATED": {
+      "text": "Contaminated",
+      "review": "draft"
+    }
+  },
+  "photoPending": {
+    "text": "Text received · photo waiting to sync",
+    "review": "draft"
+  },
+  "earliestFirst_one": {
+    "text": "{{count}} trip · earliest departure first",
+    "review": "draft"
+  },
+  "earliestFirst_other": {
+    "text": "{{count}} trips · earliest departure first",
+    "review": "draft"
+  }
+}
