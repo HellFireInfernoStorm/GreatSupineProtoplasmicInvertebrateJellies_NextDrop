@@ -35,12 +35,12 @@ Conflict classification is a later issue (#54).
    A lost race retries the event (up to 3 times). Any other server error fails the request with 5xx, so the client retries the batch; replays are idempotent.
 4. **Illegal transitions.** Until #54 classifies conflicts, a fact the reducer calls `ILLEGAL_TRANSITION` is rejected. A late earlier-stage fact is accepted and recorded without moving the status.
 5. **Trip facts.**
-   - `TRIP_READY` moves PLANNED to READY. It is refused while `rules.tripChecklistReadiness` is not ready: every ordered line on every stop must be checked (`qtyLoaded + ΣqtyShort + ΣqtyDamaged >= qtyOrdered`), and no order may have a short line that is unresolved or resolved `HOLD_TRIP` (ADRs 0005, 0046).
+   - `TRIP_READY` moves PLANNED to READY. It is refused while `rules.tripChecklistReadiness` is not ready: every ordered line on every stop must be checked (`qtyLoaded + ΣqtyShort + ΣqtyDamaged >= qtyOrdered`), and no order may have a short line that is unresolved or resolved `HOLD_TRIP` (ADRs 0005, 0047).
    - `TRIP_DEPARTED` moves PLANNED or READY to DEPARTED. In the same transaction it derives a server `ORDER_OUT_FOR_DELIVERY` for each order `rules.ordersGoingOut` returns (ADR 0019). The derived event's actor is the driver.
    - A repeated or late trip fact is recorded without moving the trip. A cancelled trip refuses both.
 6. **Projections.**
    - `LOAD_CONFIRMED` sets `qtyLoaded`.
-   - `LOAD_REVERSED` resets every line's `qtyLoaded` to 0 (ADR 0046).
+   - `LOAD_REVERSED` resets every line's `qtyLoaded` to 0 (ADR 0047).
    - `STOP_OUTCOME` sets `qtyDelivered` from its lines; a FULL outcome without lines delivers what was loaded (or ordered).
    - A delivering outcome sets `Order.confirmedAt` to the server's receipt time ("confirmed after sync", ADR 0032).
    - Accepted batches and heartbeats update the device's `lastSeenAt` (last heard). Heartbeats append no feed rows.

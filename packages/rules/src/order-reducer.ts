@@ -168,7 +168,7 @@ export interface OrderState {
   /** Short and Damaged are flags with line detail, not statuses. */
   readonly short: readonly (ShortLine & { readonly resolution: ShortOutcome | null })[];
   readonly damaged: readonly DamagedLine[];
-  /** Per-line loaded quantities from `LOAD_CONFIRMED` (ADR 0046). Cleared on `LOAD_REVERSED`. */
+  /** Per-line loaded quantities from `LOAD_CONFIRMED` (ADR 0047). Cleared on `LOAD_REVERSED`. */
   readonly loaded: readonly LoadedLine[];
   readonly lastStopOutcome: StopOutcome | null;
   readonly pendingReversal: PendingReversal | null;
@@ -358,7 +358,7 @@ function reduce(state: OrderState, event: OrderEvent, forced: boolean): ReduceRe
   const targetRank = PROGRESS_RANK[target];
   const currentRank = EFFECTIVE_RANK[from];
   if ((targetRank !== undefined && currentRank !== undefined && targetRank <= currentRank) || target === from) {
-    // Still project LOAD_CONFIRMED quantities when status does not move (ADR 0046).
+    // Still project LOAD_CONFIRMED quantities when status does not move (ADR 0047).
     if (event.type === "LOAD_CONFIRMED") {
       return {
         state: { ...state, loaded: mergeLoaded(state.loaded, event.payload.lines ?? []) },
@@ -399,7 +399,7 @@ function withStatus(state: OrderState, event: OrderEvent, target: OrderStatus): 
       return { ...next, loaded: mergeLoaded(state.loaded, event.payload.lines ?? []) };
     case "LOAD_REVERSED": {
       const r = state.pendingReversal;
-      // Clear dock projections: the unload starts a new checklist cycle (ADR 0046). Timeline events stay.
+      // Clear dock projections: the unload starts a new checklist cycle (ADR 0047). Timeline events stay.
       const afterReversal: OrderState = {
         ...next,
         pendingReversal: null,
@@ -468,7 +468,7 @@ export function shortLinesBlockingReady(
   return state.short.filter((l) => l.resolution === null || l.resolution === "HOLD_TRIP");
 }
 
-/** One ordered line the loader must account for on the checklist (ADR 0046). */
+/** One ordered line the loader must account for on the checklist (ADR 0047). */
 export interface ChecklistLineInput {
   readonly lineId: string;
   readonly qtyOrdered: number;
@@ -500,7 +500,7 @@ export interface BlockingShortLine {
 }
 
 /**
- * Loader checklist readiness for a trip (ADR 0046).
+ * Loader checklist readiness for a trip (ADR 0047).
  * A line is checked when `qtyLoaded + ΣqtyShort + ΣqtyDamaged >= qtyOrdered`.
  * Status `LOADED` alone is not enough: one `LOAD_CONFIRMED` line cannot cover a multi-line order.
  * Dispatcher blockers reuse `shortLinesBlockingReady` (unresolved / `HOLD_TRIP`).

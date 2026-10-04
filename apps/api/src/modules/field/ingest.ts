@@ -421,7 +421,7 @@ export function createIngest(deps: IngestDependencies) {
     let nextStatus: "READY" | "DEPARTED" | null = null;
     let goingOut: string[] = [];
     if (event.type === "TRIP_READY") {
-      // Checklist completeness + dispatcher short blockers share one rules gate (ADR 0046).
+      // Checklist completeness + dispatcher short blockers share one rules gate (ADR 0047).
       const readiness = tripChecklistReadiness(
         states.map(({ order, state }) => ({
           orderId: order.id,

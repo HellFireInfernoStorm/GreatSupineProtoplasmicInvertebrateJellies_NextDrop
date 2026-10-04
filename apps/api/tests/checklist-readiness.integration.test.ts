@@ -12,7 +12,7 @@ const PIN = "2468";
 const DATE = "2026-10-04";
 const clock = new Date("2026-10-04T00:00:00.000Z");
 
-describe.skipIf(!testDatabaseUrl)("TRIP_READY checklist readiness against PostgreSQL (ADR 0046)", () => {
+describe.skipIf(!testDatabaseUrl)("TRIP_READY checklist readiness against PostgreSQL (ADR 0047)", () => {
   let suite: SuiteDatabase;
   let prisma: PrismaClient;
   let app: App;
@@ -277,7 +277,7 @@ describe.skipIf(!testDatabaseUrl)("TRIP_READY checklist readiness against Postgr
     expect((await prisma.trip.findUniqueOrThrow({ where: { id: ids.trip } })).status).toBe("READY");
   });
 
-  it("refuses TRIP_READY after LOAD_REVERSED clears qtyLoaded (ADR 0046)", async () => {
+  it("refuses TRIP_READY after LOAD_REVERSED clears qtyLoaded (ADR 0047)", async () => {
     // Fresh trip/order: the shared suite trip is already READY and must not delete events.
     const baseTrip = await prisma.trip.findUniqueOrThrow({ where: { id: ids.trip } });
     const baseOrder = await prisma.order.findUniqueOrThrow({ where: { id: ids.order } });

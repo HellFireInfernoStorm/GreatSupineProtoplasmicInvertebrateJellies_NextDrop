@@ -1,4 +1,4 @@
-# ADR 0046: Shared Loader checklist readiness for TRIP_READY
+# ADR 0047: Shared Loader checklist readiness for TRIP_READY
 
 - Status: proposed
 - Date: 2026-10-04
