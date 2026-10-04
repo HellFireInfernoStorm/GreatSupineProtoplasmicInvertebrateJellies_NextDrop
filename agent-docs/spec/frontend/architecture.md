@@ -32,7 +32,7 @@ Driver stop routes record each order separately within an adjacent-outlet group.
 - **Outlet grouping** (ADR 0010): accounting stays per order, but Driver and Store views group adjacent stops of one outlet and trip into one card with expandable order rows. A Driver card is done when every order is terminal or has a locally saved projected outcome and proof (ADR 0050); Store receipt confirmation remains per order. Trip time still counts service time per order.
 - **Brand ordering guidance** (ADR 0010): the store order screen shows the notice from `orderingGuidance(brand, date, calendar)` (Style weekly day, Fresh chilled days, Tech single items). It is a notice only and never blocks submission. The seed obeys the same rule except on purpose.
 - **Capacity in m³**: the capacity outlook and its axes use m³. Tonnes may appear as a secondary label.
-- **Capacity outlook (D5)**: the current week and the next six. Four stat tiles (highest demand week, highest chilled demand, payday weeks, weeks with headroom), a total chart against fleet capacity and a chilled chart against reefer capacity, each with a table twin in the week-by-week table, and a "What this means" list of over and tight weeks. Load is "tight" at 95% or more and "over" above 100% (ADR 0055).
+- **Capacity outlook (D5)**: the current week and the next six. Four stat tiles (highest demand week, highest chilled demand, payday weeks, weeks with headroom), a total chart against fleet capacity and a chilled chart against reefer capacity, each with a table twin in the week-by-week table, and a "What this means" list of over and tight weeks. Load is "tight" at 95% or more and "over" above 100% (ADR 0056).
 
 ## 14.4 Shared plumbing
 

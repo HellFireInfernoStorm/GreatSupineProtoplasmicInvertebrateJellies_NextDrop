@@ -1,7 +1,7 @@
 import type { ApiDto } from "@nextdrop/contracts";
 import { addDays, dayOfWeek, isoWeekOf, type LocalDate } from "@nextdrop/rules";
 
-// D5 Capacity outlook (ADR 0055): the forecast per ISO week against usable fleet and reefer capacity, with the
+// D5 Capacity outlook (ADR 0056): the forecast per ISO week against usable fleet and reefer capacity, with the
 // calendar flags and the stats and takeaways the screen shows. Pure, so the screen only presents it.
 
 export const OUTLOOK_WEEKS = 7;

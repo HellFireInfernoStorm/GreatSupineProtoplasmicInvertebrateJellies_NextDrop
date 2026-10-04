@@ -477,7 +477,7 @@ describe.skipIf(!testDatabaseUrl)("run monitor, exceptions and disputes against 
     expect(items.filter((i) => i.type === "ISSUE")).toEqual([]);
   });
 
-  it("GET /dispatch/outlook reports seeded weekly demand, a moving average after it, and usable fleet capacity (#55, ADR 0055)", async () => {
+  it("GET /dispatch/outlook reports seeded weekly demand, a moving average after it, and usable fleet capacity (#55, ADR 0056)", async () => {
     await prisma.weeklyDemandHistory.createMany({
       data: [
         { depot: "Kandy", brand: "Fresh", isoYear: 2026, isoWeek: 39, totalVolumeM3: 50, chilledVolumeM3: 20 },

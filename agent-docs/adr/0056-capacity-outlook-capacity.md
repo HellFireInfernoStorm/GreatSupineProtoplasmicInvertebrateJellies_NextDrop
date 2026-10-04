@@ -1,4 +1,4 @@
-# ADR 0055: Capacity outlook window, fleet capacity and reefer limit
+# ADR 0056: Capacity outlook window, fleet capacity and reefer limit
 
 - Status: accepted
 - Date: 2026-10-04

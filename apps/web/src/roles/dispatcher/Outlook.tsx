@@ -198,7 +198,7 @@ function WeekChart(props: ChartProps) {
   );
 }
 
-/** D5 Capacity outlook: forecast against usable fleet and reefer capacity for seven weeks (ADR 0055, ADR 0010). */
+/** D5 Capacity outlook: forecast against usable fleet and reefer capacity for seven weeks (ADR 0056, ADR 0010). */
 export function Outlook({ depot, date }: { depot: string; date: string }) {
   const { t, i18n } = useTranslation("dispatcher/planning");
   const range = outlookWindow(date);

@@ -37,7 +37,7 @@ function operatingDays(date: LocalDate, calendar: Calendar): number {
 }
 
 /**
- * The depot's usable fleet (ADR 0055): its vehicles, less those `IN_WORKSHOP` on `date`, each with the trips its
+ * The depot's usable fleet (ADR 0056): its vehicles, less those `IN_WORKSHOP` on `date`, each with the trips its
  * weekly fuel quota covers: floor(weeklyFuelQuotaL × kmPerL / typicalTripKm), where typicalTripKm is the mean round
  * trip (2 × depotToDistrictKm) over the depot's districts.
  */
@@ -69,7 +69,7 @@ function weeklyCapacityL(fleet: FleetVehicle[], days: number): number {
 }
 
 /**
- * `GET /dispatch/outlook` (D5, ADR 0055): weekly demand against the depot's usable fleet capacity. A week with seeded
+ * `GET /dispatch/outlook` (D5, ADR 0056): weekly demand against the depot's usable fleet capacity. A week with seeded
  * `WeeklyDemandHistory` reports it; a later week is the moving average of the last four weeks before it.
  * Capacity is per week: the usable fleet (vehicles not `IN_WORKSHOP` on `from`) at `maxTripsPerVehicle` trips on each
  * of the week's operating Mon–Sat days, each vehicle capped by its weekly fuel quota. Reefer capacity is the same over

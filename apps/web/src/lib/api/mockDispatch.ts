@@ -284,7 +284,7 @@ function story(nowMs: number) {
   };
 }
 
-// D5 Capacity outlook: seven weeks of forecast against 367 m³ of usable fleet and 152 m³ of reefers (ADR 0055). Payday
+// D5 Capacity outlook: seven weeks of forecast against 367 m³ of usable fleet and 152 m³ of reefers (ADR 0056). Payday
 // weeks of the mock calendar run tight; the festival week (or the sixth week, when the window has no festival) goes
 // over both limits.
 type OutlookItem = ApiDtoInput<"outlookResponse">["items"][number];
