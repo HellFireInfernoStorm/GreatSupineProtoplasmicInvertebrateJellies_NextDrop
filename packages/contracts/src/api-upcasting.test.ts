@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
 
-// Simulate a deploy to v2 without changing the production v1 catalogue/version.
+// Simulate a deploy to v3 without changing the production v2 catalogue/version.
 vi.mock("./schema-version", async () => {
   const { z } = await import("zod");
-  return { SCHEMA_VERSION: 2, schemaVersion: z.number().int().min(1).max(2) };
+  return { SCHEMA_VERSION: 3, schemaVersion: z.number().int().min(1).max(3) };
 });
 
 import { apiFixtures, parseClientEvent, syncEventResultSchema, type UpcasterRegistry } from "./index";
 
 describe("server ingress upcasting before current-schema validation", () => {
   const event = apiFixtures.clientEvent;
-  const legacy = { ...event, schemaVersion: 1, payload: { legacyLines: event.payload.lines } };
-  const upgraded = { ...event, schemaVersion: 2 };
+  const legacy = { ...event, schemaVersion: 2, payload: { legacyLines: event.payload.lines } };
+  const upgraded = { ...event, schemaVersion: 3 };
 
   it("upcasts legacy payloads before parsing and normalizes version without mutating input", () => {
     const transform = vi.fn(() => event.payload);
-    const registry: UpcasterRegistry = new Map([[event.type, new Map([[1, transform]])]]);
+    const registry: UpcasterRegistry = new Map([[event.type, new Map([[2, transform]])]]);
     const raw = { ...legacy, payload: { legacyLines: legacy.payload.legacyLines.map((line) => ({ ...line })) } };
     expect(parseClientEvent(raw, event.deviceId, 0, event.capturedAt, registry)).toEqual({
       success: true,
@@ -32,7 +32,7 @@ describe("server ingress upcasting before current-schema validation", () => {
         throw new Error("invalid legacy payload");
       },
     ]) {
-      const registry: UpcasterRegistry = new Map([[event.type, new Map([[1, transform]])]]);
+      const registry: UpcasterRegistry = new Map([[event.type, new Map([[2, transform]])]]);
       const result = parseClientEvent(legacy, event.deviceId, 3, event.capturedAt, registry);
       expect(result.success).toBe(false);
       if (!result.success)
@@ -48,8 +48,8 @@ describe("server ingress upcasting before current-schema validation", () => {
 
   it("rejects invalid/future version framing and server types before running upcasters", () => {
     const transform = vi.fn(() => event.payload);
-    const registry: UpcasterRegistry = new Map([[event.type, new Map([[1, transform]])]]);
-    for (const schemaVersion of [0, -1, 1.5, "1", 3]) {
+    const registry: UpcasterRegistry = new Map([[event.type, new Map([[2, transform]])]]);
+    for (const schemaVersion of [0, -1, 1.5, "1", 4]) {
       expect(
         parseClientEvent({ ...legacy, schemaVersion }, event.deviceId, 0, event.capturedAt, registry).success,
       ).toBe(false);
@@ -62,7 +62,7 @@ describe("server ingress upcasting before current-schema validation", () => {
 
   it("keeps current events unchanged and enforces metadata and device identity after upgrading", () => {
     const transform = vi.fn(() => event.payload);
-    const registry: UpcasterRegistry = new Map([[event.type, new Map([[1, transform]])]]);
+    const registry: UpcasterRegistry = new Map([[event.type, new Map([[2, transform]])]]);
     expect(parseClientEvent(upgraded, event.deviceId, 0, event.capturedAt, registry)).toEqual({
       success: true,
       data: upgraded,

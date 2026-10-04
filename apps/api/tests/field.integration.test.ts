@@ -299,6 +299,14 @@ describe.skipIf(!testDatabaseUrl)("field snapshot, sync push and heartbeat again
         "ORD10490",
       ]);
       expect(snap.config.reasons.loadShort[0]).toEqual({ code: "STOCK_SHORT", message_key: "loadShort.STOCK_SHORT" });
+      expect(snap.config.reasons.loadDamaged[0]).toEqual({ code: "CRUSHED", message_key: "loadDamaged.CRUSHED" });
+      expect(snap.config.reasons.loadDamaged.map((r: { code: string }) => r.code)).toEqual([
+        "CRUSHED",
+        "LEAKING",
+        "TORN_PACKAGING",
+        "CONTAMINATED",
+        "OTHER",
+      ]);
     });
 
     it("gives the loader the depot's trips and another depot's driver nothing", async () => {
@@ -386,6 +394,65 @@ describe.skipIf(!testDatabaseUrl)("field snapshot, sync push and heartbeat again
         firstResults.map((r) => r.serverEventId),
       );
       expect(await prisma.orderEvent.count()).toBe(before);
+    });
+
+    it("preserves LOAD_DAMAGED reasonCode and photoRef through ingest, flags and timeline", async () => {
+      const photoRef = randomUUID();
+      const damaged = ev(
+        "loader",
+        "LOAD_DAMAGED",
+        { orderId: ids.orderA },
+        {
+          lines: [{ lineId: lines.aEggs, qty: 1 }],
+          reasonCode: "LEAKING",
+          photoRef,
+        },
+      );
+      const invalid = ev(
+        "loader",
+        "LOAD_DAMAGED",
+        { orderId: ids.orderA },
+        {
+          lines: [{ lineId: lines.aEggs, qty: 1 }],
+          reasonCode: "STOCK_SHORT",
+        },
+      );
+      const legacy = {
+        ...ev("loader", "LOAD_DAMAGED", { orderId: ids.orderB }, { lines: [{ lineId: lines.bMilk, qty: 2 }] }),
+        schemaVersion: 1,
+      };
+      const res = (await push("loader", [damaged, invalid, legacy])).json();
+      expect(res.results.map((r: { status: string }) => r.status)).toEqual(["ACCEPTED", "REJECTED", "ACCEPTED"]);
+      expect(res.results[1]).toMatchObject({ status: "REJECTED", code: "SCHEMA_INVALID", index: 1 });
+
+      const stored = await prisma.orderEvent.findFirstOrThrow({
+        where: { orderId: ids.orderA, type: "LOAD_DAMAGED", clientEventId: damaged.clientEventId },
+      });
+      expect(stored.schemaVersion).toBe(2);
+      expect(stored.payload).toEqual({
+        lines: [{ lineId: lines.aEggs, qty: 1 }],
+        reasonCode: "LEAKING",
+        photoRef,
+      });
+
+      const legacyStored = await prisma.orderEvent.findFirstOrThrow({
+        where: { orderId: ids.orderB, type: "LOAD_DAMAGED", clientEventId: legacy.clientEventId },
+      });
+      expect(legacyStored.schemaVersion).toBe(2);
+      expect(legacyStored.payload).toEqual({
+        lines: [{ lineId: lines.bMilk, qty: 2 }],
+        reasonCode: "OTHER",
+      });
+
+      const detail = (await get("store", `/api/store/orders/${ids.orderA}`)).json();
+      expect(detail.order.flags.damaged).toEqual([{ lineId: lines.aEggs, qty: 1 }]);
+      const timelineEvent = detail.timeline.find((e: { type: string }) => e.type === "LOAD_DAMAGED");
+      expect(timelineEvent).toMatchObject({
+        type: "LOAD_DAMAGED",
+        schemaVersion: 2,
+        payload: { lines: [{ lineId: lines.aEggs, qty: 1 }], reasonCode: "LEAKING", photoRef },
+      });
+      expect((await get("nimal", "/api/notifications")).json().items[0].kind).toBe("damaged_reported");
     });
 
     it("refuses TRIP_READY until every short line is resolved other than HOLD_TRIP (ADR 0005)", async () => {

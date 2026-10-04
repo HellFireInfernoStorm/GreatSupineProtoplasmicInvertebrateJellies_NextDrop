@@ -1,4 +1,4 @@
-import { PROBLEM_KINDS, type ApiDto } from "@nextdrop/contracts";
+import { PROBLEM_KINDS, LOAD_DAMAGED_REASON_CODES, type ApiDto } from "@nextdrop/contracts";
 import { REASON_CODES } from "@nextdrop/rules";
 
 /**
@@ -14,6 +14,9 @@ export const STOP_OUTCOME_REASONS = [
   "OTHER",
 ] as const;
 
+/** Loader damage-sheet chips (ADR 0042). Re-export so API callers share the contracts catalogue. */
+export const LOAD_DAMAGED_REASONS = LOAD_DAMAGED_REASON_CODES;
+
 const list = <C extends string>(group: string, codes: readonly C[]) =>
   codes.map((code) => ({ code, message_key: `${group}.${code}` }));
 
@@ -23,6 +26,7 @@ export function reasonLists(): ApiDto<"reasonsResponse"> {
     deferral: list("deferral", REASON_CODES),
     problems: list("problems", PROBLEM_KINDS),
     loadShort: list("loadShort", LOAD_SHORT_REASONS),
+    loadDamaged: list("loadDamaged", LOAD_DAMAGED_REASONS),
     stopOutcome: list("stopOutcome", STOP_OUTCOME_REASONS),
   };
 }

@@ -26,7 +26,7 @@ import { createCalendarSource, outletInclude, toOutletDto, type CalendarSource }
 import { collectionResource, scoped, type Actor } from "../policy";
 import { reasonLists } from "./reasons";
 
-export { LOAD_SHORT_REASONS, reasonLists, STOP_OUTCOME_REASONS } from "./reasons";
+export { LOAD_DAMAGED_REASONS, LOAD_SHORT_REASONS, reasonLists, STOP_OUTCOME_REASONS } from "./reasons";
 
 /** The longest calendar range one request may ask for (ADR 0038). */
 export const MAX_CALENDAR_DAYS = 366;
