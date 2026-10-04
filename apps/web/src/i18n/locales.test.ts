@@ -54,6 +54,7 @@ describe("locale files", () => {
     expect(Object.keys(english).sort()).toEqual(
       [
         "dispatcher/login",
+        "dispatcher/planning",
         "driver/login",
         "loader/login",
         "shared/common",

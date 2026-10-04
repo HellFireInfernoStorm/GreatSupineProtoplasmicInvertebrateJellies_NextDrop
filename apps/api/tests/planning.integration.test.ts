@@ -94,6 +94,9 @@ describe.skipIf(!url)("planning API (PostgreSQL)", () => {
     const day = res.json() as ApiDto<"dayResponse">;
     expect(day).toMatchObject({ date: DATE, depot: "Peliyagoda", state: "CLOSED", currentVersion: null });
     expect(day.queue).toHaveLength(86);
+    expect(day.planningContext.vehicleFuel).toHaveLength(38);
+    expect(day.planningContext.outletService).toHaveLength(new Set(day.queue.map((order) => order.outletId)).size);
+    expect(day.planningContext.loadedOrders).toEqual([]);
     expect(day.queue.filter((o) => o.status === "DEFERRED").length).toBeGreaterThan(0);
     expect(day.demandCapacity.orders).toBe(86);
     expect(day.demandCapacity.deferred).toBeGreaterThan(0);

@@ -146,7 +146,13 @@ export async function callApi<K extends JsonRouteName>(name: K, ...args: Request
     return data as ApiResponse<K>;
   }
 
-  const error = apiSchemas.apiError.safeParse(raw.body);
+  const errorSchemaName = (definition.responses as Record<number, ApiSchemaName | undefined>)[raw.status];
+  const extended =
+    errorSchemaName === "validationErrorResponse" ? apiSchemas.validationErrorResponse.safeParse(raw.body) : null;
+  // The base schema is strict: extended 422s must be parsed through their declared contract first.
+  const error = extended?.success
+    ? { success: true as const, data: extended.data }
+    : apiSchemas.apiError.safeParse(raw.body);
   // A 401 from login is a wrong password and from reauth a wrong PIN: neither says the session is gone.
   if (raw.status === 401 && (definition.access === "session" || definition.access === "demo")) notifySessionExpired();
   throw new ApiRequestError(
@@ -154,5 +160,6 @@ export async function callApi<K extends JsonRouteName>(name: K, ...args: Request
     raw.status,
     error.success ? error.data : null,
     `${name} failed with status ${raw.status}`,
+    extended?.success ? extended.data.validation : null,
   );
 }

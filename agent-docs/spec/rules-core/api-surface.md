@@ -16,6 +16,7 @@ validateTrip(trip, ref, ctx): ValidationResult        // used for live edits
 computeTripTime(trip, ref): TripTimeBreakdown         // outbound, inter-stop, handling, total
 computeEtas(trip, ref, ctx): StopEta[]                // with windows and waiting
 computeFuel(trip, vehicle, ref, cfg): { km, litres }
+runUsage(trips, vehicle, ref, ctx): RunUsage           // shared validator and UI time/fuel totals
 proposePlan(input, ref, cfg): AllocationResult        // trips, deferrals + explanations, stats, trace
 rankOrders(orders, cfg, { date, calendar }): RankedOrder[]   // priority keys (slip needs the calendar)
 explainDeferral(order, finalPlan, ref, cfg, ctx?): DeferralExplanation   // ctx: workshop and breakdown vehicles, fuel used, rank lookup
@@ -24,5 +25,7 @@ nextOperatingDate(date, calendar), operatingDateAfter(date, calendar), cutoffAt(
 deliveryDateFor(requestedDate, placedAt, calendar)    // date an order targets after rollover and cutoff (ADR 0018)
 orderingGuidance(brand, date, calendar): MessageKey | null   // brand ordering notice (ADR 0010)
 ```
+
+`runUsage` returns timed trips and schedules, minutes and budgets by Fresh/Style-Tech class, per-trip and planned integer fuel, weekly fuel including context usage, and the vehicle quota. It restricts trips to the selected vehicle, excludes unknown outlets, and times only trips whose first remaining outlet has a known district, exactly as the validator does. `ctx.cfg` supplies the same configured limits and fuel policy used by validation.
 
 `ValidationResult = { ok, violations: Violation[] }`, where `Violation = { code, severity: 'HARD'|'WARN', tripRef?, vehicleId?, orderIds[], params, message_key }`. `params` carries limit and actual values (e.g. `{ limit: 270, actual: 301 }`) so the UI can render the constraint-breach modal and localize it.
