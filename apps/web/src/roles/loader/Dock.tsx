@@ -18,7 +18,7 @@ export function Dock({ data }: { data: LoaderData }) {
       <PlanReview data={data} />
       <div className="loader-heading">
         <h1>{t("title")}</h1>
-        <p className="loader-muted">{t("earliestFirst", { count: trips.length })}</p>
+        {trips.length > 0 && <p className="loader-muted">{t("earliestFirst", { count: trips.length })}</p>}
       </div>
       {!snapshot ? (
         <Empty data={data} />
