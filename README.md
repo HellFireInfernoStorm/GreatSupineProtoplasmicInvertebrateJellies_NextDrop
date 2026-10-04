@@ -157,13 +157,19 @@ To set up a new droplet, paste [`docker/droplet-init.sh`](docker/droplet-init.sh
 2. installs Docker;
 3. clones this repository to `/opt/nextdrop`;
 4. writes `.env` with `COMPOSE_PROFILES=public`, the hostname, generated secrets and `DEMO_MODE=true`. The hostname is `DOMAIN` from the top of the script, or `<ip>.sslip.io` when `DOMAIN` is empty;
-5. starts the stack.
+5. runs `docker/redeploy.sh`, which starts the stack and resets the demo.
 
-To redeploy, run this over SSH. The seed is idempotent, so the demo state survives a redeploy (ADR 0030).
+To redeploy, run this over SSH:
 
 ```bash
-cd /opt/nextdrop && git pull && docker compose up -d --build
+/opt/nextdrop/docker/redeploy.sh
 ```
+
+It pulls, rebuilds and restarts the stack, waits for the API, then resets the demo with the script key (ADR 0054). Every deploy therefore opens on the seeded story day: Mon 28 Sep 2026 14:00 on the demo clock, with the Peliyagoda peak day and the Kandy story orders waiting for Tue 29 Sep. A failed build stops the script before the reset, and the old container keeps serving.
+
+- To start from another preset, pass it: `docker/redeploy.sh orders-closed`. To make it the default, set `DEMO_DEPLOY_PRESET` in `.env`. A preset that is not built yet fails with a 409.
+- To deploy without touching the demo state, pass `--keep`.
+- A plain restart, such as a reboot, never resets: the seed keeps the demo progress (ADR 0030).
 
 Other tasks on the droplet:
 
@@ -372,6 +378,7 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0049 D | AA contrast on four Store and Dispatcher elements |
 | 0050 D | Driver run, proof and recovery |
 | 0051 | Public hosting on a DigitalOcean droplet |
+| 0054 | A redeploy resets the public demo to a preset |
 | 0052 D | Loader recording, Undo and plan review |
 
 ## Submission documents
