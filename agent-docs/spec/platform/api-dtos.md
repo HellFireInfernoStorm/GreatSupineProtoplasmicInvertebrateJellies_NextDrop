@@ -6,7 +6,7 @@ sources: guide §12; issues 29, 59, 78, 110; accepted ADRs 0024, 0026, 0038, 004
 
 # API wire DTOs
 
-The dispatcher day response includes required `planningContext`: `vehicleFuel[{vehicleId,usedOtherDaysThisWeekMl}]`, `outletService[{outletId,daysSinceLastServed,deferredLastRun}]`, and `loadedOrders[{orderId,vehicleId,tripNo,reversalRequested}]`. Identities are UUIDs; fuel is nonnegative integer millilitres, service age is a nonnegative integer day count, and trip number is 1 or 2. Context is generated from the existing authoritative planning inputs, scoped to the permitted depot and queue, with explicit zero usage for known vehicles. It is a fetch-time snapshot; server validation on save remains authoritative (ADR 0044 proposal).
+The dispatcher day response includes required `planningContext`: `vehicleFuel[{vehicleId,usedOtherDaysThisWeekMl}]`, `outletService[{outletId,daysSinceLastServed,deferredLastRun}]`, and `loadedOrders[{orderId,vehicleId,tripNo,reversalRequested}]`. Identities are UUIDs; fuel is nonnegative integer millilitres, service age is a nonnegative integer day count, and trip number is 1 or 2. Context is generated from the existing authoritative planning inputs, scoped to the permitted depot and queue, with explicit zero usage for known vehicles. It is a fetch-time snapshot; server validation on save remains authoritative (ADR 0045 proposal).
 
 This draft documents the wire conventions for [API endpoints](api.md) accepted in [ADR 0024](../../adr/0024-api-wire-contracts.md). Schemas, inferred types, and synthetic web fixtures are exported by `@nextdrop/contracts`. Prisma records stay inside the API.
 
