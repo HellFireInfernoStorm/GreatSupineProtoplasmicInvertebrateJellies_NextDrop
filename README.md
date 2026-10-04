@@ -25,7 +25,7 @@ NextDrop links ordering, planning, loading, delivery and receipt in one responsi
 
 | | |
 | --- | --- |
-| Public URL | **TODO (#33, #67):** add the public URL once hosting is chosen and the deployment is live. |
+| Public URL | https://nextdrop.duckdns.org (a DigitalOcean droplet, ADR 0051) |
 | Repository | This monorepo |
 | Demo video | Not linked here; submitted through the submission form (#64). |
 
@@ -87,7 +87,7 @@ docker compose up
 - **Stop.** `docker compose down`. Data stays in the `db-data` volume. `docker compose down -v` wipes it, and the next start migrates and seeds a fresh database.
 - **Configuration.** Optional. Copy `.env.example` to `.env` and edit it; Compose reads `.env` automatically. Every variable is explained in `.env.example`, and each one has a working default.
 - **Session secret.** If `SESSION_SECRET` is empty, the container generates one on first start and keeps it in the `app-data` volume, so sessions survive a restart. Set your own for a public deployment.
-- **Profiles.** `--profile public` adds Caddy (automatic HTTPS for `CADDY_DOMAIN`), to be finished by #33. `--profile solver` is a placeholder: the solver is not built (ADR 0014).
+- **Profiles.** `--profile public`, or `COMPOSE_PROFILES=public` in `.env`, adds Caddy: it gets an HTTPS certificate for `CADDY_DOMAIN` automatically ([Public deployment](#public-deployment)). `--profile solver` is a placeholder: the solver is not built (ADR 0014).
 - **Several stacks at once** (one per worktree): copy `.env.example` to `.env.local`, set a free `APP_PORT`, then run `docker compose -p wp-<issue> --env-file .env.local up`. The project name keeps containers and volumes apart. The database is never published to the host, so only `APP_PORT` has to differ.
 
 The seed loads the reference data, the seeded accounts, the Peliyagoda peak day and the Kandy story orders (see [Local development](#local-development-works-today)); under Compose it runs on every start. To start again from a clean seeded day, run `docker compose down -v` and then `docker compose up`. With `DEMO_MODE=true` the API also has a demo clock and a reset for a signed-in Dispatcher (`POST /api/demo/clock`, `POST /api/demo/reset` with the `before-cutoff` preset, ADR 0033). **TODO (#56):** the app has no control for them yet; describe the demo panel here once it ships.
@@ -141,7 +141,37 @@ Environment variables read by the code today:
 | `API_URL`, `API_PORT` | Vite dev proxy | `http://localhost:3000` | Where `/api` is proxied in development |
 | `WEB_PORT` | Vite dev server | `5173` | Web dev port |
 
-Compose also reads `APP_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `TZ`, `SOLVER_ENABLED`, `SOLVER_URL`, `CADDY_DOMAIN` and `VAPID_*` (see `.env.example`), and sets `WEB_DIST_DIR`, which makes the API serve the built PWA. The demo clock has no variable: its offset is stored in the database and moved with `POST /api/demo/clock` (ADR 0033).
+Compose also reads `APP_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `TZ`, `SOLVER_ENABLED`, `SOLVER_URL`, `CADDY_DOMAIN`, `COMPOSE_PROFILES` and `VAPID_*` (see `.env.example`), and sets `WEB_DIST_DIR`, which makes the API serve the built PWA. The demo clock has no variable: its offset is stored in the database and moved with `POST /api/demo/clock` (ADR 0033).
+
+### Public deployment
+
+The public URL runs the same Compose stack on one DigitalOcean droplet, with Caddy in front (ADR 0051):
+
+- **Droplet:** 2 GB RAM, 1 shared vCPU, SGP1, Ubuntu 24.04.
+- **Hostname:** `nextdrop.duckdns.org`, a free DuckDNS name pointing at the Reserved IP `137.184.250.211`. Caddy gets a Let's Encrypt certificate for it.
+- **Firewall:** a DigitalOcean Cloud Firewall allows only ports 22, 80 and 443. Docker bypasses `ufw`, and `app` publishes 8080.
+
+To set up a new droplet, paste [`docker/droplet-init.sh`](docker/droplet-init.sh) into **User data** when you create it. The script:
+
+1. adds swap;
+2. installs Docker;
+3. clones this repository to `/opt/nextdrop`;
+4. writes `.env` with `COMPOSE_PROFILES=public`, the hostname, generated secrets and `DEMO_MODE=true`. The hostname is `DOMAIN` from the top of the script, or `<ip>.sslip.io` when `DOMAIN` is empty;
+5. starts the stack.
+
+To redeploy, run this over SSH. The seed is idempotent, so the demo state survives a redeploy (ADR 0030).
+
+```bash
+cd /opt/nextdrop && git pull && docker compose up -d --build
+```
+
+Other tasks on the droplet:
+
+| Task | Command |
+| --- | --- |
+| Follow the logs | `docker compose logs -f --tail=200 app` |
+| Check health | `curl https://nextdrop.duckdns.org/api/readyz` |
+| Back up the database | `docker compose exec -T db pg_dump -U nextdrop nextdrop \| gzip > ~/nextdrop-$(date +%F-%H%M).sql.gz` |
 
 ### Checks
 
@@ -194,9 +224,9 @@ These depart from the Day 5 design as submitted. Each is recorded in an ADR in `
 
 Driver run, proof and recovery ([ADR 0050](agent-docs/adr/0050-driver-run-proof-and-recovery.md), #53 / #130): each order in an adjacent-outlet card has its own recording route; settings expose language and diagnostics. Recovery follows real queue/context/confirmation gates instead of prototype timing. Server-received held facts remain Needs dispatch beside All synced. Existing real fixture IDs and grouping follow ADRs 0008 and 0010.
 
-Loader recording and Undo ([ADR 0051](agent-docs/adr/0051-loader-recording-and-undo.md), #52): per-line actions preserve multi-line order accounting; Undo cancels a durable unsent draft. Hand-over uses shared readiness and real sync states. Plan review shows the current order; missing vehicle capacities and driver details remain unavailable. Loader switching uses PIN sign-in.
+Loader recording and Undo ([ADR 0052](agent-docs/adr/0052-loader-recording-and-undo.md), #52): per-line actions preserve multi-line order accounting; Undo cancels a durable unsent draft. Hand-over uses shared readiness and real sync states. Plan review shows the current order; missing vehicle capacities and driver details remain unavailable. Loader switching uses PIN sign-in.
 
-**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:30. This list covers the ADRs up to 0051. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). Loader (#52) is recorded above; Dispatcher D4 (#61) still needs a final departure entry when its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
+**TODO (#22, before submission):** add any departure recorded after 4 Oct 2026, 17:30. This list covers the ADRs up to 0052. The Dispatcher dashboard, queue and plan board are merged (#46, labelled a departure; its ADR 0046 records none, so check whether it needs a line here). Loader (#52) is recorded above; Dispatcher D4 (#61) still needs a final departure entry when its ADR lands. The dispatcher D4 additions (a "Sync clash" inbox item and an escalated state, #61) are covered by ADR 0008.
 
 ## Scope: what is not built
 
@@ -339,7 +369,8 @@ All in [`agent-docs/adr/`](agent-docs/adr/). "D" marks a Designathon departure.
 | 0048 | Kandy reefer trucks in the workshop on the story day |
 | 0049 D | AA contrast on four Store and Dispatcher elements |
 | 0050 D | Driver run, proof and recovery |
-| 0051 D | Loader recording, Undo and plan review |
+| 0051 | Public hosting on a DigitalOcean droplet |
+| 0052 D | Loader recording, Undo and plan review |
 
 ## Submission documents
 

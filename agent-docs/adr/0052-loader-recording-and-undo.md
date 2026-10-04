@@ -1,4 +1,4 @@
-# ADR 0051: Loader recording, Undo and plan review
+# ADR 0052: Loader recording, Undo and plan review
 
 - Status: proposed
 - Date: 2026-10-04

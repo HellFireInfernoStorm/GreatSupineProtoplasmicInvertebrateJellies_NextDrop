@@ -25,7 +25,7 @@ sources: guide §10
 
 “All synced” describes server receipt of text and proof, not dispatcher acceptance. Held facts keep Needs dispatch, their historical context and proof, and remain inert. Changed-plan review waits for queued work, covering snapshots for accepted events and context for held facts to reconcile; it may then show while received clashes await dispatch. Store PLAN_ACKNOWLEDGED receipts per user/run/epoch/version across pruning. Only an accepted acknowledgement with a covering snapshot permanently dismisses that version's review. Held/rejected acknowledgements remain visible.
 
-## Loader recording and Undo (ADR 0051)
+## Loader recording and Undo (ADR 0052)
 
 Loader actions first persist as scoped Dexie metadata drafts for a five-second Undo window. Drafts include the original capture time/offset, event intents, optional compressed evidence, and a durable receipt identity. They project locally but are not sent. Undo cancels only an unexpired draft. After expiry, events, evidence and receipt enter the existing queues atomically; a cold start resumes promotion for the same user. A changed-plan draft remains saved for explicit discard/review rather than taking the new version. Account switching leaves other users' drafts inert; demo reset clears all drafts and plan baselines.
 
