@@ -1,0 +1,137 @@
+{
+  "eyebrow": "Place order · {{outlet}}",
+  "title": "Place order",
+  "intro": "Dry and chilled are separate orders for the same delivery date. Chilled goods travel only on reefer trucks.",
+  "repeat": "Repeat last {{weekday}}'s order",
+  "cutoff": {
+    "eyebrow": "Orders for {{day}} close at {{time}}",
+    "after": "After the cutoff, your order moves to the next run ({{next}}).",
+    "left": "left · updates live",
+    "banner": "{{day}} closes {{time}}",
+    "bannerLeft": "{{left}} left",
+    "review": "Closes {{time}} · {{left}} left",
+    "closedEyebrow": "Orders for {{day}} are closed",
+    "closedBody": "An order placed now is delivered on {{delivery}}."
+  },
+  "countdown": {
+    "hm": "{{hours}} h {{minutes}} min",
+    "m": "{{minutes}} min",
+    "soon": "less than 1 min"
+  },
+  "date": {
+    "title": "1 · Delivery date",
+    "label": "Delivery date",
+    "none": "No deliveries",
+    "closed": "Closed",
+    "hint": "Deliveries run Monday to Saturday."
+  },
+  "items": {
+    "title": "2 · Items",
+    "tabs": "Order type",
+    "tab": {
+      "ambient": "Dry order · {{count}}",
+      "chilled": "Chilled order · {{count}}"
+    },
+    "tabShort": {
+      "ambient": "Dry · {{count}}",
+      "chilled": "Chilled · {{count}}"
+    },
+    "last": "Last {{weekday}}: {{qty}}",
+    "lastNone": "Last {{weekday}}: none",
+    "quantity": "Quantity of {{product}}",
+    "remove": "Remove {{product}}",
+    "add": "Add from products",
+    "addPhone": "Add items from the catalogue",
+    "empty": {
+      "ambient": "No dry items yet.",
+      "chilled": "No chilled items yet."
+    },
+    "separate": "Chilled items go on the Chilled order tab and are saved as their own order."
+  },
+  "summary": {
+    "title": "Order summary",
+    "outlet": "Outlet",
+    "date": "Delivery date",
+    "order": {
+      "ambient": "Dry order",
+      "chilled": "Chilled order"
+    },
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items",
+    "units_one": "{{count}} unit",
+    "units_other": "{{count}} units",
+    "orders": "Orders",
+    "ordersValue_one": "{{count}} · it gets its own ID",
+    "ordersValue_other": "{{count}} · each gets its own ID",
+    "none": "Nothing added yet",
+    "hint": "Confirmation IDs appear instantly. The ETA window arrives when tonight's plan is published, after the cutoff."
+  },
+  "submit_one": "Submit {{count}} order",
+  "submit_other": "Submit {{count}} orders",
+  "submitNone": "Submit orders",
+  "submitting": "Submitting…",
+  "review": {
+    "button_one": "Review {{count}} order · {{units}}",
+    "button_other": "Review {{count}} orders · {{units}}",
+    "desktop": "Review order",
+    "title": "Review orders",
+    "subtitle": "Delivery {{day}} · {{outlet}}",
+    "edit": {
+      "ambient": "Edit dry order",
+      "chilled": "Edit chilled order"
+    },
+    "hint": "Each order gets its own confirmation ID right away. The ETA window arrives when tonight's plan is published."
+  },
+  "catalogue": {
+    "eyebrow": "Products · {{brand}} catalogue",
+    "title": "Products",
+    "phoneTitle": "Add items",
+    "phoneSubtitle": "{{day}} · {{order}}",
+    "back": "Place order",
+    "intro": "Add items to your {{day}} order. Only {{brand}} items for your outlet are listed, with last week's quantity.",
+    "search": "Search {{brand}} items…",
+    "sku": "{{sku}} · last {{weekday}}: {{qty}}",
+    "skuNone": "{{sku}} · last {{weekday}}: none",
+    "none": "No items match.",
+    "add": "Add",
+    "added": "Added",
+    "done_one": "Done · {{count}} item in {{order}}",
+    "done_other": "Done · {{count}} items in {{order}}"
+  },
+  "placed": {
+    "title_one": "{{count}} order placed",
+    "title_other": "{{count}} orders placed",
+    "subtitle": "Delivery {{day}}",
+    "placedAt": "Placed",
+    "outlet": "Outlet",
+    "eta": "ETA window",
+    "etaValue": "After tonight's plan",
+    "group": {
+      "ambient": "Dry · {{id}}",
+      "chilled": "Chilled · {{id}}"
+    },
+    "track": "Track orders",
+    "back": "Back to My deliveries"
+  },
+  "ordering": {
+    "nonOperatingDay": "There are no deliveries on that day. The order moves to the next operating day.",
+    "fresh": {
+      "separateChilled": "Fresh outlets order dry goods every trading day. Chilled goods go as their own order."
+    },
+    "style": {
+      "weeklyDay": "Style outlets place one weekly order for their scheduled delivery day.",
+      "peakAhead": "A festival is coming. Style outlets usually order more ahead of it."
+    },
+    "tech": {
+      "singleItems": "Tech outlets order as needed, usually single large items."
+    }
+  },
+  "errors": {
+    "load": "Can't load the catalogue. Check the connection and try again.",
+    "retry": "Try again",
+    "network": "Can't reach the server. Nothing more was placed. Try again: an order already placed is not placed twice.",
+    "rejected": "The server did not accept the order. Check the items and try again.",
+    "partial_one": "{{count}} order was placed before this happened.",
+    "partial_other": "{{count}} orders were placed before this happened."
+  }
+}
