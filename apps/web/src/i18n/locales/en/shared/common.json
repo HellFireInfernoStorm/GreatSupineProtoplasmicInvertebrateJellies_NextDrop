@@ -56,6 +56,8 @@
     "failedAction": "Action for {{reference}} was not applied.",
     "reason": "Server reason: {{code}}. Your record is kept for review.",
     "heldAction": "Fact for {{reference}} is saved on the server and awaiting dispatcher review.",
+    "rejectedAction": "The dispatcher did not accept the fact for {{reference}} ({{time}}). It is kept here and was not applied.",
+    "dispatcherNote": "Dispatcher note: {{note}}",
     "captured": "Captured {{time}}",
     "confirmed": "Confirmed {{time}} after sync",
     "paused": "Reconnect needed",

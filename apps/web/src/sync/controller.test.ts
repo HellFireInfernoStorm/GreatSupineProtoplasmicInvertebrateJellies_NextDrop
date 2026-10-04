@@ -1,4 +1,5 @@
 import {
+  apiFieldConflictFixtures,
   apiFixtures,
   apiVariantFixtures,
   type ClientEvent,
@@ -54,6 +55,10 @@ beforeEach(async () => {
     push: async (_id, events) => {
       calls.push("push");
       return accepted(events);
+    },
+    conflicts: async () => {
+      calls.push("conflicts");
+      return { items: [], serverTime: apiFixtures.clientEvent.capturedAt, feedHead: data.feedCursor };
     },
     upload: async () => {
       calls.push("blob");
@@ -238,29 +243,144 @@ it("a second controller cannot claim the same device while the first sends", asy
   expect((await db.outbox.toArray())[0]?.state).toBe("acked");
 });
 
-it("retains held facts when the resolution hint omits the dispatcher decision", async () => {
-  await repository.replaceSnapshot(data, "driver-1");
-  const entry = await enqueue();
-  const conflictId = uuidv7();
-  await db.outbox.update(entry.clientEventId, { state: "held" });
-  await db.conflictsLocal.add({ id: conflictId, clientEventId: entry.clientEventId, userId: "driver-1" });
-  transport.changes = async () => ({
-    items: [
-      {
-        seq: data.feedCursor,
-        kind: "conflict_resolved",
-        entity: { type: "conflict", id: conflictId },
-        at: entry.capturedAt,
-      },
-    ],
-    head: data.feedCursor,
-    resetEpoch: data.resetEpoch,
+describe("held fact outcomes (ADR 0042)", () => {
+  const heldLoad = async (userId = "driver-1") => {
+    const order = data.scope.trips[0]!.stops[0]!.order;
+    const entry = await repository.enqueue({
+      type: "LOAD_CONFIRMED",
+      subject: { orderId: order.id },
+      actor: { role: "DRIVER", userId },
+      payload: { lines: [{ lineId: "line-1", qtyLoaded: 1 }] },
+    });
+    const conflictId = uuidv7();
+    await db.outbox.update(entry.clientEventId, { state: "held", lastError: null, confirmedAt: entry.capturedAt });
+    await db.conflictsLocal.add({ id: conflictId, clientEventId: entry.clientEventId, userId });
+    return { entry, conflictId, orderId: order.id };
+  };
+  const decided = (
+    clientEventId: string,
+    conflictId: string,
+    resolution: "ACCEPT_FACT" | "REJECT_FACT",
+    note: string | null = null,
+  ): ApiDto<"fieldConflict"> => ({
+    conflictId,
+    clientEventId,
+    kind: "LOAD_AGAINST_CHANGED_PLAN",
+    openedAt: apiFixtures.clientEvent.capturedAt,
+    state: "RESOLVED",
+    resolution,
+    note,
+    resolvedAt: apiFixtures.clientEvent.capturedAt,
   });
-  await controller.syncNow();
-  expect(await db.conflictsLocal.count()).toBe(1);
-  expect(await db.outbox.get(entry.clientEventId)).toMatchObject({
-    state: "held",
-    lastError: "RESOLUTION_DETAILS_UNAVAILABLE",
+  beforeEach(async () => {
+    data.scope.trips[0]!.stops[0]!.order.status = "PLANNED";
+    await repository.replaceSnapshot(data, "driver-1");
+  });
+
+  it("confirms an accepted fact and keeps it projected until a snapshot covers the boundary", async () => {
+    const { entry, conflictId, orderId } = await heldLoad();
+    const boundary = String(BigInt(data.feedCursor) + 5n);
+    transport.conflicts = async (ids) => {
+      calls.push("conflicts");
+      expect(ids).toEqual([entry.clientEventId]);
+      return {
+        items: [decided(entry.clientEventId, conflictId, "ACCEPT_FACT")],
+        serverTime: entry.capturedAt,
+        feedHead: boundary,
+      };
+    };
+    // Held facts are not projected; the snapshot after the decision is still older than the boundary.
+    expect((await repository.projectOrder(orderId, "driver-1"))?.status).toBe("PLANNED");
+    await controller.syncNow();
+    expect(calls).toEqual(["changes", "conflicts", "snapshot"]);
+    expect(await db.outbox.get(entry.clientEventId)).toMatchObject({
+      state: "acked",
+      lastError: null,
+      confirmationFeedHead: boundary,
+      resolution: { conflictId, decision: "ACCEPT_FACT", note: null },
+    });
+    expect((await repository.projectOrder(orderId, "driver-1"))?.status).toBe("LOADED");
+    expect((await db.conflictsLocal.get(conflictId))?.resolution?.decision).toBe("ACCEPT_FACT");
+    // Once decided it is not asked about again; a covering snapshot retires it.
+    calls = [];
+    data.feedCursor = boundary;
+    await controller.syncNow();
+    expect(calls).toEqual(["changes"]);
+    await repository.replaceSnapshot(data, "driver-1");
+    expect(await db.outbox.get(entry.clientEventId)).toBeUndefined();
+  });
+
+  it("marks a rejected fact visibly rejected with the dispatcher's note and stops projecting it", async () => {
+    const { entry, conflictId, orderId } = await heldLoad();
+    transport.conflicts = async () => ({
+      items: [decided(entry.clientEventId, conflictId, "REJECT_FACT", "Order was moved to another van")],
+      serverTime: entry.capturedAt,
+      feedHead: data.feedCursor,
+    });
+    await controller.syncNow();
+    expect(await db.outbox.get(entry.clientEventId)).toMatchObject({
+      state: "rejected",
+      lastError: "CONFLICT_REJECTED",
+      resolution: { conflictId, decision: "REJECT_FACT", note: "Order was moved to another van" },
+    });
+    expect((await repository.projectOrder(orderId, "driver-1"))?.status).toBe("PLANNED");
+    // Rejected work is kept, not pruned, even by a newer snapshot.
+    data.feedCursor = String(BigInt(data.feedCursor) + 50n);
+    await repository.replaceSnapshot(data, "driver-1");
+    expect((await db.outbox.get(entry.clientEventId))?.state).toBe("rejected");
+  });
+
+  it("keeps open, unknown, uncorrelated and unreachable outcomes held without blocking new work", async () => {
+    const open = await heldLoad();
+    const unknown = await heldLoad();
+    transport.conflicts = async () => ({
+      items: [
+        { ...apiFieldConflictFixtures.open, conflictId: open.conflictId, clientEventId: open.entry.clientEventId },
+        // An outcome for an event this device did not ask about is ignored.
+        decided(uuidv7(), uuidv7(), "REJECT_FACT"),
+      ],
+      serverTime: open.entry.capturedAt,
+      feedHead: data.feedCursor,
+    });
+    await controller.syncNow();
+    for (const { entry } of [open, unknown])
+      expect(await db.outbox.get(entry.clientEventId)).toMatchObject({ state: "held" });
+
+    transport.conflicts = async () => {
+      throw new ApiRequestError("network", null, null, "offline");
+    };
+    const fresh = await enqueue();
+    await controller.syncNow();
+    expect((await db.outbox.get(fresh.clientEventId))?.state).toBe("acked");
+    for (const { entry } of [open, unknown])
+      expect(await db.outbox.get(entry.clientEventId)).toMatchObject({ state: "held" });
+  });
+
+  it("recovers a decision after missed hints and a cold resume, asking only for this user's held facts", async () => {
+    const { entry, conflictId } = await heldLoad();
+    const other = await heldLoad("driver-2");
+    // The saved cursor is already past the resolution: the feed has nothing more to say.
+    transport.changes = async () => ({ items: [], head: data.feedCursor, resetEpoch: data.resetEpoch });
+    let asked: string[] = [];
+    transport.conflicts = async (ids) => {
+      asked = ids;
+      return {
+        items: [decided(entry.clientEventId, conflictId, "REJECT_FACT")],
+        serverTime: entry.capturedAt,
+        feedHead: data.feedCursor,
+      };
+    };
+    // A new controller over the same database stands in for a reopened app.
+    const resumed = new SyncController(
+      new FieldRepository(db),
+      transport,
+      () => "driver-1",
+      () => false,
+    );
+    await resumed.syncNow();
+    expect(asked).toEqual([entry.clientEventId]);
+    expect((await db.outbox.get(entry.clientEventId))?.state).toBe("rejected");
+    expect((await db.outbox.get(other.entry.clientEventId))?.state).toBe("held");
   });
 });
 

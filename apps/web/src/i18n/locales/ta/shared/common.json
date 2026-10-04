@@ -176,6 +176,14 @@
       "text": "{{reference}}க்கான தகவல் சேவையகத்தில் சேமிக்கப்பட்டு அனுப்புநர் ஆய்வுக்காக உள்ளது.",
       "review": "draft"
     },
+    "rejectedAction": {
+      "text": "{{reference}} க்கான தகவலை அனுப்புநர் ஏற்கவில்லை ({{time}}). அது இங்கே வைக்கப்பட்டுள்ளது, பயன்படுத்தப்படவில்லை.",
+      "review": "draft"
+    },
+    "dispatcherNote": {
+      "text": "அனுப்புநர் குறிப்பு: {{note}}",
+      "review": "draft"
+    },
     "captured": {
       "text": "பதிவு {{time}}",
       "review": "draft"

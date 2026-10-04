@@ -71,6 +71,19 @@ export const apiConflictFixtures = {
   resolved: { ...f.conflict, state: "RESOLVED", resolution: "ACCEPT_FACT", resolvedAt: f.clientEvent.capturedAt },
 } satisfies Record<"orderLevel" | "tripLevel" | "resolved", ApiDtoInput<"conflict">>;
 
+/** A held fact's outcome as the field device sees it: still open, accepted or rejected (ADR 0042). */
+export const apiFieldConflictFixtures = {
+  open: {
+    conflictId: f.conflict.id,
+    clientEventId: f.clientEvent.clientEventId,
+    kind: f.conflict.kind,
+    openedAt: f.conflict.openedAt,
+    state: "OPEN",
+  },
+  accepted: { ...f.fieldConflict, resolution: "ACCEPT_FACT", note: null },
+  rejected: f.fieldConflict,
+} satisfies Record<"open" | "accepted" | "rejected", ApiDtoInput<"fieldConflict">>;
+
 /** All short outcomes, including the one-line next-operating-day backorder. */
 export const apiShortResolutionFixtures = {
   SHIP_PARTIAL: f.resolveShortResponse,

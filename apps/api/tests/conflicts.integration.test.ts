@@ -588,6 +588,96 @@ describe.skipIf(!testDatabaseUrl)("sync conflicts against PostgreSQL", () => {
     };
   }
 
+  describe("field outcomes of held facts (issue #97, ADR 0042)", () => {
+    const outcomes = (who: Who, clientEventIds: string[], headers: Record<string, string> = {}) =>
+      app.inject({
+        method: "POST",
+        url: "/api/sync/conflicts",
+        payload: { clientEventIds },
+        cookies: { [SESSION_COOKIE]: sessions[who].cookie },
+        headers: { [CSRF_HEADER]: sessions[who].csrf, ...headers },
+      });
+    const get = (who: Who, url: string) =>
+      app.inject({ method: "GET", url, cookies: { [SESSION_COOKIE]: sessions[who].cookie } });
+    type Item = { clientEventId: string; conflictId: string; state: string; resolution?: string; note?: string };
+    const byEvent = (items: Item[]) => new Map(items.map((item) => [item.clientEventId, item]));
+
+    it("returns only the caller's own held facts, decided or not, with a covering confirmation boundary", async () => {
+      const sc = await scenario();
+      const offline = [departed(sc, 1), ...delivery(sc, "A", 1)];
+      await publish(sc, { A: "DEFER" });
+      const results = await push("sampath", offline);
+      expect(results.map((r) => r.status)).toEqual(["ACCEPTED", "HELD_CONFLICT", "HELD_CONFLICT", "HELD_CONFLICT"]);
+      const [, arrival, outcome, proof] = offline.map((e) => e.clientEventId) as [string, string, string, string];
+      const asked = [offline[0]!.clientEventId, arrival, outcome, proof, randomUUID()];
+
+      // Applied and unknown IDs are left out; the held ones are open and name the conflict the push returned.
+      let res = await outcomes("sampath", asked);
+      expect(res.statusCode, res.body).toBe(200);
+      let items = byEvent(res.json().items);
+      expect([...items.keys()].sort()).toEqual([arrival, outcome, proof].sort());
+      for (const [i, id] of [arrival, outcome, proof].entries()) {
+        expect(items.get(id)).toEqual({
+          conflictId: results[i + 1]!.conflictId,
+          clientEventId: id,
+          kind: "FACT_ON_CANCELLED_STOP",
+          openedAt: expect.any(String),
+          state: "OPEN",
+        });
+      }
+
+      // Scope: the same user on another device sees them; another driver and the loader see nothing.
+      expect((await outcomes("sampath2", asked)).json().items).toHaveLength(3);
+      expect((await outcomes("kumara", asked)).json().items).toEqual([]);
+      expect((await outcomes("loader", asked)).json().items).toEqual([]);
+      for (const who of ["store", "nimal"] as const) {
+        const denied = await outcomes(who, asked);
+        expect(denied.statusCode).toBe(403);
+        expect(denied.json().code).toBe("FORBIDDEN");
+      }
+      expect((await outcomes("sampath", asked, { [CSRF_HEADER]: "nope" })).statusCode).toBe(403);
+      expect((await outcomes("sampath", [])).statusCode).toBe(400);
+      expect(
+        (
+          await outcomes(
+            "sampath",
+            Array.from({ length: 101 }, () => randomUUID()),
+          )
+        ).statusCode,
+      ).toBe(400);
+
+      // The device then misses the hints: its feed cursor moves past both decisions before it asks.
+      const note = "Proof photo does not match the outlet";
+      expect((await resolve("nimal", results[2]!.conflictId!, "ACCEPT_FACT")).statusCode).toBe(200);
+      expect((await resolve("nimal", results[1]!.conflictId!, "REJECT_FACT", note)).statusCode).toBe(200);
+      const head = (await get("sampath", "/api/changes?after=0&limit=1")).json().head as string;
+      expect((await get("sampath", `/api/changes?after=${head}`)).json().items).toEqual([]);
+
+      res = await outcomes("sampath", asked);
+      items = byEvent(res.json().items);
+      expect(items.get(outcome)).toMatchObject({ state: "RESOLVED", resolution: "ACCEPT_FACT", note: null });
+      expect(items.get(arrival)).toMatchObject({ state: "RESOLVED", resolution: "REJECT_FACT", note });
+      expect(items.get(arrival)).toHaveProperty("resolvedAt", clock.toISOString());
+      expect(items.get(proof)).toMatchObject({ state: "OPEN" });
+      expect(items.get(proof)).not.toHaveProperty("resolution");
+
+      // The boundary covers both decisions' feed rows, and a snapshot at or past it shows the accepted delivery.
+      const boundary = BigInt(res.json().feedHead);
+      const rows = await prisma.changeFeed.findMany({
+        where: { kind: "conflict_resolved", entityId: { in: [results[1]!.conflictId!, results[2]!.conflictId!] } },
+      });
+      expect(rows).toHaveLength(2);
+      for (const row of rows) expect(row.seq <= boundary).toBe(true);
+      expect((await order(sc.orders.A.id)).status).toBe("DELIVERED");
+      const snapshot = (await get("sampath", `/api/field/snapshot?date=${sc.date}`)).json();
+      expect(BigInt(snapshot.feedCursor) >= boundary).toBe(true);
+
+      // Retries are stable: asking again, or the dispatcher repeating a decision, changes nothing.
+      expect((await resolve("nimal", results[2]!.conflictId!, "ACCEPT_FACT")).statusCode).toBe(200);
+      expect((await outcomes("sampath", asked)).json().items).toEqual(res.json().items);
+    });
+  });
+
   it.each(Array.from({ length: 8 }, (_, i) => i + 1))(
     "keeps the invariants under a random interleaving of offline batches and publishes (seed %i)",
     async (seed) => {
