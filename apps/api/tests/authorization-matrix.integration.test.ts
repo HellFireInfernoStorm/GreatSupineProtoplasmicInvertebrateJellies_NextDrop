@@ -20,14 +20,21 @@ const REFERENCE_RESPONSES = [
 ];
 // Generate currently implemented collection paths from the contracts, including store aliases.
 const collectionRoutes = routes.filter(([, route]) =>
-  ["notificationsResponse", "readNotificationsResponse", "changesResponse", ...REFERENCE_RESPONSES].includes(
-    route.responses[200] ?? "",
-  ),
+  [
+    "notificationsResponse",
+    "readNotificationsResponse",
+    "changesResponse",
+    "runsResponse",
+    "exceptionsResponse",
+    ...REFERENCE_RESPONSES,
+  ].includes(route.responses[200] ?? ""),
 );
 // Reference rows each role may see (ADR 0038). The driver has no trips here, so it sees no outlets.
 const QUERIES: Record<string, string> = {
   changesResponse: "?after=0",
   calendarResponse: "?from=2026-10-01&to=2026-10-03",
+  runsResponse: "?depot=Own%20depot",
+  exceptionsResponse: "?depot=Own%20depot",
 };
 const referenceIds = { ownOutlet: "", foreignOutlet: "", ownVehicle: "", foreignVehicle: "", fresh: "", other: "" };
 const visibleReference: Record<string, Record<HumanRole, (keyof typeof referenceIds)[]>> = {
@@ -273,6 +280,9 @@ describe.skipIf(!testDatabaseUrl)("generated collection matrix (PostgreSQL and r
           "2026-10-02",
           "2026-10-03",
         ]);
+      } else if (["runsResponse", "exceptionsResponse"].includes(route.responses[200] ?? "")) {
+        // The matrix has no trips or exceptions today; the point is who may read the depot.
+        expect(Array.isArray(response.json().items)).toBe(true);
       } else if (route.responses[200] === "reasonsResponse") {
         expect(response.json().loadShort.length).toBeGreaterThan(0);
       } else if (visibleReference[route.responses[200] ?? ""]) {

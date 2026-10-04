@@ -48,9 +48,9 @@ export const apiVariantFixtures = {
   exception: {
     ACK: { type: "ACK", tripId: f.trip.id, planVersion: 1, actor: f.clientEvent.actor, at: f.clientEvent.capturedAt },
     CONFLICT: f.exception,
-    ISSUE: { type: "ISSUE", issue: f.issue },
+    ISSUE: { type: "ISSUE", issue: f.issue, evidence: [] },
     SHORT: { type: "SHORT", orderId: f.order.id, lineId: f.orderLine.id, qtyShort: 1, resolution: null },
-    DAMAGED: { type: "DAMAGED", orderId: f.order.id, lineId: f.orderLine.id, qty: 1 },
+    DAMAGED: { type: "DAMAGED", orderId: f.order.id, lineId: f.orderLine.id, qty: 1, evidence: [] },
     FAILED: { type: "FAILED", order: { ...f.order, status: "FAILED" } },
     PROBLEM: {
       type: "PROBLEM",
@@ -59,6 +59,7 @@ export const apiVariantFixtures = {
       tripId: f.trip.id,
       kind: "VEHICLE_PROBLEM",
       note: "Mock breakdown",
+      evidence: [],
     },
   },
 } satisfies VariantFixtures;

@@ -274,7 +274,7 @@ export function createIngest(deps: IngestDependencies) {
     }
   }
 
-  function runUpdated(trip: NonNullable<Subjects["trip"]>): FeedRowInput {
+  function runUpdated(trip: { id: string; depot: string; vehicleId: string }): FeedRowInput {
     return {
       kind: "run_updated",
       entity: { type: "trip", id: trip.id },
@@ -331,6 +331,8 @@ export function createIngest(deps: IngestDependencies) {
       const feed: FeedRowInput[] = [
         orderChanged({ id: order.id, outletId: order.outletId, depot: order.outlet.depot, vehicleId: assignedVehicle }),
       ];
+      // The run monitor counts stops done from these facts (ADR 0041).
+      if (stop) feed.push(runUpdated({ id: stop.tripId, depot: order.outlet.depot, vehicleId: stop.trip.vehicleId }));
       for (const input of notificationsFor(event, subjects)) feed.push(...(await notifier.notify(tx, input)));
       await appendFeed(tx, feed);
       return { id, conflictId: null };

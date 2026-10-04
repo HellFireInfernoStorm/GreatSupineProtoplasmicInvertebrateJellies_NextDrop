@@ -14,6 +14,7 @@ import { registerConflicts } from "./modules/conflicts";
 import { demoRoutes } from "./modules/demo";
 import { feedRoutes } from "./modules/feed";
 import { registerField } from "./modules/field";
+import { registerMonitor } from "./modules/monitor";
 import { createNotifier, notificationRoutes } from "./modules/notifications";
 import { registerOrders } from "./modules/orders";
 import { registerPlanning } from "./modules/planning";
@@ -89,6 +90,8 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
   await registerField(app, { prisma, now: clock.now });
   await registerShortfalls(app, { prisma, now: clock.now });
   await registerConflicts(app, { prisma, now: clock.now });
+  // Run states are business time: NO_SIGNAL and BEHIND follow the demo clock.
+  await registerMonitor(app, { prisma, now: clock.now });
   await registerBlobs(app, { prisma });
   await registerReference(app, { prisma });
   // Demo tooling needs the database: the clock offset, the tick and the reset all live there.
