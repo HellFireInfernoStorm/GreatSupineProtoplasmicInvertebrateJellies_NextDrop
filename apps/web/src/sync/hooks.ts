@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { OrderState } from "@nextdrop/rules";
 import { useSession } from "../lib/session";
 import { fieldRepository, unconfirmed } from "./repository";
-import { syncController } from "./controller";
+import { type SyncController, syncController, useSyncActivity } from "./controller";
 import type { OutboxEntry, QueuedBlob } from "./database";
 
 export interface SyncDiagnostics {
@@ -14,6 +14,8 @@ export interface SyncDiagnostics {
   heldItems: OutboxEntry[];
   lastSyncedAt: string | null;
   simulateOffline: boolean;
+  /** False until the stored values are read, so the switch never shows a placeholder as the saved state. */
+  ready: boolean;
 }
 export function useSyncDiagnostics(): SyncDiagnostics {
   const { user } = useSession();
@@ -25,6 +27,7 @@ export function useSyncDiagnostics(): SyncDiagnostics {
     heldCount: 0,
     lastSyncedAt: null,
     simulateOffline: false,
+    ready: false,
   });
   useEffect(() => {
     const db = fieldRepository.db;
@@ -57,6 +60,7 @@ export function useSyncDiagnostics(): SyncDiagnostics {
         heldItems: events.filter((e) => e.state === "held"),
         lastSyncedAt: (await db.value<string>("lastSyncedAt")) ?? null,
         simulateOffline: !!(await db.value("simulateOffline")),
+        ready: true,
       };
     }).subscribe(setState);
     return () => subscription.unsubscribe();
@@ -72,9 +76,11 @@ export function useProjectedOrder(orderId: string): OrderState | null {
   }, [orderId, user.id]);
   return state;
 }
-export async function setForceOffline(value: boolean): Promise<void> {
-  await fieldRepository.db.set("simulateOffline", value);
-  await syncController.syncNow();
+/** Turning the switch off reconnects and flushes the outbox at once, without waiting for the retry timer. */
+export async function setForceOffline(value: boolean, controller: SyncController = syncController): Promise<void> {
+  await controller.repository.db.set("simulateOffline", value);
+  useSyncActivity.setState({ offline: value || (typeof navigator !== "undefined" && navigator.onLine === false) });
+  await controller.syncNow();
 }
 
 /** Field screens consume this local snapshot instead of calling the network. */

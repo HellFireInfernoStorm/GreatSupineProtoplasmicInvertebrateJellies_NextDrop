@@ -54,7 +54,7 @@ export function FieldSync({ compact = false }: { compact?: boolean }) {
           <button type="button" disabled={needed || activity.syncing} onClick={() => void syncController.syncNow()}>
             {t("sync.now")}
           </button>
-          {DEMO_MODE && (
+          {DEMO_MODE && diagnostics.ready && (
             <label>
               <input
                 type="checkbox"

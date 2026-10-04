@@ -56,7 +56,7 @@ export function Settings() {
         >
           {t("syncNow")}
         </Button>
-        {DEMO_MODE && (
+        {DEMO_MODE && diagnostics.ready && (
           <label className="driver-toggle">
             <input
               type="checkbox"

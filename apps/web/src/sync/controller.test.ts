@@ -12,7 +12,8 @@ import { uuidv7 } from "uuidv7";
 import { OfflineDatabase } from "./database";
 import { FieldRepository } from "./repository";
 import { ApiRequestError } from "../lib/api";
-import { SyncController } from "./controller";
+import { SyncController, useSyncActivity } from "./controller";
+import { setForceOffline } from "./hooks";
 import type { SyncTransport } from "./transport";
 
 let db: OfflineDatabase;
@@ -171,6 +172,17 @@ describe("sync state machine", () => {
     );
     await paused.syncNow();
     expect(calls).toEqual([]);
+  });
+
+  it("turning force offline off reconnects and flushes the outbox at once (#147)", async () => {
+    const entry = await enqueue();
+    await setForceOffline(true, controller);
+    expect(calls).toEqual([]);
+    expect(useSyncActivity.getState().offline).toBe(true);
+    await setForceOffline(false, controller);
+    expect(useSyncActivity.getState().offline).toBe(false);
+    expect(calls).toContain("push");
+    expect((await db.outbox.get(entry.clientEventId))?.state).toBe("acked");
   });
 
   it("serializes simultaneous sync requests without duplicate concurrent pushes", async () => {
