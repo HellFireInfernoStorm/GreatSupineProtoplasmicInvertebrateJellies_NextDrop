@@ -5,6 +5,7 @@ import { Logo } from "../ui/Logo";
 import { PasswordField } from "./PasswordField";
 import { QuickLoginChips } from "./QuickLoginChips";
 import { useLogin } from "./useLogin";
+import { DEFAULT_DEPOT } from "../roles/dispatcher/depot";
 
 /** The two depots of the network (data/reference/vehicles.csv). The reference API needs a session, so they are listed here. */
 const DEPOTS = ["Peliyagoda", "Kandy"] as const;
@@ -21,7 +22,7 @@ export function DispatcherLogin() {
   const { pending, failure, submit, clearFailure } = useLogin();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [depot, setDepot] = useState<(typeof DEPOTS)[number]>("Peliyagoda");
+  const [depot, setDepot] = useState<(typeof DEPOTS)[number]>(DEFAULT_DEPOT);
   const [badFormat, setBadFormat] = useState(false);
 
   function onSubmit(event: FormEvent) {

@@ -13,7 +13,7 @@ import { colomboIso, seedOrders, type OrderSpec } from "./orders";
 import { generatePeakDay, PEAK_DAY_WORKSHOP } from "./peak-day";
 import { loadReference } from "./pick-fixtures";
 import { dateOnly, seedReference, type ReferenceIds } from "./reference";
-import { storyOrderIds, storyOrders } from "./story";
+import { HILL_RUN_WORKSHOP, storyOrderIds, storyOrders } from "./story";
 import { STORY_DATE } from "./story-fixtures";
 import { syncRows, wrote, type SyncResult } from "./sync";
 
@@ -80,13 +80,13 @@ export async function runSeed(db: PrismaClient): Promise<SeedSummary> {
   return { sections, wrote: changed || !current, resetEpoch };
 }
 
-/** Workshop vehicles on the story date, each with its `VEHICLE_AVAILABILITY_CHANGED` event, set by the dispatcher. */
+/** Workshop vehicles on the story date (Peliyagoda peak day and Kandy hill run), each with its `VEHICLE_AVAILABILITY_CHANGED` event, set by the dispatcher. */
 async function seedVehicleAvailability(db: PrismaClient, ids: ReferenceIds, dispatcherId: string): Promise<SyncResult> {
   const date = dateOnly(STORY_DATE);
   const existing = new Set((await db.vehicleAvailability.findMany({ where: { date } })).map((v) => v.vehicleId));
   const setAt = new Date(colomboIso("2026-09-28", "07:30"));
   let created = 0;
-  for (const { vehicleId: displayId, reason } of PEAK_DAY_WORKSHOP) {
+  for (const { vehicleId: displayId, reason } of [...PEAK_DAY_WORKSHOP, ...HILL_RUN_WORKSHOP]) {
     const vehicleId = lookup(ids.vehicles, displayId);
     if (existing.has(vehicleId)) continue;
     await db.$transaction([
