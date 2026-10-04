@@ -1,0 +1,156 @@
+{
+  "tracking": {
+    "title": "Order tracking",
+    "eyebrow": "Order tracking · {{day}}, {{time}}",
+    "subtitle": "{{day}} · {{time}}",
+    "intro": "Every order and what happened to it, in the same status words the dispatcher, loader and driver see.",
+    "next": "Next delivery · {{day}}",
+    "waiting": "Waiting for the plan",
+    "heroLine": "{{temp}} · {{id}} · Trip {{trip}} · stop {{seq}}",
+    "heroLineUnplanned": "{{temp}} · {{id}}",
+    "units_one": "{{count}} unit",
+    "units_other": "{{count}} units",
+    "none": {
+      "title": "Nothing on the way",
+      "body": "Orders you place show here, from the moment they are placed until you confirm receipt."
+    },
+    "stage": {
+      "ordered": "Ordered",
+      "planned": "Planned",
+      "loaded": "Loaded / Short",
+      "out": "Out for delivery",
+      "delivered": "Delivered",
+      "closed": "Received / Disputed"
+    },
+    "stageBy": {
+      "ordered": "you",
+      "planned": "dispatcher",
+      "loaded": "at the dock",
+      "out": "driver",
+      "delivered": "driver",
+      "closed": "you"
+    },
+    "stageDone": "{{stage}}, done",
+    "stageNext": "next: {{stage}}",
+    "timeline": "Order timeline",
+    "timelineShort": "Timeline",
+    "confirm": "Confirm receipt",
+    "deferred": {
+      "title": "{{temp}} order {{id}} deferred to {{day}}",
+      "body": "Reason: {{reason}}.",
+      "view": "View notice"
+    },
+    "table": {
+      "label": "Orders",
+      "order": "Order",
+      "type": "Type",
+      "date": "Delivery date",
+      "eta": "ETA / delivered",
+      "status": "Status",
+      "note": "Note"
+    },
+    "was": "was {{day}}",
+    "eta": "ETA {{from}}–{{to}}",
+    "tripStop": "Trip {{trip}} · stop {{seq}}",
+    "afterPlan": "After the next plan",
+    "delivered": "Delivered {{time}}",
+    "confirmed": "confirmed {{time}} after sync",
+    "footnote": "Status words shared by every role: Ordered → Planned / Deferred → Loaded / Short → Out for delivery → Delivered → Received / Disputed.",
+    "empty": "No orders to track."
+  },
+  "order": {
+    "title": "Order timeline",
+    "back": "Order tracking",
+    "subtitle": "{{id}} · {{temp}}",
+    "subtitleOutlet": "{{id}} · {{temp}} · {{outlet}}",
+    "delivery": "Delivery",
+    "from": "from {{day}}",
+    "trip": "Trip",
+    "tripValue": "{{trip}} · stop {{seq}}",
+    "tripEta": "ETA {{from}}–{{to}}",
+    "notPlanned": "Not planned yet",
+    "notPlannedBody": "The dispatcher plans it after the cutoff",
+    "happened": "What happened",
+    "lines": "What is on it",
+    "ordered": "{{count}} ordered",
+    "loaded": "{{count}} loaded",
+    "deliveredQty": "{{count}} delivered",
+    "receivedQty": "{{count}} received",
+    "confirm": "Confirm receipt",
+    "report": "Report an issue",
+    "notFound": "This order could not be found.",
+    "loadFailed": "The order could not be loaded.",
+    "retry": "Try again",
+    "noSignal": "No signal · last heard {{time}}",
+    "noSignalNever": "No signal",
+    "noSignalBody": "Waiting for the driver's phone to sync. A delivery made meanwhile shows here with both of its times.",
+    "deferral": {
+      "title": "Moved to {{day}}",
+      "body": "Reason: {{reason}}. It was due {{from}}."
+    }
+  },
+  "step": {
+    "title": {
+      "ordered": "Ordered",
+      "deferred": "Deferred",
+      "planned": "Planned",
+      "planChanged": "Plan changed",
+      "short": "Short",
+      "damaged": "Damaged",
+      "loaded": "Loaded",
+      "out": "Out for delivery",
+      "arrived": "Driver arrived",
+      "delivered": "Delivered",
+      "refused": "Refused",
+      "failed": "Not delivered",
+      "proof": "Proof of delivery",
+      "received": "Received",
+      "issue": "Disputed",
+      "issueResolved": "Issue resolved",
+      "cancelled": "Cancelled"
+    },
+    "detail": {
+      "ordered_one": "{{count}} unit",
+      "ordered_other": "{{count}} units",
+      "deferred": "Moved to {{day}} · {{reason}}",
+      "planned": "ETA {{from}}–{{to}}",
+      "planChanged": "New ETA {{from}}–{{to}}",
+      "short": "{{count}} not loaded at the dock",
+      "damaged": "{{count}} damaged at the dock",
+      "loaded_one": "{{count}} unit on the vehicle",
+      "loaded_other": "{{count}} units on the vehicle",
+      "out": "Left the depot",
+      "arrived": "At your store",
+      "delivered_one": "{{count}} unit handed over",
+      "delivered_other": "{{count}} units handed over",
+      "refused": "The delivery was refused",
+      "failed": "The delivery could not be made",
+      "proof_zero": "Signed by {{name}}",
+      "proof_one": "Signed by {{name}} · {{count}} photo",
+      "proof_other": "Signed by {{name}} · {{count}} photos",
+      "received_one": "{{count}} unit received",
+      "received_other": "{{count}} units received",
+      "issue": "{{kind}} · sent to the dispatcher",
+      "issueResolved": "{{resolution}}",
+      "cancelled": "The order was cancelled"
+    }
+  },
+  "role": {
+    "STORE": "Store",
+    "DISPATCHER": "Dispatcher",
+    "LOADER": "Loader",
+    "DRIVER": "Driver",
+    "SYSTEM": "NextDrop"
+  },
+  "issueKind": {
+    "SHORT": "Items short",
+    "DAMAGED": "Items damaged",
+    "WARM": "Chilled items warm",
+    "OTHER": "Another problem"
+  },
+  "resolution": {
+    "CREDIT": "Credited",
+    "ADD_TO_RUN": "Added to the next run",
+    "REJECT": "Not accepted"
+  }
+}

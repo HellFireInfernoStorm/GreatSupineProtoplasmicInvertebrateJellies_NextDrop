@@ -72,3 +72,12 @@ export function useDeferredOrders() {
     refetchInterval: 60_000,
   });
 }
+
+/** One order with its timeline: every event recorded against it, by any role. */
+export function useOrder(id: string) {
+  return useQuery({
+    queryKey: ["store", "order", id],
+    queryFn: () => callApi("storeOrder", { params: { id } }),
+    refetchInterval: 30_000,
+  });
+}

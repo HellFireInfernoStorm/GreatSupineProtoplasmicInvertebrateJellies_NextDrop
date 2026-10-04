@@ -1,17 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { useServerNow } from "../../../lib/clock";
 import { useIsDesktop } from "../../../lib/layout";
 import { useSession } from "../../../lib/session";
 import { formatDay, formatTime } from "../../../lib/time";
 import { Banner, Button } from "../../../ui";
-import { useDeferredOrders, useDeliveries } from "../data";
-import { dateInstant, todayOn } from "../dates";
+import { dateInstant } from "../dates";
 import { Icon } from "../icons";
-import { useOrderModel } from "../order/useOrderModel";
 import { PhoneScreen } from "../StoreLayout";
-import { alertsOf, heroRun, runsOf, type Order } from "./model";
+import { useBoard } from "./useBoard";
+import { alertsOf } from "./model";
 import {
   AlertBanners,
   AlertsCard,
@@ -39,42 +37,25 @@ export function DeliveriesPage() {
   const { t } = useTranslation("store/deliveries");
   const desktop = useIsDesktop();
   const navigate = useNavigate();
-  const now = useServerNow(60_000);
-  const today = todayOn(now);
-  const model = useOrderModel();
-  const nextDay = model.options.find((option) => option.operating)?.date ?? model.date;
+  const board = useBoard();
+  const { now, today, nextDay, model, orders, run, later } = board;
   const [explaining, setExplaining] = useState(false);
-
-  const deliveries = useDeliveries(today);
-  const upcoming = useDeliveries(nextDay);
-  const deferred = useDeferredOrders();
-
-  const items = deliveries.data?.items ?? [];
-  const orders = items.map((item) => item.order);
-  const run = heroRun(runsOf(items));
   const alerts = alertsOf(orders);
-  // The next delivery day's orders, with any order that was moved off it.
-  const later: Order[] = [...(upcoming.data?.items.map((item) => item.order) ?? [])];
-  for (const order of deferred.data ?? []) {
-    if (!later.some((other) => other.id === order.id) && !orders.some((other) => other.id === order.id)) {
-      later.push(order);
-    }
-  }
   const notice = later.find((order) => order.status === "DEFERRED");
   const greeting = useGreeting(now);
   const todayText = formatDay(dateInstant(today));
 
-  const hero = deliveries.isPending ? null : run ? (
-    <Hero run={run} desktop={desktop} refreshing={deliveries.isFetching} onRefresh={() => void deliveries.refetch()} />
+  const hero = board.loading ? null : run ? (
+    <Hero run={run} desktop={desktop} refreshing={board.refreshing} onRefresh={board.refresh} />
   ) : (
     <HeroEmpty waiting={orders.length > 0} />
   );
-  const failed = deliveries.isError && (
+  const failed = board.failed && (
     <Banner
       tone="danger"
       message={t("loadFailed")}
       action={
-        <Button variant="secondary" onClick={() => void deliveries.refetch()}>
+        <Button variant="secondary" onClick={board.refresh}>
           {t("retry")}
         </Button>
       }

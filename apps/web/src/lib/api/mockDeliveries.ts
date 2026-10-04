@@ -57,6 +57,7 @@ const DRY = [
 const SHORT = 4;
 
 const TRIP_ID = mockId(60);
+const NEXT_TRIP_ID = mockId(61);
 
 function withProgress(order: Order, status: Order["status"], short: number): Order {
   const loaded = status !== "ORDERED" && status !== "PLANNED" && status !== "DEFERRED";
@@ -130,31 +131,42 @@ function story(nowMs: number): { today: Delivery[]; tomorrow: Delivery[] } {
     assignment,
   };
 
-  const stop = (n: number, order: Order) => ({
-    ...apiFixtures.trip.stops[0]!,
-    id: mockId(n),
-    seq: 4,
-    order,
-    outlet: MOCK_OUTLET,
-    ...eta,
-    arrivedAt: delivered ? iso(deliveredAt - 6 * MIN) : null,
-    // Delivered on the driver's phone, confirmed when the phone reached the server: two times, never merged.
-    deliveredAt: delivered ? iso(deliveredAt) : null,
-    confirmedAt: delivered ? iso(deliveredAt + 84 * MIN) : null,
-  });
-  const trip = (orders: readonly Order[], status: "PLANNED" | "DEPARTED" | "COMPLETE", departMs: number) => ({
+  const stop = (n: number, order: Order) => {
+    // Only an order the driver has handed over has delivery times.
+    const done = order.status === "DELIVERED" || order.status === "RECEIVED" || order.status === "DISPUTED";
+    return {
+      ...apiFixtures.trip.stops[0]!,
+      id: mockId(n),
+      seq: order.assignment?.seq ?? 1,
+      order,
+      outlet: MOCK_OUTLET,
+      etaFrom: order.assignment?.etaFrom ?? eta.etaFrom,
+      etaTo: order.assignment?.etaTo ?? eta.etaTo,
+      arrivedAt: done ? iso(deliveredAt - 6 * MIN) : null,
+      // Delivered on the driver's phone, confirmed when the phone reached the server: two times, never merged.
+      deliveredAt: done ? iso(deliveredAt) : null,
+      confirmedAt: done ? iso(deliveredAt + 84 * MIN) : null,
+    };
+  };
+  const trip = (
+    n: number,
+    displayId: string,
+    orders: readonly Order[],
+    status: "PLANNED" | "DEPARTED" | "COMPLETE",
+    departMs: number,
+  ) => ({
     ...apiFixtures.trip,
-    id: TRIP_ID,
-    displayId: "T001",
+    id: mockId(n),
+    displayId,
     brand: MOCK_OUTLET.brand,
     district: MOCK_OUTLET.district,
     status,
     plannedDepart: iso(departMs),
-    stops: orders.map((order, index) => stop(70 + index, order)),
+    stops: orders.map((order, index) => stop(n + 10 + index, order)),
   });
 
   const silent = at === "nosignal";
-  const todayTrip = trip([chilled, dry], at === "evening" ? "COMPLETE" : "DEPARTED", etaFrom - 150 * MIN);
+  const todayTrip = trip(60, "T001", [chilled, dry], at === "evening" ? "COMPLETE" : "DEPARTED", etaFrom - 150 * MIN);
   const contact = {
     signal: silent ? "NO_SIGNAL" : "ONLINE",
     lastHeardAt: iso(nowMs - (silent ? 32 : 3) * MIN),
@@ -166,7 +178,7 @@ function story(nowMs: number): { today: Delivery[]; tomorrow: Delivery[] } {
   // Tomorrow: the chilled order is planned, the dry order was deferred to the day after.
   const nextEta = five(nowMs + 9 * 60 * MIN);
   const nextAssignment = {
-    tripId: TRIP_ID,
+    tripId: NEXT_TRIP_ID,
     vehicleId: apiFixtures.trip.vehicleId,
     seq: 2,
     etaFrom: iso(nextEta),
@@ -191,7 +203,7 @@ function story(nowMs: number): { today: Delivery[]; tomorrow: Delivery[] } {
       decidedBy: "DISPATCHER",
     },
   };
-  const nextTrip = trip([planned], "PLANNED", nextEta - 150 * MIN);
+  const nextTrip = trip(61, "T003", [planned], "PLANNED", nextEta - 150 * MIN);
   return {
     today: todayItems,
     tomorrow: [
@@ -199,6 +211,101 @@ function story(nowMs: number): { today: Delivery[]; tomorrow: Delivery[] } {
       { order: deferred, trip: null, signal: "ONLINE", lastHeardAt: null },
     ],
   };
+}
+
+type TimelineEvent = ApiDtoInput<"orderDetail">["timeline"][number];
+
+/** The events behind an order's status, in the order they happened: what its timeline shows. */
+function timelineOf(delivery: Delivery): TimelineEvent[] {
+  const { order, trip } = delivery;
+  const n = order.id.slice(-2);
+  const events: TimelineEvent[] = [];
+  const add = (
+    role: TimelineEvent["actor"]["role"],
+    capturedMs: number,
+    event: Pick<TimelineEvent, "type" | "payload">,
+    receivedMs: number = capturedMs,
+  ) => {
+    events.push({
+      id: `018f1234-5678-7890-abcd-ef123450${n}${String(events.length).padStart(2, "0")}`,
+      schemaVersion: 1,
+      subject: { orderId: order.id },
+      source: receivedMs === capturedMs ? "SERVER" : "FIELD",
+      actor: { userId: `mock-${role.toLowerCase()}`, role },
+      capturedAt: iso(capturedMs),
+      receivedAt: iso(receivedMs),
+      disposition: "APPLIED",
+      ...event,
+    } as TimelineEvent);
+  };
+  const placedMs = Date.parse(order.placedAt);
+  add("STORE", placedMs, {
+    type: "ORDER_PLACED",
+    payload: {
+      lines: order.lines.map((line) => ({ lineId: line.id, skuId: line.sku, qty: line.qtyOrdered })),
+      requestedDate: order.requestedDate,
+    },
+  });
+  if (order.deferral) add("DISPATCHER", placedMs + 90 * MIN, { type: "ORDER_DEFERRED", payload: order.deferral });
+  if (!order.assignment || !trip) return events;
+
+  const etaMs = Date.parse(order.assignment.etaFrom);
+  add("DISPATCHER", Math.max(placedMs + 120 * MIN, etaMs - 9 * 60 * MIN), {
+    type: "ORDER_PLANNED",
+    payload: { ...order.assignment, planVersion: 1 },
+  });
+  if (order.status === "PLANNED") return events;
+  if (order.flags.short.length > 0) {
+    add("LOADER", etaMs - 190 * MIN, {
+      type: "LOAD_SHORT",
+      payload: {
+        lines: order.flags.short.map((flag) => ({ lineId: flag.lineId, qtyShort: flag.qtyShort })),
+        reasonCode: "OUT_OF_STOCK",
+      },
+    });
+  }
+  add("LOADER", etaMs - 170 * MIN, {
+    type: "LOAD_CONFIRMED",
+    payload: { lines: order.lines.map((line) => ({ lineId: line.id, qtyLoaded: line.qtyLoaded })) },
+  });
+  add("DRIVER", etaMs - 150 * MIN, { type: "ORDER_OUT_FOR_DELIVERY", payload: { tripId: trip.id } });
+
+  const stop = trip.stops.find((candidate) => candidate.order.id === order.id);
+  if (!stop?.deliveredAt || !stop.confirmedAt) return events;
+  // Recorded on the driver's phone while it was out of coverage, received when it synced.
+  const deliveredMs = Date.parse(stop.deliveredAt);
+  const syncedMs = Date.parse(stop.confirmedAt);
+  add(
+    "DRIVER",
+    deliveredMs,
+    {
+      type: "STOP_OUTCOME",
+      payload: {
+        outcome: order.flags.short.length > 0 ? "PARTIAL" : "FULL",
+        lines: order.lines.map((line) => ({ lineId: line.id, qtyDelivered: line.qtyDelivered })),
+      },
+    },
+    syncedMs,
+  );
+  add(
+    "DRIVER",
+    deliveredMs + MIN,
+    { type: "POD_CAPTURED", payload: { receiverName: "Dilini", photoBlobRefs: ["mock-photo"] } },
+    syncedMs,
+  );
+  if (order.status === "RECEIVED") {
+    add("STORE", syncedMs + 4 * MIN, {
+      type: "RECEIPT_CONFIRMED",
+      payload: { lines: order.lines.map((line) => ({ lineId: line.id, qtyReceived: line.qtyReceived })) },
+    });
+  }
+  if (order.status === "DISPUTED") {
+    add("STORE", syncedMs + 6 * MIN, {
+      type: "ISSUE_REPORTED",
+      payload: { kind: "WARM", lines: [{ lineId: order.lines[0]!.id, qty: 1 }], note: "One crate arrived warm." },
+    });
+  }
+  return events;
 }
 
 const notFound = (): RawResponse => ({
@@ -215,7 +322,8 @@ export function mockDeliveriesRespond(
   const name: ApiRouteName = request.name;
   const { today, tomorrow } = story(nowMs);
   const all = [...today, ...tomorrow];
-  const byPath = () => all.find((item) => url.pathname.split("/").includes(item.order.id))?.order;
+  const itemByPath = () => all.find((item) => url.pathname.split("/").includes(item.order.id));
+  const byPath = () => itemByPath()?.order;
   switch (name) {
     case "storeDeliveries": {
       const date = url.searchParams.get("date");
@@ -239,8 +347,8 @@ export function mockDeliveriesRespond(
       return items.length === 0 ? null : { status: 200, body: { items, nextCursor: null } };
     }
     case "storeOrder": {
-      const order = byPath();
-      return order ? { status: 200, body: { order, timeline: [] } } : null;
+      const item = itemByPath();
+      return item ? { status: 200, body: { order: item.order, timeline: timelineOf(item) } } : null;
     }
     case "receipt": {
       const order = byPath();
