@@ -7,7 +7,7 @@ export type PayloadUpcaster = (payload: unknown) => unknown;
 export type UpcasterRegistry = Map<EventType, Map<number, PayloadUpcaster>>;
 
 /**
- * Shared registry. `LOAD_DAMAGED` v1→v2 fills a missing `reasonCode` with `OTHER` (ADR 0041).
+ * Shared registry. `LOAD_DAMAGED` v1→v2 fills a missing `reasonCode` with `OTHER` (ADR 0042).
  * Other types have no payload change at v2; missing entries are no-ops.
  */
 export const upcasterRegistry: UpcasterRegistry = new Map([

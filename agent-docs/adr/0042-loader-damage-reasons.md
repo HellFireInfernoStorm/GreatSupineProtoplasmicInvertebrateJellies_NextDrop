@@ -1,8 +1,8 @@
-# ADR 0041: Loader damage reason codes on LOAD_DAMAGED
+# ADR 0042: Loader damage reason codes on LOAD_DAMAGED
 
 - Status: proposed
 - Date: 2026-10-04
-- Issue / PR: #114
+- Issue / PR: #114 / #122
 - Designathon departure: no
 
 ## Context

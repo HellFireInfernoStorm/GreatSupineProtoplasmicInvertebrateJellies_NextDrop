@@ -14,7 +14,7 @@ export const STOP_OUTCOME_REASONS = [
   "OTHER",
 ] as const;
 
-/** Loader damage-sheet chips (ADR 0041). Re-export so API callers share the contracts catalogue. */
+/** Loader damage-sheet chips (ADR 0042). Re-export so API callers share the contracts catalogue. */
 export const LOAD_DAMAGED_REASONS = LOAD_DAMAGED_REASON_CODES;
 
 const list = <C extends string>(group: string, codes: readonly C[]) =>
