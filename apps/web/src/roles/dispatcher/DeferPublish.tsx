@@ -156,27 +156,43 @@ export function DeferPublish(props: Props) {
                 <small className="dispatch-muted">{t("pinnedHint")}</small>
               </div>
               {pinned.length === 0 && <p className="dispatch-muted">{t("noPinned")}</p>}
-              {pinned.map((order) => {
-                const row = rows.find((r) => r.order.id === order.id);
-                const trip = candidate.trips.find((r) => r.orderIds.includes(order.id));
-                return (
-                  <article key={order.id} className="dispatch-pinned-order" data-deferred={!!row}>
-                    <div className="dispatch-card-heading">
-                      <img src={row ? repeatIcon : passedIcon} alt="" />
-                      <div>
-                        <strong>{outletLabel(order.outletId)}</strong>
-                        <small>
-                          {order.displayId} · {order.brand}
-                        </small>
-                      </div>
-                      <Pill tone={row ? "danger" : "ok"}>
-                        {row ? t("deferredAgain") : t("planned", { trip: trip?.ref })}
-                      </Pill>
-                    </div>
-                    {row && note(row)}
-                  </article>
-                );
-              })}
+              {pinned.length > 0 && (
+                <details open={pinned.some((order) => rows.some((row) => row.order.id === order.id))}>
+                  <summary>
+                    {t("pinnedSummary", {
+                      planned: pinned.filter((order) => !rows.some((row) => row.order.id === order.id)).length,
+                      deferred: pinned.filter((order) => rows.some((row) => row.order.id === order.id)).length,
+                    })}
+                  </summary>
+                  {[...pinned]
+                    .sort(
+                      (a, b) =>
+                        Number(rows.some((row) => row.order.id === b.id)) -
+                        Number(rows.some((row) => row.order.id === a.id)),
+                    )
+                    .map((order) => {
+                      const row = rows.find((r) => r.order.id === order.id);
+                      const trip = candidate.trips.find((r) => r.orderIds.includes(order.id));
+                      return (
+                        <article key={order.id} className="dispatch-pinned-order" data-deferred={!!row}>
+                          <div className="dispatch-card-heading">
+                            <img src={row ? repeatIcon : passedIcon} alt="" />
+                            <div>
+                              <strong>{outletLabel(order.outletId)}</strong>
+                              <small>
+                                {order.displayId} · {order.brand}
+                              </small>
+                            </div>
+                            <Pill tone={row ? "danger" : "ok"}>
+                              {row ? t("deferredAgain") : t("planned", { trip: trip?.ref })}
+                            </Pill>
+                          </div>
+                          {row && note(row)}
+                        </article>
+                      );
+                    })}
+                </details>
+              )}
             </section>
             <section className="dispatch-card dispatch-deferrals-table">
               <h2>{t("deferredOrders")}</h2>
@@ -322,6 +338,7 @@ export function DeferPublish(props: Props) {
             {rows[0] && (
               <div className="dispatch-notice-preview">
                 <h3>{t("preview")}</h3>
+                <small>{t("previewHint")}</small>
                 <strong>{t("noticeTitle", { order: rows[0].order.displayId })}</strong>
                 <p>
                   {t("noticeBody", {
