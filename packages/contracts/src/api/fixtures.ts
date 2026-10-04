@@ -70,6 +70,66 @@ const fieldConflict = {
   note: "Mock resolution",
   resolvedAt: MOCK_TIME,
 } satisfies ApiDtoInput<"fieldConflict">;
+/** Historical field context for Driver R3; independent of the current run snapshot. */
+export const fieldConflictContextFixture = {
+  conflictId: MOCK_ID,
+  clientEventId: MOCK_ID,
+  kind: "FACT_ON_CANCELLED_STOP",
+  openedAt: MOCK_TIME,
+  state: "OPEN",
+  context: {
+    fact: {
+      ...clientEvent,
+      id: MOCK_ID,
+      receivedAt: MOCK_TIME,
+      disposition: "HELD",
+      type: "POD_CAPTURED",
+      actor: { userId: "mock-driver", role: "DRIVER" },
+      subject: { orderId: MOCK_ORDER_ID, tripId: r.trip.id, vehicleId: r.vehicle.id },
+      basedOnPlanVersion: 1,
+      clockOffsetMs: 1200,
+      payload: { receiverName: "Mock receiver", photoBlobRefs: [MOCK_ID], signatureBlobRef: MOCK_ID },
+    },
+    original: {
+      planVersion: 1,
+      tripId: r.trip.id,
+      tripDisplayId: r.trip.displayId,
+      vehicleId: r.vehicle.id,
+      stop: r.trip.stops[0]!,
+    },
+    changes: [
+      {
+        kind: "DEFERRED",
+        fromVersion: 1,
+        toVersion: 2,
+        at: MOCK_TIME,
+        from: { tripId: r.trip.id, vehicleId: r.vehicle.id },
+        to: null,
+        reasonCode: "TIME_BUDGET",
+        note: "Route shortened",
+      },
+    ],
+  },
+} satisfies ApiDtoInput<"fieldConflict">;
+export const fieldReassignedConflictContextFixture = {
+  ...fieldConflictContextFixture,
+  kind: "FACT_ON_REASSIGNED_STOP",
+  context: {
+    ...fieldConflictContextFixture.context,
+    changes: [
+      {
+        kind: "MOVED_VEHICLE",
+        fromVersion: 1,
+        toVersion: 2,
+        at: MOCK_TIME,
+        from: { tripId: r.trip.id, vehicleId: r.vehicle.id },
+        to: { tripId: "018f1234-5678-7890-abcd-ef1234567893", vehicleId: "018f1234-5678-7890-abcd-ef1234567894" },
+        reasonCode: null,
+        note: null,
+      },
+    ],
+  },
+} satisfies ApiDtoInput<"fieldConflict">;
 const issue = {
   id: MOCK_ID,
   orderId: MOCK_ORDER_ID,

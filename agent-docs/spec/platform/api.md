@@ -26,3 +26,20 @@ Schemas, route registration metadata and exported mock fixtures live in `package
 `/api/readyz` returns `{ status, checks: { database, migrations } }`: 200 with `status: ok` only when a DB query succeeds and all migration files shipped with the app have completed matching-checksum entries in `_prisma_migrations`. Missing runtime migration files, failed/pending migrations and unavailable/unconfigured databases return 503 with `status: unavailable`. Rolled-back attempts do not count as applied. `/api/healthz` reports process liveness independently. The production image must include `apps/api/prisma/migrations` alongside the API source (ADR 0023).
 
 The lifecycle-managed application Prisma client is available as app.prisma without a readiness query-time limit. A private probe client applies 2s connection/query/statement limits only to readiness checks. Its migration query explicitly uses the configured database schema, independent of the connection's default search path. Closing the server disconnects both clients.
+
+### Historical field conflict context (ADR 0044)
+
+`POST /api/sync/conflicts` accepts optional `includeContext: true`. This returns
+each owned held fact's original envelope and published stop/outlet, plus recorded
+order-specific removal, deferral or reassignment changes through conflict opening.
+Changes include before/after versions, publication time, minimal assignments and
+available deferral reason/note. Missing historical values are explicitly `null`;
+later replans do not rewrite the clash. Full plans and other users' facts are excluded.
+Legacy requests retain their existing response shape. Opted-in responses also carry
+`resetEpoch`, read coherently with history, outcomes and `feedHead`.
+
+Ownership follows the original fact, even after removal/reassignment and on another
+device for the same user. Lookup ignores feed cursor, so cold resume and missed hints
+recover context. History survives until demo reset; discard cached context when the
+epoch changes. Accepted outcomes still require a covering snapshot before pruning.
+See [ADR 0044](../../adr/0044-field-conflict-context.md).

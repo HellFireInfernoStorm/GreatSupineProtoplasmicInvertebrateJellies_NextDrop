@@ -80,7 +80,14 @@ export const fieldRoutes: FastifyPluginAsyncZod<FieldRouteDependencies> = async 
       },
       config: { policy: { action: "fieldConflicts", resourceResolver: collectionResource } },
     },
-    async (request) => heldOutcomes(prisma, fieldActor(request).userId, request.body.clientEventIds, deps.now()),
+    async (request) =>
+      heldOutcomes(
+        prisma,
+        fieldActor(request).userId,
+        request.body.clientEventIds,
+        deps.now(),
+        request.body.includeContext,
+      ),
   );
 
   app.post(

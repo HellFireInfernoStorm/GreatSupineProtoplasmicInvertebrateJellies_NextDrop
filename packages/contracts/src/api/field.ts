@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eventEnvelopeBase } from "../envelope";
+import { eventEnvelopeBase, eventEnvelopeSchema } from "../envelope";
 import { eventPayloadSchemas, type EventPayloadMap } from "../event-payload";
 import { errorCodeSchema } from "../errors";
 import { syncResultStatusSchema } from "../sync";
@@ -10,7 +10,7 @@ import { isoDateTime, localDate, uuidV7 } from "../primitives";
 import { count, cursorSchema, nonempty } from "./common";
 import { rulesConfigSchema } from "./planning-resources";
 import { reasonsResponseSchema } from "./reference";
-import { orderSchema, tripSchema, vehicleSchema } from "./resources";
+import { orderSchema, stopSchema, tripSchema, vehicleSchema } from "./resources";
 
 export const FIELD_EVENT_TYPES = [
   "PLAN_ACKNOWLEDGED",
@@ -177,14 +177,46 @@ export const heartbeatResponseSchema = z.strictObject({
   resetEpoch: count,
 });
 /**
- * The device's own held facts, looked up by clientEventId (ADR 0042). Unknown, foreign or not-held IDs are omitted.
+ * The device's own held facts, looked up by clientEventId (ADR 0043). Unknown, foreign or not-held IDs are omitted.
  */
-export const fieldConflictsRequestSchema = z.strictObject({ clientEventIds: z.array(uuidV7).min(1).max(100) });
+export const fieldConflictsRequestSchema = z.strictObject({
+  clientEventIds: z.array(uuidV7).min(1).max(100),
+  includeContext: z.boolean().optional(),
+});
+export const fieldConflictAssignmentSchema = z.strictObject({
+  tripId: uuidV7,
+  vehicleId: uuidV7,
+});
+export const fieldConflictContextSchema = z.strictObject({
+  fact: eventEnvelopeSchema,
+  original: z
+    .strictObject({
+      planVersion: count,
+      tripId: uuidV7,
+      tripDisplayId: nonempty,
+      vehicleId: uuidV7,
+      stop: stopSchema,
+    })
+    .nullable(),
+  changes: z.array(
+    z.strictObject({
+      kind: z.enum(["REMOVED", "DEFERRED", "MOVED_VEHICLE", "MOVED_TRIP"]),
+      fromVersion: count,
+      toVersion: count,
+      at: isoDateTime,
+      from: fieldConflictAssignmentSchema.nullable(),
+      to: fieldConflictAssignmentSchema.nullable(),
+      reasonCode: z.string().nullable(),
+      note: z.string().nullable(),
+    }),
+  ),
+});
 const fieldConflictBase = z.strictObject({
   conflictId: uuidV7,
   clientEventId: uuidV7,
   kind: conflictKindSchema,
   openedAt: isoDateTime,
+  context: fieldConflictContextSchema.optional(),
 });
 export const fieldConflictSchema = z.discriminatedUnion("state", [
   fieldConflictBase.extend({ state: z.literal("OPEN") }),
@@ -197,6 +229,7 @@ export const fieldConflictSchema = z.discriminatedUnion("state", [
 ]);
 export const fieldConflictsResponseSchema = z.strictObject({
   items: z.array(fieldConflictSchema),
+  resetEpoch: count.optional(),
   serverTime: isoDateTime,
   /** Confirmation boundary: a snapshot whose feedCursor is at or past this reflects every listed resolution. */
   feedHead: cursorSchema,
