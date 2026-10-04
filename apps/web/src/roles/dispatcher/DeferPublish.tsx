@@ -1,5 +1,4 @@
 import { useState, useSyncExternalStore } from "react";
-import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { REASON_CODES } from "@nextdrop/rules";
 import type { ApiDto } from "@nextdrop/contracts";
@@ -118,12 +117,6 @@ export function DeferPublish(props: Props) {
   }
   return (
     <>
-      <div className="dispatch-deferral-toolbar">
-        <Pill tone={complete === rows.length ? "ok" : "warn"}>{t("reasonsSet", { complete, total: rows.length })}</Pill>
-        <Link className="nd-button" data-variant="secondary" to="/dispatch/plan">
-          {t("back")}
-        </Link>
-      </div>
       {!!error && (
         <Banner
           tone="warn"

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Button, Banner, Toast } from "../../ui";
 import { callApi, ApiRequestError } from "../../lib/api";
@@ -221,7 +221,12 @@ function Editor({ queries, depot, date }: { queries: PlanningQueries; depot: str
           <ValidationChecks result={snapshot.validation} serverVerified />
         </section>
       )}
-      <div className="dispatch-page-actions">
+      <div className="dispatch-page-actions" data-defer={page === "defer"}>
+        {page === "defer" && (
+          <Link className="nd-button" data-variant="secondary" to="/dispatch/plan">
+            {t("back", { ns: "dispatcher/deferrals" })}
+          </Link>
+        )}
         <Button
           variant="secondary"
           disabled={snapshot.busy || editing || publication.busy || publication.uncertain}
