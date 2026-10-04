@@ -10,6 +10,7 @@ import type { Readiness } from "./lib/readiness";
 import { registerWebApp } from "./lib/web-app";
 import { registerBlobs } from "./modules/blobs";
 import { authConfigFromEnv, registerAuth, type AuthConfig } from "./modules/auth";
+import { registerConflicts } from "./modules/conflicts";
 import { demoRoutes } from "./modules/demo";
 import { feedRoutes } from "./modules/feed";
 import { registerField } from "./modules/field";
@@ -87,6 +88,7 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
   // Field facts are received on business time too (receivedAt, confirmed-after-sync, serverTime).
   await registerField(app, { prisma, now: clock.now });
   await registerShortfalls(app, { prisma, now: clock.now });
+  await registerConflicts(app, { prisma, now: clock.now });
   await registerBlobs(app, { prisma });
   await registerReference(app, { prisma });
   // Demo tooling needs the database: the clock offset, the tick and the reset all live there.
