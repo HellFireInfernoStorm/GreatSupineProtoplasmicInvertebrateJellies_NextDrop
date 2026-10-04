@@ -1,10 +1,28 @@
-import { beforeEach, afterEach, describe, it, expect } from "vitest";
+import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
+import { createElement, type ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { apiVariantFixtures, type FieldSnapshot } from "@nextdrop/contracts";
 import { uuidv7 } from "uuidv7";
-import { OfflineDatabase } from "../../sync/database";
+import { OfflineDatabase, type FieldReceipt } from "../../sync/database";
 import { FieldRepository } from "../../sync/repository";
-import { loadIntents, loadOrder, tripGate, projectDrafts, loadTotals } from "./model";
-import { loadKey, saveDraft, undoDraft, promoteDraft, queueReady } from "./drafts";
+import { loadIntents, loadOrder, tripGate, projectDrafts, loadTotals, latestReceipt, canRetry } from "./model";
+import { loadKey, saveDraft, undoDraft, promoteDraft, queueReady, readyKey } from "./drafts";
+import { Checklist } from "./Checklist";
+import { Ready } from "./Ready";
+import type { LoaderData } from "./data";
+import type * as LoaderParts from "./parts";
+import type * as SessionModule from "../../lib/session";
+import "../../i18n";
+vi.mock("../../lib/session", async (importOriginal) => ({
+  ...(await importOriginal<typeof SessionModule>()),
+  useSession: () => ({ user: { id: "loader-1" } }),
+}));
+vi.mock("./parts", async (importOriginal) => ({
+  ...(await importOriginal<typeof LoaderParts>()),
+  Frame: ({ children, footer }: { children: ReactNode; footer?: ReactNode }) =>
+    createElement("main", null, children, footer),
+}));
 let db: OfflineDatabase;
 let repository: FieldRepository;
 const userId = "loader-1";
@@ -81,13 +99,130 @@ async function stage(kind: "loaded" | "short" | "damaged", quantity = 0) {
   return { draft, trip, stop, value, state };
 }
 describe("Loader durable recording", () => {
+  it("restores the actual checklist and hand-over controls after a rejected attempt", async () => {
+    const { draft, value, trip, stop } = await stage("loaded");
+    await promoteDraft(repository, draft.key, userId, 7000);
+    await db.outbox.toCollection().modify({ state: "held" });
+    const data: LoaderData = {
+      snapshot: value,
+      states: { [stop.order.id]: (await repository.projectOrder(stop.order.id, userId))! },
+      events: await db.outbox.toArray(),
+      receipts: [(await db.value<FieldReceipt>(`fieldReceipt:${draft.receipt.id}`))!],
+      blobs: [],
+      drafts: [],
+      baseline: value.planVersion,
+      loaded: true,
+      error: false,
+    };
+    const render = (component: typeof Checklist | typeof Ready, path: string) =>
+      renderToStaticMarkup(
+        createElement(
+          MemoryRouter,
+          { initialEntries: [`/loader/trips/${trip.id}${path}`] },
+          createElement(
+            Routes,
+            null,
+            createElement(Route, { path: `/loader/trips/:tripId${path}`, element: createElement(component, { data }) }),
+          ),
+        ),
+      );
+    const button = (html: string, text: string) =>
+      [...html.matchAll(/<button\b[^>]*>[\s\S]*?<\/button>/g)].find((match) => match[0].includes(text))?.[0];
+    expect(button(render(Checklist, ""), ">Loaded<")).toContain("disabled");
+    await db.outbox.toCollection().modify({ state: "rejected" });
+    data.events = await db.outbox.toArray();
+    expect(button(render(Checklist, ""), ">Loaded<")).not.toContain("disabled");
+    expect(render(Checklist, "")).toContain("Not accepted · check connection details");
+    stop.order.lines[0]!.qtyLoaded = 10;
+    await repository.replaceSnapshot(value, userId);
+    await queueReady(repository, userId, value, trip.id);
+    const rows = await db.meta.where("key").startsWith("fieldReceipt:").toArray();
+    data.receipts = rows.map((r) => r.value as FieldReceipt);
+    data.events = await db.outbox.toArray();
+    data.states[stop.order.id] = (await repository.projectOrder(stop.order.id, userId))!;
+    expect(button(render(Ready, "/ready"), "nd-hold")).toBeUndefined();
+    await db.outbox
+      .toCollection()
+      .filter((e) => e.type === "TRIP_READY")
+      .modify({ state: "rejected" });
+    data.events = await db.outbox.toArray();
+    expect(button(render(Ready, "/ready"), "nd-hold")).toBeDefined();
+    expect(button(render(Ready, "/ready"), "nd-hold")).not.toContain("disabled");
+  });
+  it.each(["rejected", "failed"] as const)(
+    "allows a new load attempt after %s while preserving its history",
+    async (state) => {
+      const { draft, value, stop } = await stage("loaded");
+      const prefix = loadKey(userId, value, stop.order.id, stop.order.lines[0]!.id);
+      await promoteDraft(repository, draft.key, userId, 7000);
+      await db.outbox.toCollection().modify({ state });
+      const oldReceipt = (await db.value<FieldReceipt>(`fieldReceipt:${draft.receipt.id}`))!;
+      expect(canRetry(oldReceipt, await db.outbox.toArray())).toBe(true);
+      expect((await repository.projectOrder(stop.order.id, userId))!.loaded[0]!.qtyLoaded).toBe(0);
+      const retryInput = { ...draft, receipt: { ...draft.receipt, id: prefix } };
+      const retry = await saveDraft(repository, retryInput, 8000);
+      expect(retry.receipt.id).not.toBe(draft.receipt.id);
+      await expect(saveDraft(repository, retryInput, 8001)).rejects.toThrow("Already recorded");
+      await promoteDraft(repository, retry.key, userId, 14000);
+      const rows = await db.meta.where("key").startsWith("fieldReceipt:").toArray();
+      const receipts = rows.map((r) => r.value as FieldReceipt);
+      expect(receipts).toHaveLength(2);
+      expect(latestReceipt(receipts, prefix)?.id).toBe(retry.receipt.id);
+      expect(canRetry(latestReceipt(receipts, prefix)!, await db.outbox.toArray())).toBe(false);
+      expect((await repository.projectOrder(stop.order.id, userId))!.loaded[0]!.qtyLoaded).toBe(10);
+      expect(
+        (await db.outbox.toArray()).find((e) => e.clientEventId === oldReceipt.events[0]!.clientEventId)?.state,
+      ).toBe(state);
+    },
+  );
+  it.each(["rejected", "failed"] as const)(
+    "allows another hand-over after %s but prevents two live attempts",
+    async (state) => {
+      const { draft, value, trip } = await stage("loaded");
+      await promoteDraft(repository, draft.key, userId, 7000);
+      await queueReady(repository, userId, value, trip.id);
+      await db.outbox
+        .where("state")
+        .equals("pending")
+        .filter((e) => e.type === "TRIP_READY")
+        .modify({ state });
+      await queueReady(repository, userId, value, trip.id);
+      await expect(queueReady(repository, userId, value, trip.id)).rejects.toThrow("Already recorded");
+      const events = (await db.outbox.toArray()).filter((e) => e.type === "TRIP_READY");
+      expect(events.map((e) => e.state)).toEqual([state, "pending"]);
+      const receipts = (await db.meta.where("key").startsWith("fieldReceipt:").toArray()).map(
+        (r) => r.value as FieldReceipt,
+      );
+      expect(latestReceipt(receipts, readyKey(userId, value, trip.id))?.events[0]!.clientEventId).toBe(
+        events[1]!.clientEventId,
+      );
+    },
+  );
+  it("keeps partial and held batches locked and recognizes legacy receipts", async () => {
+    const { draft, value, stop } = await stage("short", 2);
+    await promoteDraft(repository, draft.key, userId, 7000);
+    const prefix = loadKey(userId, value, stop.order.id, stop.order.lines[0]!.id);
+    const original = (await db.value<FieldReceipt>(`fieldReceipt:${draft.receipt.id}`))!;
+    await db.meta.delete(`fieldReceipt:${draft.receipt.id}`);
+    await db.set(`fieldReceipt:${prefix}`, { ...original, id: prefix });
+    const receipt = { ...original, id: prefix };
+    for (const state of ["pending", "sending", "held", "acked"] as const) {
+      await db.outbox.toCollection().modify({ state: "rejected" });
+      await db.outbox.update(original.events[0]!.clientEventId, { state });
+      expect(canRetry(receipt, await db.outbox.toArray())).toBe(false);
+      await expect(
+        saveDraft(repository, { ...draft, receipt: { ...draft.receipt, id: prefix } }, 8000),
+      ).rejects.toThrow("Already recorded");
+    }
+    expect(latestReceipt([receipt], prefix)?.id).toBe(prefix);
+  });
   it("hand-over rechecks saved quantities and drafts, then records exactly one durable ready receipt", async () => {
     const { draft, value, trip } = await stage("loaded");
     await expect(queueReady(repository, userId, value, trip.id)).rejects.toThrow("Trip not ready");
     expect(await db.outbox.count()).toBe(0);
     await promoteDraft(repository, draft.key, userId, 7000);
     await queueReady(repository, userId, value, trip.id);
-    await expect(queueReady(repository, userId, value, trip.id)).rejects.toThrow("Already saved");
+    await expect(queueReady(repository, userId, value, trip.id)).rejects.toThrow("Already recorded");
     const events = await db.outbox.toArray();
     expect(events.filter((e) => e.type === "TRIP_READY")).toHaveLength(1);
     expect(events.find((e) => e.type === "TRIP_READY")?.subject).toEqual({
@@ -95,7 +230,10 @@ describe("Loader durable recording", () => {
       vehicleId: trip.vehicleId,
     });
     expect(
-      await db.value(`fieldReceipt:ready:${userId}:${value.resetEpoch}:${value.scope.date}:${trip.id}`),
+      latestReceipt(
+        (await db.meta.where("key").startsWith("fieldReceipt:").toArray()).map((r) => r.value as FieldReceipt),
+        readyKey(userId, value, trip.id),
+      ),
     ).toBeDefined();
   });
   it("hand-over rejects stale plans, other owners and unresolved shorts without recording a ready fact", async () => {
@@ -128,7 +266,7 @@ describe("Loader durable recording", () => {
     expect(tripGate(trip, { [state.orderId]: saved }).ready).toBe(true);
   });
   it("Undo removes only its unsent draft; promotion retains original capture time and rejects duplicate saves", async () => {
-    const { draft, state, trip } = await stage("loaded");
+    const { draft, state, trip, value } = await stage("loaded");
     expect(tripGate(trip, { [state.orderId]: projectDrafts(state, [draft]) }).ready).toBe(true);
     expect(await db.outbox.count()).toBe(0);
     expect(await promoteDraft(repository, draft.key, userId, 5999)).toBe(false);
@@ -143,7 +281,16 @@ describe("Loader durable recording", () => {
     expect(events[0]!.capturedAt).toBe(draft.capturedAt);
     expect(events[0]!.clockOffsetMs).toBe(60000);
     expect(await undoDraft(repository, draft.key, userId, 7000)).toBe(false);
-    await expect(saveDraft(repository, draft, 8000)).rejects.toThrow("Already recorded");
+    await expect(
+      saveDraft(
+        repository,
+        {
+          ...draft,
+          receipt: { ...draft.receipt, id: loadKey(userId, value, state.orderId, trip.stops[0]!.order.lines[0]!.id) },
+        },
+        8000,
+      ),
+    ).rejects.toThrow("Already recorded");
   });
   it("short reports confirm the remaining load but wait for dispatcher approval", async () => {
     const { draft, state, trip } = await stage("short", 4);

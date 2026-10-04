@@ -9,7 +9,16 @@ import { compressPhoto } from "../../sync/blobs";
 import { Banner, Button, QuantityStepper, Sheet } from "../../ui";
 import { Pill } from "../../ui/StatusPill";
 import type { LoaderData } from "./data";
-import { loadOrder, loadIntents, orderGate, type Stop, type Line } from "./model";
+import {
+  loadOrder,
+  loadIntents,
+  orderGate,
+  latestReceipt,
+  receiptMatches,
+  canRetry,
+  type Stop,
+  type Line,
+} from "./model";
 import { saveDraft, loadKey, undoDraft } from "./drafts";
 import { Frame, TripSummary, Back, Empty, Icon, ReceiptStatus } from "./parts";
 import { PlanReview } from "./Review";
@@ -264,13 +273,13 @@ export function Checklist({ data }: { data: LoaderData }) {
                     ? (orderGate(stop, state).incompleteLines.find((l) => l.lineId === line.id)?.missing ?? 0)
                     : line.qtyOrdered;
                   const id = loadKey(user.id, snapshot, stop.order.id, line.id);
-                  const receipt = data.receipts.find((r) => r.id === id);
-                  const draft = data.drafts.find((d) => d.receipt.id === id);
+                  const receipt = latestReceipt(data.receipts, id);
+                  const draft = data.drafts.find((d) => receiptMatches(d.receipt, id));
                   const locked =
                     !editable ||
                     busy ||
                     !!draft ||
-                    !!receipt ||
+                    (!!receipt && !canRetry(receipt, data.events)) ||
                     !state ||
                     !(state.status === "PLANNED" || state.status === "LOADED") ||
                     !!state.pendingReversal;

@@ -8,6 +8,24 @@ import {
 import { loadDamagedReasonCodeSchema, type ApiDto, type TripDto } from "@nextdrop/contracts";
 import type { EventIntent } from "../../sync/repository";
 import type { LoadDraft } from "./drafts";
+import type { FieldReceipt, OutboxEntry } from "../../sync/database";
+export const receiptMatches = (receipt: Pick<FieldReceipt, "id">, prefix: string) =>
+  receipt.id === prefix || receipt.id.startsWith(`${prefix}:`);
+export function latestReceipt(receipts: FieldReceipt[], prefix: string): FieldReceipt | undefined {
+  return receipts
+    .filter((r) => receiptMatches(r, prefix))
+    .sort((a, b) => (b.events[0]?.deviceSeq ?? -1) - (a.events[0]?.deviceSeq ?? -1))[0];
+}
+/** Retry only a wholly rejected/failed attempt; pending, held or accepted facts remain immutable. */
+export function canRetry(receipt: FieldReceipt, events: OutboxEntry[]): boolean {
+  return (
+    receipt.events.length > 0 &&
+    receipt.events.every((saved) => {
+      const event = events.find((e) => e.clientEventId === saved.clientEventId) ?? saved;
+      return event.state === "rejected" || event.state === "failed";
+    })
+  );
+}
 export type Stop = ApiDto<"stop">;
 export type Line = Stop["order"]["lines"][number];
 export const loadOrder = (trip: TripDto) => [...trip.stops].sort((a, b) => b.seq - a.seq);

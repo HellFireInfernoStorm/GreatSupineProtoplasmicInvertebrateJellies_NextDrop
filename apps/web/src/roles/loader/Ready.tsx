@@ -4,11 +4,11 @@ import { useParams } from "react-router";
 import { useSession } from "../../lib/session";
 import { fieldRepository } from "../../sync";
 import { Banner, HoldToConfirm } from "../../ui";
-import { tripGate, orderGate, loadTotals } from "./model";
+import { tripGate, orderGate, loadTotals, latestReceipt, canRetry } from "./model";
 import { Frame, TripSummary, Back, Empty, ReceiptStatus } from "./parts";
 import { PlanReview } from "./Review";
 import type { LoaderData } from "./data";
-import { queueReady } from "./drafts";
+import { queueReady, readyKey } from "./drafts";
 export function Ready({ data }: { data: LoaderData }) {
   const { t } = useTranslation("loader/dock");
   const { user } = useSession();
@@ -27,9 +27,10 @@ export function Ready({ data }: { data: LoaderData }) {
   const gate = tripGate(trip, data.states);
   const totals = loadTotals(trip, data.states);
   const checked = trip.stops.filter((s) => !orderGate(s, data.states[s.order.id]!).incompleteLines.length).length;
-  const record = data.receipts.find((r) => r.kind === "TRIP_READY" && r.tripId === trip.id);
+  const record = latestReceipt(data.receipts, readyKey(user.id, snapshot, trip.id));
+  const retryable = !record || canRetry(record, data.events);
   const drafts = data.drafts.some((d) => d.receipt.tripId === trip.id);
-  const ready = gate.ready && !drafts && !record && trip.stops.length > 0 && trip.status === "PLANNED";
+  const ready = gate.ready && !drafts && retryable && trip.stops.length > 0 && trip.status === "PLANNED";
   const markReady = async () => {
     if (!ready || busy || snapshot.planVersion === null) return;
     setBusy(true);
@@ -46,12 +47,15 @@ export function Ready({ data }: { data: LoaderData }) {
     <Frame
       data={data}
       footer={
-        record ? (
+        record && !retryable ? (
           <ReceiptStatus receipt={record} data={data} />
         ) : (
-          <HoldToConfirm disabled={!ready || busy} onConfirm={() => void markReady()}>
-            {t("holdReady")}
-          </HoldToConfirm>
+          <>
+            {record && <ReceiptStatus receipt={record} data={data} />}
+            <HoldToConfirm disabled={!ready || busy} onConfirm={() => void markReady()}>
+              {t("holdReady")}
+            </HoldToConfirm>
+          </>
         )
       }
     >

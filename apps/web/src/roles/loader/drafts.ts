@@ -1,13 +1,24 @@
 import type { FieldSnapshot } from "@nextdrop/contracts";
 import { uuidv7 } from "uuidv7";
 import type { OrderState } from "@nextdrop/rules";
-import { tripGate } from "./model";
+import { tripGate, receiptMatches, latestReceipt, canRetry } from "./model";
 import type { FieldReceipt, QueuedBlob } from "../../sync/database";
 import type { EventIntent, FieldRepository } from "../../sync/repository";
 export const loaderPlanKey = (userId: string, snapshot: FieldSnapshot) =>
   `loaderPlan:${userId}:${snapshot.resetEpoch}:${snapshot.scope.date}:${snapshot.role === "LOADER" ? snapshot.scope.depot : ""}`;
 export const loadKey = (userId: string, snapshot: FieldSnapshot, orderId: string, lineId: string) =>
   `load:${loaderPlanKey(userId, snapshot)}:${orderId}:${lineId}`;
+export const readyKey = (userId: string, snapshot: FieldSnapshot, tripId: string) =>
+  `ready:${userId}:${snapshot.resetEpoch}:${snapshot.scope.date}:${tripId}`;
+async function assertAvailable(repository: FieldRepository, prefix: string) {
+  const db = repository.db;
+  const rows = await db.meta.where("key").startsWith(`fieldReceipt:${prefix}`).toArray();
+  const receipt = latestReceipt(
+    rows.map((r) => r.value as FieldReceipt),
+    prefix,
+  );
+  if (receipt && !canRetry(receipt, await db.outbox.toArray())) throw new Error("Already recorded");
+}
 export interface LoadDraft {
   label: string;
   key: string;
@@ -25,8 +36,13 @@ export async function saveDraft(
   now = Date.now(),
 ): Promise<LoadDraft> {
   const db = repository.db;
-  const value = { ...draft, key: `loaderDraft:${uuidv7()}`, expiresAt: now + 5000 };
-  await db.transaction("rw", db.meta, db.runs, async () => {
+  const value = {
+    ...draft,
+    receipt: { ...draft.receipt, id: `${draft.receipt.id}:${uuidv7()}` },
+    key: `loaderDraft:${uuidv7()}`,
+    expiresAt: now + 5000,
+  };
+  await db.transaction("rw", db.meta, db.runs, db.outbox, async () => {
     const snapshot = await repository.snapshot(draft.receipt.userId);
     if (
       !snapshot ||
@@ -40,10 +56,8 @@ export async function saveDraft(
     )
       throw new Error("Plan changed before save");
     const drafts = await db.meta.where("key").startsWith("loaderDraft:").toArray();
-    if (
-      (await db.value(`fieldReceipt:${draft.receipt.id}`)) ||
-      drafts.some((r) => (r.value as LoadDraft).receipt.id === draft.receipt.id)
-    )
+    await assertAvailable(repository, draft.receipt.id);
+    if (drafts.some((r) => receiptMatches((r.value as LoadDraft).receipt, draft.receipt.id)))
       throw new Error("Already recorded");
     await db.set(value.key, value);
   });
@@ -125,6 +139,8 @@ export async function queueReady(
       !tripGate(currentTrip, states).ready
     )
       throw new Error("Trip not ready");
+    const prefix = readyKey(userId, snapshot, tripId);
+    await assertAvailable(repository, prefix);
     await repository.enqueueBatch(
       [
         {
@@ -135,7 +151,7 @@ export async function queueReady(
         },
       ],
       {
-        id: `ready:${userId}:${snapshot.resetEpoch}:${snapshot.scope.date}:${tripId}`,
+        id: `${prefix}:${uuidv7()}`,
         userId,
         resetEpoch: snapshot.resetEpoch,
         date: snapshot.scope.date,
