@@ -58,6 +58,20 @@ describe("shared display kit", () => {
     expect(html).toContain('aria-valuetext="0.3 / 12 m³"');
     expect(html).not.toContain("0.30000000000000004 /");
   });
+  it("gives a summary's capacity, share and headroom instead of repeating the used amount", () => {
+    const spare = render(
+      h(CapacityBar, { label: "Weight", used: 0.01, capacity: 5, unit: "t", presentation: "summary" }),
+    );
+    expect(spare).toContain("<strong>0.01 t</strong>");
+    expect(spare).toContain("<small>of 5 t · 0% · 4.99 t spare</small>");
+    expect(spare).toContain('aria-valuetext="0.01 / 5 t"');
+    const over = render(
+      h(CapacityBar, { label: "Chilled", used: 13.2, capacity: 12, unit: "m³", presentation: "summary" }),
+    );
+    expect(over).toContain("<small>of 12 m³ · 110% · 1.2 m³ over</small>");
+    const unknown = render(h(CapacityBar, { label: "Loaded", used: 3, unit: "kg", presentation: "summary" }));
+    expect(unknown).toContain("<small>Capacity unavailable</small>");
+  });
   it("omits today's day while retaining the day on older field facts", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-10-04T03:00:00Z"));

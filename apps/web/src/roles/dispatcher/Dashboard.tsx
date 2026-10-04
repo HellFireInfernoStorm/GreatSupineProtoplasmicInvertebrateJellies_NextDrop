@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { CapacityBar } from "../../ui";
 import { formatDay } from "../../lib/time";
-import type { DraftData, Outlet, Vehicle } from "./planning";
+import { demandVsCapacity, type DraftData, type Outlet, type Vehicle } from "./planning";
 
 interface Props {
   day: ApiDto<"dayResponse">;
@@ -17,8 +17,7 @@ interface Props {
 export function Dashboard({ day, data, vehicles, outlets, workshop, runs, exceptions }: Props) {
   const { t } = useTranslation("dispatcher/planning");
   const available = vehicles.filter((v) => !workshop.some((w) => w.id === v.id));
-  const weight = day.queue.reduce((n, o) => n + o.weightG, 0) / 1000;
-  const chilled = day.queue.filter((o) => o.tempRequirement === "chilled").reduce((n, o) => n + o.volumeL, 0) / 1000;
+  const demand = demandVsCapacity(day.queue, available);
   const statusCount = (status: string) =>
     runs
       ? runs.items
@@ -67,26 +66,28 @@ export function Dashboard({ day, data, vehicles, outlets, workshop, runs, except
         <section className="dispatch-card">
           <CapacityBar
             label={t("weightFleet")}
-            used={weight}
-            capacity={available.reduce((n, v) => n + v.weightCapG, 0) / 1000}
-            unit={t("units.kg")}
+            used={demand.weightT}
+            capacity={demand.fleetWeightT}
+            unit={t("units.t")}
             tone="ok"
+            presentation="summary"
           />
         </section>
         <section className="dispatch-card">
           <CapacityBar
             label={t("chilledCapacity")}
-            used={chilled}
-            capacity={available.filter((v) => v.temp === "reefer").reduce((n, v) => n + v.volumeCapL, 0) / 1000}
+            used={demand.chilledM3}
+            capacity={demand.reeferM3}
             unit={t("units.m3")}
+            presentation="summary"
           />
         </section>
         <section className="dispatch-card">
           <h3>{t("tripsPerVehicle")}</h3>
           <strong>
             {t("vehicleTripCount", {
-              vehicles: new Set(data.trips.map((trip) => trip.vehicleId)).size,
-              trips: data.trips.length,
+              vehicles: t("vehicleCount", { count: new Set(data.trips.map((trip) => trip.vehicleId)).size }),
+              trips: t("tripCount", { count: data.trips.length }),
             })}
           </strong>
         </section>

@@ -47,6 +47,8 @@
   },
   "capacity": {
     "value": "{{used}} / {{capacity}} {{unit}}",
+    "summary": "of {{capacity}} {{unit}} · {{percent}} · {{remaining}} {{unit}} spare",
+    "summaryOver": "of {{capacity}} {{unit}} · {{percent}} · {{remaining}} {{unit}} over",
     "unavailable": "Capacity unavailable"
   },
   "trip": {
