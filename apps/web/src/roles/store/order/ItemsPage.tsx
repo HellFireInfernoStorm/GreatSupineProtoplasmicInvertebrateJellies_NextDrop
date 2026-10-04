@@ -17,7 +17,7 @@ const matches = (product: Product, search: string) =>
 function Search({ value, onChange, brand }: { value: string; onChange: (value: string) => void; brand: string }) {
   const { t } = useTranslation("store/order");
   return (
-    <label className="flex h-11 flex-1 items-center gap-3 rounded-xl bg-surface-2 px-4 text-faint">
+    <label className="flex h-11 shrink-0 items-center gap-3 rounded-xl bg-surface-2 px-4 text-faint lg:flex-1">
       <Icon name="search" />
       <span className="sr-only">{t("catalogue.search", { brand })}</span>
       <input
@@ -25,7 +25,7 @@ function Search({ value, onChange, brand }: { value: string; onChange: (value: s
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={t("catalogue.search", { brand })}
-        className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-faint"
+        className="h-full min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-faint"
       />
     </label>
   );
@@ -61,7 +61,7 @@ function ProductList({
               <Icon name={qty > 0 ? "checkCircle" : "bag"} />
             </span>
             <p className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold">{productLabel(product)}</span>
+              <span className="block text-sm font-semibold break-words">{productLabel(product)}</span>
               <span className="text-xs text-muted">
                 {last
                   ? t("catalogue.sku", { sku: product.sku, weekday, qty: last })
@@ -72,7 +72,7 @@ function ProductList({
             {desktop && (
               <Button
                 variant={qty > 0 ? "secondary" : "primary"}
-                className="w-24"
+                className="w-24 shrink-0"
                 icon={<Icon name={qty > 0 ? "checkCircle" : "plus"} />}
                 disabled={qty > 0}
                 // Start from what the outlet took last week, or one.
@@ -145,7 +145,8 @@ export function ItemsPage() {
         <h1 className="mt-2 text-3xl leading-[1.25] font-bold tracking-[-0.01em]">{t("catalogue.title")}</h1>
         <p className="mt-2 text-sm text-muted">{t("catalogue.intro", { day, brand })}</p>
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_392px] items-start gap-6">
+      {/* Two columns only where both fit: beside the sidebar that takes 1280 px. Narrower, the summary goes below. */}
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_392px]">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <Search value={search} onChange={setSearch} brand={brand} />

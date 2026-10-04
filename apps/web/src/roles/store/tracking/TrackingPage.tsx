@@ -112,13 +112,15 @@ function Hero({ row, desktop }: { row: Row; desktop: boolean }) {
   const temp = tDeliveries(`temp.${order.tempRequirement}`);
   const eta = order.assignment;
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-panel p-4 text-on-panel lg:flex-row lg:items-center lg:gap-10 lg:p-7">
+    <section className="flex flex-col gap-4 rounded-2xl bg-panel p-4 text-on-panel lg:gap-6 lg:p-7 xl:flex-row xl:items-center xl:gap-10">
       <div className="flex shrink-0 flex-col gap-3">
         <div className="flex items-center justify-between gap-3 lg:justify-start">
           <p className="text-[11px] font-semibold tracking-[0.06em] text-on-panel-muted uppercase">
             {t("tracking.next", { day: day(order.currentDate) })}
           </p>
-          <StatusPill status={order.status} />
+          <span className="shrink-0 whitespace-nowrap">
+            <StatusPill status={order.status} />
+          </span>
         </div>
         <p className="text-3xl leading-[1.2] font-bold lg:text-4xl">
           {eta
@@ -210,56 +212,62 @@ export function OrdersTable({ rows }: { rows: readonly Row[] }) {
   const text = useRowText();
   const head = "px-5 py-3 text-left text-xs font-semibold text-muted";
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-      <table className="w-full text-sm" aria-label={t("tracking.table.label")}>
-        <thead className="border-b border-border bg-surface-2">
-          <tr>
-            {(["order", "type", "date", "eta", "status", "note"] as const).map((column) => (
-              <th key={column} scope="col" className={head}>
-                {t(`tracking.table.${column}`)}
-              </th>
-            ))}
-            <th scope="col" className={head} />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {rows.map((row) => {
-            const cell = text(row);
-            return (
-              <tr key={row.order.id}>
-                <td className="px-5 py-4 font-mono font-semibold">{row.order.displayId}</td>
-                <td className="px-5 py-4">
-                  <span className="flex items-center gap-2">
-                    <TempIcon order={row.order} className="size-4" />
-                    {cell.temp}
-                  </span>
-                </td>
-                <td className="px-5 py-4">
-                  {cell.date}
-                  {cell.was && <span className="block text-xs text-muted">{cell.was}</span>}
-                </td>
-                <td className="px-5 py-4">
-                  {cell.when}
-                  {cell.whenSub && <span className="block text-xs text-muted">{cell.whenSub}</span>}
-                </td>
-                <td className="px-5 py-4">
-                  <StatusPill status={row.order.status} />
-                </td>
-                <td className="px-5 py-4 text-xs text-muted">{cell.note}</td>
-                <td className="px-5 py-4 text-right">
-                  <Link
-                    to={`/store/orders/${row.order.id}`}
-                    className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-sm font-semibold"
-                  >
-                    {row.order.status === "DEFERRED" ? t("tracking.deferred.view") : t("tracking.timelineShort")}
-                  </Link>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <>
+      {/* Seven columns need the width of a 1280 px window. Narrower, the same orders show as the list. */}
+      <div className="xl:hidden">
+        <OrdersList rows={rows} />
+      </div>
+      <div className="hidden overflow-hidden rounded-2xl border border-border bg-surface xl:block">
+        <table className="w-full text-sm" aria-label={t("tracking.table.label")}>
+          <thead className="border-b border-border bg-surface-2">
+            <tr>
+              {(["order", "type", "date", "eta", "status", "note"] as const).map((column) => (
+                <th key={column} scope="col" className={head}>
+                  {t(`tracking.table.${column}`)}
+                </th>
+              ))}
+              <th scope="col" className={head} />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {rows.map((row) => {
+              const cell = text(row);
+              return (
+                <tr key={row.order.id}>
+                  <td className="px-5 py-4 font-mono font-semibold">{row.order.displayId}</td>
+                  <td className="px-5 py-4">
+                    <span className="flex items-center gap-2">
+                      <TempIcon order={row.order} className="size-4" />
+                      {cell.temp}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    {cell.date}
+                    {cell.was && <span className="block text-xs text-muted">{cell.was}</span>}
+                  </td>
+                  <td className="px-5 py-4">
+                    {cell.when}
+                    {cell.whenSub && <span className="block text-xs text-muted">{cell.whenSub}</span>}
+                  </td>
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <StatusPill status={row.order.status} />
+                  </td>
+                  <td className="px-5 py-4 text-xs text-muted">{cell.note}</td>
+                  <td className="px-5 py-4 text-right">
+                    <Link
+                      to={`/store/orders/${row.order.id}`}
+                      className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-sm font-semibold whitespace-nowrap"
+                    >
+                      {row.order.status === "DEFERRED" ? t("tracking.deferred.view") : t("tracking.timelineShort")}
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
@@ -285,7 +293,9 @@ export function OrdersList({ rows }: { rows: readonly Row[] }) {
                   {[cell.temp, cell.date, cell.when, cell.whenSub].filter(Boolean).join(" · ")}
                 </span>
               </span>
-              <StatusPill status={row.order.status} />
+              <span className="shrink-0 whitespace-nowrap">
+                <StatusPill status={row.order.status} />
+              </span>
               <Icon name="chevronRight" className="size-4 text-faint" />
             </Link>
           </li>

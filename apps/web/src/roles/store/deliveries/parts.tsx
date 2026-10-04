@@ -56,7 +56,9 @@ export function Hero({ run, desktop, refreshing, onRefresh }: HeroProps) {
         <p className="text-[11px] font-semibold tracking-[0.06em] text-on-panel-muted uppercase">
           {t(`hero.eyebrow.${run.state}`)}
         </p>
-        {silent ? <Pill tone="neutral">{t("hero.noSignal")}</Pill> : <StatusPill status={run.status} />}
+        <span className="shrink-0 whitespace-nowrap">
+          {silent ? <Pill tone="neutral">{t("hero.noSignal")}</Pill> : <StatusPill status={run.status} />}
+        </span>
       </div>
       <div>
         <p className="text-3xl leading-[1.2] font-bold lg:text-4xl">{t("hero.band", band(run.etaFrom, run.etaTo))}</p>
@@ -163,7 +165,11 @@ export function NoSignalNote({ onExplain }: { onExplain: () => void }) {
       detail={
         <>
           <p>{t("noSignal.body")}</p>
-          <button type="button" onClick={onExplain} className="mt-1 text-xs font-semibold text-link underline">
+          <button
+            type="button"
+            onClick={onExplain}
+            className="-mb-2 flex min-h-11 items-center text-xs font-semibold text-link underline"
+          >
             {t("noSignal.link")}
           </button>
         </>

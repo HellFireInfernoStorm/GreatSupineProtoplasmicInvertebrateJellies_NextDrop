@@ -120,7 +120,7 @@ export function DeliveriesPage() {
         </Button>
       </div>
       {failed}
-      <div className="grid grid-cols-[minmax(0,1fr)_412px] items-start gap-6">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_412px]">
         <div className="flex flex-col gap-6">
           {hero}
           {silentNote}

@@ -146,11 +146,11 @@ export function ItemRow({ line, last, removable }: { line: DraftLine; last: stri
   const { t } = useTranslation("store/order");
   return (
     <li className="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 lg:gap-4 lg:px-4">
-      <span className="hidden size-11 items-center justify-center rounded-lg bg-surface-2 text-muted lg:flex">
+      <span className="hidden size-11 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-muted lg:flex">
         <Icon name="bag" />
       </span>
       <p className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold">{productLabel(line.product)}</span>
+        <span className="block text-sm font-semibold break-words">{productLabel(line.product)}</span>
         <span className="text-xs text-muted">{last}</span>
       </p>
       <ProductStepper product={line.product} qty={line.qty} />
@@ -159,7 +159,7 @@ export function ItemRow({ line, last, removable }: { line: DraftLine; last: stri
           type="button"
           aria-label={t("items.remove", { product: productLabel(line.product) })}
           onClick={() => draft.setQty(line.product.id, 0)}
-          className="flex size-9 items-center justify-center rounded-lg text-muted hover:text-danger"
+          className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted hover:text-danger"
         >
           <Icon name="trash" />
         </button>

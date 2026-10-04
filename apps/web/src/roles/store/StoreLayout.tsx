@@ -176,7 +176,10 @@ export function PhoneScreen({ title, subtitle, back, footer, nav = false, childr
     <div className="flex flex-1 flex-col bg-bg">
       <header className="bg-panel px-5 pt-10 pb-5 text-on-panel">
         {back && (
-          <NavLink to={back.to} className="mb-2 flex items-center gap-2 text-xs font-semibold text-on-panel-muted">
+          <NavLink
+            to={back.to}
+            className="-mt-3 -mb-1 flex min-h-11 items-center gap-2 text-xs font-semibold text-on-panel-muted"
+          >
             <Icon name="arrowLeft" className="size-4" />
             {back.label}
           </NavLink>
