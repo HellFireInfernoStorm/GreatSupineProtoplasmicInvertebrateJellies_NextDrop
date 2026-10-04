@@ -99,6 +99,29 @@ jobs:
           echo "$headers" | grep -qi '^content-type: text/html'
           echo "$headers" | grep -qi '^cache-control: no-store'
           grep -q '<div id="root">' /tmp/index.html
+      # The judge walkthrough and the axe smoke checks, in a real browser against the stack above (#62).
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium for Playwright
+        run: pnpm e2e:install
+      - name: Walkthrough and accessibility smoke (Playwright)
+        run: pnpm e2e
+        env:
+          E2E_BASE_URL: http://localhost:8080
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
       - name: Logs
         if: failure()
         run: |
