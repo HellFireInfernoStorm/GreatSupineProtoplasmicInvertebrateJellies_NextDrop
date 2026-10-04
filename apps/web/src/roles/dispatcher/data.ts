@@ -1,6 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { callApi } from "../../lib/api";
 
+/** Today's runs (D4 and the dashboard share the cache). The change feed refreshes it; the interval is the fallback. */
+export const runsQuery = (depot: string) => ({
+  queryKey: ["dispatch", depot, "runs"],
+  queryFn: ({ signal }: { signal: AbortSignal }) => callApi("runs", { query: { depot }, signal }),
+  refetchInterval: 30_000,
+});
+export const exceptionsQuery = (depot: string) => ({
+  queryKey: ["dispatch", depot, "exceptions"],
+  queryFn: ({ signal }: { signal: AbortSignal }) => callApi("exceptions", { query: { depot }, signal }),
+  refetchInterval: 30_000,
+});
+
 export function usePlanningData(depot: string, date: string) {
   const day = useQuery({
     queryKey: ["dispatch", depot, date, "day"],
@@ -26,16 +38,8 @@ export function usePlanningData(depot: string, date: string) {
     queryKey: ["dispatch", depot, date, "fleet"],
     queryFn: ({ signal }) => callApi("getFleet", { query: { date }, signal }),
   });
-  const runs = useQuery({
-    queryKey: ["dispatch", depot, "runs"],
-    queryFn: ({ signal }) => callApi("runs", { query: { depot }, signal }),
-    refetchInterval: 30_000,
-  });
-  const exceptions = useQuery({
-    queryKey: ["dispatch", depot, "exceptions"],
-    queryFn: ({ signal }) => callApi("exceptions", { query: { depot }, signal }),
-    refetchInterval: 30_000,
-  });
+  const runs = useQuery(runsQuery(depot));
+  const exceptions = useQuery(exceptionsQuery(depot));
   return { day, draft, outlets, vehicles, calendar, fleet, runs, exceptions };
 }
 export type PlanningQueries = ReturnType<typeof usePlanningData>;
