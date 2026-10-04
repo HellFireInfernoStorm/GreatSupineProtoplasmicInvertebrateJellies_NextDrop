@@ -15,6 +15,7 @@ import { feedRoutes } from "./modules/feed";
 import { registerField } from "./modules/field";
 import { createNotifier, notificationRoutes } from "./modules/notifications";
 import { registerOrders } from "./modules/orders";
+import { registerPlanning } from "./modules/planning";
 
 export interface ServerDependencies {
   ready?: Readiness;
@@ -80,6 +81,7 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
   await app.register(notificationRoutes, { prisma, now: clock.now });
   // Store cutoffs are business time: they follow the demo clock.
   await registerOrders(app, { prisma, now: clock.now });
+  await registerPlanning(app, { prisma, clock });
   // Field facts are received on business time too (receivedAt, confirmed-after-sync, serverTime).
   await registerField(app, { prisma, now: clock.now });
   await registerBlobs(app, { prisma });
