@@ -98,7 +98,14 @@ export function Run() {
               </strong>
               <span className="driver-muted">{t("stopsDone")}</span>
             </div>
-            <div className="driver-segments" aria-label={t("stopsDone")}>
+            <div
+              className="driver-segments"
+              role="progressbar"
+              aria-label={t("stopsDone")}
+              aria-valuemin={0}
+              aria-valuemax={Math.max(1, groups.length)}
+              aria-valuenow={groups.filter(done).length}
+            >
               {groups.map((g) => (
                 <span key={g.stops[0]!.id} data-done={done(g)} data-next={g === next} />
               ))}
