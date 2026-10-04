@@ -58,4 +58,27 @@ describe("dispatcher screen data", () => {
     expect(html).toContain("over");
     expect(html).toContain("Temperature");
   });
+  it("summarises late arrivals once and identifies affected trips without technical copy", () => {
+    const risk = { ...apiFixtures.violation, code: "LATE_RISK" as const, severity: "WARN" as const };
+    const html = renderToStaticMarkup(
+      createElement(ValidationChecks, {
+        result: {
+          ok: true,
+          violations: [
+            { ...risk, tripRef: "T001", orderIds: ["order-a"] },
+            { ...risk, tripRef: "T001", orderIds: ["order-b"] },
+            { ...risk, tripRef: "T002", orderIds: ["order-c"] },
+          ],
+        },
+        contextAvailable: true,
+      }),
+    );
+    expect(html.match(/orders may arrive after their delivery window/g)).toHaveLength(1);
+    expect(html).toContain("3 orders may arrive");
+    expect(html).toContain("Review 2 affected trips");
+    expect(html).toContain("T001, T002");
+    expect(html).not.toContain("Display ETA");
+    expect(html).not.toContain("Local checks use");
+    expect(html).not.toContain("All available checks pass");
+  });
 });

@@ -68,6 +68,18 @@ Store and dispatcher accounts share one demo password, and loaders and drivers o
 13. **Store**: sees delivered (double timestamp), confirms receipt of one order, reports a shortage on another.
 14. **Dispatcher** resolves the dispute; opens the capacity outlook.
 
+### Repeat-deferral side scenario (#135)
+
+The stock proposal plans every order that was carried over, so D3's "Deferred again" path is reached by an explicit dispatcher choice, not by changing the seed, the service flags or the allocator:
+
+1. Reset to `before-cutoff`, then advance the demo clock to Mon 28 Sep 16:05.
+2. **Dispatcher** (Kandy depot): **Propose plan** for Tue 29 Sep. ORD10412 (chilled, hill store) is planned; it was carried over from Monday, so its outlet was skipped last run.
+3. Take ORD10412 off its trip and defer it. A manual choice for a Fresh order has cause `OTHER` ([deferral-explanation.md](../rules-core/deferral-explanation.md)).
+4. The validator raises `REPEAT_DEFERRAL` as a warning, so the draft reaches D3. D3 pins ORD10412 as deferred again, requires its justification note, shows the consequence (next delivery date, second consecutive deferral) and previews its store notice.
+5. **Publish** without the note is refused (`MISSING_DEFERRAL_REASON`); with the note it publishes, writes the deferral and sends the hill store its notice.
+
+Reset to `before-cutoff` restores the standard walkthrough state. Covered by `apps/api/tests/repeat-deferral.integration.test.ts` and `e2e/tests/repeat-deferral.spec.ts` (the D3 screen steps are `test.fixme` until #49 merges).
+
 ## 15.5 Story fixtures (ADR 0008)
 
 The invented design IDs (`OUT015`, `VEH001`, `T001`) are placeholders. A script run at seed time (`pnpm seed:pick-fixtures`) selects real rows from the reference CSVs and writes them to `apps/api/prisma/seed/story-fixtures.ts`, the single module that seed, e2e tests and docs import. Criteria:

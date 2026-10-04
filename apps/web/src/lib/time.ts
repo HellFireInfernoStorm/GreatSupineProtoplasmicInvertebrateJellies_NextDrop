@@ -33,6 +33,12 @@ export function formatTime(instant: Date | string): string {
   return timeFormat.format(typeof instant === "string" ? new Date(instant) : instant);
 }
 
+export function formatWeekday(instant: Date | string, locale = "en"): string {
+  return new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: ZONE }).format(
+    typeof instant === "string" ? new Date(instant) : instant,
+  );
+}
+
 /** "Tue 29 Sep" */
 export function formatDay(instant: Date | string): string {
   const parts = dayFormat.formatToParts(typeof instant === "string" ? new Date(instant) : instant);
