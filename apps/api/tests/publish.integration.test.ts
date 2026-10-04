@@ -444,4 +444,163 @@ describe.skipIf(!url)("publish transaction (PostgreSQL)", () => {
     expect(refused.json()).toMatchObject({ code: "STOP_LOCKED", params: { orderId: reported } });
     expect(await written()).toEqual(before);
   }, 60000);
+  it("defers a planned stop before loaded cargo and still refuses moving the loaded order", async () => {
+    const prisma = database.prisma!;
+    const date = "2026-10-01";
+    const outlet = await prisma.outlet.findUniqueOrThrow({ where: { displayId: "OUT004" } });
+    const vehicle = await prisma.vehicle.findUniqueOrThrow({ where: { displayId: "VEH001" } });
+    const product = await prisma.product.findFirstOrThrow({
+      where: { brand: outlet.brand, tempRequirement: "ambient" },
+    });
+    const planningDay = await prisma.planningDay.create({
+      data: { depot: "Peliyagoda", date: new Date(date), state: "CLOSED" },
+    });
+    const orders = await Promise.all(
+      ["EARLIER", "LOADED"].map((name) =>
+        prisma.order.create({
+          data: {
+            displayId: `ORD159-${name}`,
+            brand: outlet.brand,
+            tempRequirement: "ambient",
+            requestedDate: new Date(date),
+            currentDate: new Date(date),
+            weightG: 1000,
+            volumeL: 1,
+            idempotencyKey: randomUUID(),
+            outletId: outlet.id,
+            orderLine_orderId: {
+              create: {
+                productId: product.id,
+                qtyOrdered: 1,
+                unitWeightKg: product.unitWeightKg,
+                unitVolumeM3: product.unitVolumeM3,
+              },
+            },
+          },
+        }),
+      ),
+    );
+    const earlier = orders[0]!.id;
+    const loaded = orders[1]!.id;
+    const data: DraftData = {
+      trips: [{ ref: "T159", vehicleId: vehicle.id, tripNo: 1, orderIds: [earlier, loaded] }],
+      unassignedOrderIds: [],
+      deferrals: [],
+    };
+    let saved = await saveDraft(0, data, "Peliyagoda", date);
+    const first = await call("POST", day("/publish", "Peliyagoda", date), { revision: saved.revision });
+    expect(first.statusCode, first.body).toBe(200);
+    await prisma.order.update({ where: { id: loaded }, data: { status: "LOADED" } });
+    const edited: DraftData = {
+      trips: [{ ...data.trips[0]!, orderIds: [loaded] }],
+      unassignedOrderIds: [earlier],
+      deferrals: [{ orderId: earlier, reasonCode: "OTHER", note: "Skipped before loading completes" }],
+    };
+    saved = await saveDraft(saved.revision, edited, "Peliyagoda", date);
+    const published = await call("POST", day("/publish", "Peliyagoda", date), { revision: saved.revision });
+    expect(published.statusCode, published.body).toBe(200);
+    expect(await prisma.tripStop.findFirstOrThrow({ where: { orderId: loaded } })).toMatchObject({ seq: 1 });
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: loaded } })).status).toBe("LOADED");
+    // Simulate a stale draft so publish, rather than only save validation, must enforce the pin.
+    await prisma.planDraft.update({
+      where: { planningDayId: planningDay.id },
+      data: {
+        revision: saved.revision + 1,
+        data: { ...edited, unassignedOrderIds: [], deferrals: [], trips: [{ ...edited.trips[0]!, tripNo: 2 }] },
+      },
+    });
+    const before = await written();
+    const refused = await call("POST", day("/publish", "Peliyagoda", date), { revision: saved.revision + 1 });
+    expect(refused.statusCode, refused.body).toBe(422);
+    expect(refused.json().validation.violations).toContainEqual(
+      expect.objectContaining({ code: "ORDER_ALREADY_LOADED", orderIds: [loaded] }),
+    );
+    expect(await written()).toEqual(before);
+  }, 60000);
+  it("removes the skipped first stop when the second departed stop has a reported fact", async () => {
+    const prisma = database.prisma!;
+    const date = "2026-10-03";
+    const outlet = await prisma.outlet.findUniqueOrThrow({ where: { displayId: "OUT004" } });
+    const vehicle = await prisma.vehicle.findUniqueOrThrow({ where: { displayId: "VEH001" } });
+    const product = await prisma.product.findFirstOrThrow({
+      where: { brand: outlet.brand, tempRequirement: "ambient" },
+    });
+    const driver = await prisma.user.findUniqueOrThrow({ where: { loginId: "DRV001" } });
+    await prisma.planningDay.create({ data: { depot: "Peliyagoda", date: new Date(date), state: "CLOSED" } });
+    const orders = await Promise.all(
+      ["SKIPPED", "REPORTED"].map((name) =>
+        prisma.order.create({
+          data: {
+            displayId: `ORD159-${name}`,
+            brand: outlet.brand,
+            tempRequirement: "ambient",
+            requestedDate: new Date(date),
+            currentDate: new Date(date),
+            weightG: 1000,
+            volumeL: 1,
+            idempotencyKey: randomUUID(),
+            outletId: outlet.id,
+            orderLine_orderId: {
+              create: {
+                productId: product.id,
+                qtyOrdered: 1,
+                unitWeightKg: product.unitWeightKg,
+                unitVolumeM3: product.unitVolumeM3,
+              },
+            },
+          },
+        }),
+      ),
+    );
+    const skipped = orders[0]!.id;
+    const reported = orders[1]!.id;
+    const data: DraftData = {
+      trips: [{ ref: "T159", vehicleId: vehicle.id, tripNo: 1, orderIds: [skipped, reported] }],
+      unassignedOrderIds: [],
+      deferrals: [],
+    };
+    let saved = await saveDraft(0, data, "Peliyagoda", date);
+    const first = await call("POST", day("/publish", "Peliyagoda", date), { revision: saved.revision });
+    expect(first.statusCode, first.body).toBe(200);
+    const trip = (first.json() as ApiDto<"publishResponse">).plan.trips[0]!;
+    await prisma.trip.update({ where: { id: trip.id }, data: { status: "DEPARTED" } });
+    await prisma.order.updateMany({ where: { id: { in: [skipped, reported] } }, data: { status: "OUT_FOR_DELIVERY" } });
+    const device = await prisma.device.create({
+      data: { id: randomUUID(), kind: "FIELD", appVersion: "test", lastSeenAt: new Date(), userId: driver.id },
+    });
+    await prisma.orderEvent.create({
+      data: {
+        type: "STOP_ARRIVED",
+        source: "FIELD",
+        clientEventId: randomUUID(),
+        deviceId: device.id,
+        deviceSeq: 0,
+        actorRole: "DRIVER",
+        actorUserId: driver.id,
+        capturedAt: new Date(`${date}T01:00:00Z`),
+        orderId: reported,
+        tripId: trip.id,
+        payload: { orderId: reported },
+      },
+    });
+    saved = await saveDraft(
+      saved.revision,
+      {
+        trips: [{ ...data.trips[0]!, orderIds: [reported] }],
+        unassignedOrderIds: [skipped],
+        deferrals: [{ orderId: skipped, reasonCode: "OTHER", note: "Driver skipped the first stop" }],
+      },
+      "Peliyagoda",
+      date,
+    );
+    const published = await call("POST", day("/publish", "Peliyagoda", date), { revision: saved.revision });
+    expect(published.statusCode, published.body).toBe(200);
+    expect(await prisma.tripStop.findFirstOrThrow({ where: { orderId: reported } })).toMatchObject({
+      seq: 1,
+      tripId: trip.id,
+    });
+    expect(await prisma.tripStop.count({ where: { orderId: skipped } })).toBe(0);
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: skipped } })).status).toBe("DEFERRED");
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: reported } })).status).toBe("OUT_FOR_DELIVERY");
+  }, 60000);
 });
