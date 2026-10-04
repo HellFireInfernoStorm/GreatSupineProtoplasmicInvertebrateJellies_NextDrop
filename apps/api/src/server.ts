@@ -11,6 +11,7 @@ import { registerWebApp } from "./lib/web-app";
 import { authConfigFromEnv, registerAuth, type AuthConfig } from "./modules/auth";
 import { demoRoutes } from "./modules/demo";
 import { feedRoutes } from "./modules/feed";
+import { registerField } from "./modules/field";
 import { createNotifier, notificationRoutes } from "./modules/notifications";
 import { registerOrders } from "./modules/orders";
 import { registerPlanning } from "./modules/planning";
@@ -80,6 +81,8 @@ export async function buildServer(opts: FastifyServerOptions = {}, dependencies:
   // Store cutoffs are business time: they follow the demo clock.
   await registerOrders(app, { prisma, now: clock.now });
   await registerPlanning(app, { prisma, clock });
+  // Field facts are received on business time too (receivedAt, confirmed-after-sync, serverTime).
+  await registerField(app, { prisma, now: clock.now });
   // Demo tooling needs the database: the clock offset, the tick and the reset all live there.
   if (prisma) {
     await app.register(demoRoutes, {

@@ -20,14 +20,8 @@ if (process.env.SEED_ON_START === "true") {
   app.log.info({ seed: await runSeed(app.prisma) }, "seed finished");
 }
 
-try {
-  await app.listen({ port, host });
-} catch (err) {
-  app.log.error(err);
-  process.exit(1);
-}
-
 // The planning-day tick every minute (spec/planning/flow.md §8.1). JOBS_ENABLED=false turns it off.
+// Hooks must be added before listen(): Fastify refuses addHook on a listening instance.
 const prisma = app.prisma;
 if (prisma && process.env.DATABASE_URL && process.env.JOBS_ENABLED !== "false") {
   const notifier = createNotifier();
@@ -37,6 +31,13 @@ if (prisma && process.env.DATABASE_URL && process.env.JOBS_ENABLED !== "false") 
     log: app.log,
   });
   app.addHook("onClose", () => jobs.stop());
+}
+
+try {
+  await app.listen({ port, host });
+} catch (err) {
+  app.log.error(err);
+  process.exit(1);
 }
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {

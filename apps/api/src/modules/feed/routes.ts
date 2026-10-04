@@ -4,6 +4,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import type { PrismaClient } from "../../generated/prisma/client";
 import { isSessionActive } from "../auth";
 import { collectionResource, scoped } from "../policy";
+import { readFeedHint } from "./hint";
 import { createFeedHub, type FeedHint } from "./hub";
 
 export interface FeedRouteDependencies {
@@ -24,14 +25,7 @@ export const feedRoutes: FastifyPluginAsyncZod<FeedRouteDependencies> = async (a
     return deps.prisma;
   };
 
-  async function readHint(): Promise<FeedHint> {
-    const prisma = database();
-    const [counter, demo] = await Promise.all([
-      prisma.feedCounter.findUniqueOrThrow({ where: { singleton: true }, select: { head: true } }),
-      prisma.demoState.findUnique({ where: { singleton: true }, select: { resetEpoch: true } }),
-    ]);
-    return { head: counter.head.toString(), resetEpoch: demo?.resetEpoch ?? 0 };
-  }
+  const readHint = () => readFeedHint(database());
 
   const hub = createFeedHub(readHint, deps.pollMs, (error) => app.log.error({ err: error }, "feed head poll failed"));
   const streams = new Set<ServerResponse>();
