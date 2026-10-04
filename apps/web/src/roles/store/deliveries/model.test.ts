@@ -1,6 +1,16 @@
 import { apiFixtures } from "@nextdrop/contracts";
 import { describe, expect, it } from "vitest";
-import { alertsOf, confirmable, expectedQty, heroRun, orderUnits, runsOf, type Delivery, type Order } from "./model";
+import {
+  alertsOf,
+  confirmable,
+  expectedQty,
+  heroRun,
+  orderUnits,
+  placeDeferred,
+  runsOf,
+  type Delivery,
+  type Order,
+} from "./model";
 
 const line = (id: string, qtyOrdered: number, patch: Partial<Order["lines"][number]> = {}) => ({
   ...apiFixtures.order.lines[0]!,
@@ -117,5 +127,25 @@ describe("alerts", () => {
       },
     });
     expect(alertsOf([moved])).toMatchObject([{ kind: "deferred", deferral: { toDate: "2026-10-05" } }]);
+  });
+});
+
+describe("where a deferred order is listed", () => {
+  const id = (n: number) => `018f1234-5678-7890-abcd-ef123456700${n}`;
+  const deferred = (n: number, requestedDate: string, currentDate: string) =>
+    order({ id: id(n), status: "DEFERRED", requestedDate, currentDate });
+  const fromTuesday = deferred(1, "2026-10-06", "2026-10-07");
+  const fromThursday = deferred(2, "2026-10-08", "2026-10-09");
+
+  it("keeps an order with the day it was requested for, and lists any other as moved", () => {
+    const placed = placeDeferred([fromTuesday, fromThursday], "2026-10-06", []);
+    expect(placed.withNextDay.map((o) => o.id)).toEqual([id(1)]);
+    expect(placed.moved.map((o) => o.id)).toEqual([id(2)]);
+  });
+  it("does not list an order twice", () => {
+    expect(placeDeferred([fromTuesday, fromThursday], "2026-10-06", [fromTuesday, fromThursday])).toEqual({
+      withNextDay: [],
+      moved: [],
+    });
   });
 });

@@ -38,7 +38,7 @@ export function DeliveriesPage() {
   const desktop = useIsDesktop();
   const navigate = useNavigate();
   const board = useBoard();
-  const { now, today, nextDay, model, orders, run, later } = board;
+  const { now, today, nextDay, model, orders, run, later, moved } = board;
   const [explaining, setExplaining] = useState(false);
   const alerts = alertsOf(orders);
   const notice = later.find((order) => order.status === "DEFERRED");
@@ -86,6 +86,7 @@ export function DeliveriesPage() {
       }
     />
   );
+  const movedCard = moved.length > 0 && <OrdersCard title={t("orders.moved")} orders={moved} desktop={false} />;
   const sheet = <LateOrLostSheet open={explaining} onClose={() => setExplaining(false)} />;
 
   if (!desktop) {
@@ -97,6 +98,7 @@ export function DeliveriesPage() {
         <AlertBanners alerts={alerts} />
         {todayCard}
         {laterCard}
+        {movedCard}
         <NextOrderCard model={model} desktop={false} />
         {sheet}
       </PhoneScreen>
@@ -127,6 +129,7 @@ export function DeliveriesPage() {
         <div className="flex flex-col gap-6">
           <AlertsCard alerts={alerts} />
           {laterCard}
+          {movedCard}
           <NextOrderCard model={model} desktop />
         </div>
       </div>

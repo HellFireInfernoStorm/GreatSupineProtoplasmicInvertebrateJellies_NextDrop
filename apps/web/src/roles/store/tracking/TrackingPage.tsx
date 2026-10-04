@@ -30,7 +30,7 @@ function rowsOf(board: Board): Row[] {
     stop: item.trip?.stops.find((stop) => stop.order.id === item.order.id) ?? null,
   });
   const listed = [...board.nextItems, ...board.items].map(fromItem);
-  const moved = board.later
+  const moved = [...board.later, ...board.moved]
     .filter((order) => !listed.some((row) => row.order.id === order.id))
     .map((order): Row => ({ order, trip: null, stop: null }));
   const rows = [...listed, ...moved];

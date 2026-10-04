@@ -33,7 +33,7 @@ export function orderUnits(order: Order): { ordered: number; expected: number; s
 
 /**
  * How far along an order is, from 0 to 1. The server gives a store only its own stop of a trip, so the bar follows the
- * order's own stages and not the run's stop count (ADR 0042).
+ * order's own stages and not the run's stop count (ADR 0045).
  */
 const STAGE: Partial<Record<Order["status"], number>> = {
   PLANNED: 0.25,
@@ -140,4 +140,21 @@ export function alertsOf(orders: readonly Order[]): Alert[] {
     }
     return alerts;
   });
+}
+
+/**
+ * Where each deferred order is listed. One that was requested for the next delivery day belongs with that day's
+ * orders: it is the order the manager expected then. Any other deferred order is "moved": it has no place on a
+ * day's card, so it gets a list of its own. Orders already listed are left out.
+ */
+export function placeDeferred(
+  deferred: readonly Order[],
+  nextDay: string,
+  listed: readonly Order[],
+): { withNextDay: Order[]; moved: Order[] } {
+  const fresh = deferred.filter((order) => !listed.some((other) => other.id === order.id));
+  return {
+    withNextDay: fresh.filter((order) => order.requestedDate === nextDay),
+    moved: fresh.filter((order) => order.requestedDate !== nextDay),
+  };
 }

@@ -95,6 +95,7 @@
   "orders": {
     "title": "Today's orders",
     "titleOn": "{{day}}",
+    "moved": "Moved orders",
     "trip": "{{day}} · Trip {{trip}}",
     "full": "{{count}} units · coming in full",
     "short": "{{ordered}} ordered · expect {{expected}}",

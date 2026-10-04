@@ -2,7 +2,7 @@ import { useServerNow } from "../../../lib/clock";
 import { useDeferredOrders, useDeliveries } from "../data";
 import { todayOn } from "../dates";
 import { useOrderModel } from "../order/useOrderModel";
-import { heroRun, runsOf, type Order } from "./model";
+import { heroRun, placeDeferred, runsOf, type Order } from "./model";
 
 /**
  * The orders a store manager is following: today's deliveries, the next delivery day's, and anything deferred.
@@ -21,11 +21,10 @@ export function useBoard() {
   const items = deliveries.data?.items ?? [];
   const orders = items.map((item) => item.order);
   const nextItems = upcoming.data?.items ?? [];
+  const nextOrders = nextItems.map((item) => item.order);
+  const placed = placeDeferred(deferred.data ?? [], nextDay, [...nextOrders, ...orders]);
   // The next delivery day's orders, with any order that was moved off it.
-  const later: Order[] = nextItems.map((item) => item.order);
-  for (const order of deferred.data ?? []) {
-    if (![...later, ...orders].some((other) => other.id === order.id)) later.push(order);
-  }
+  const later: Order[] = [...nextOrders, ...placed.withNextDay];
   const runs = runsOf(items);
   return {
     now,
@@ -47,6 +46,8 @@ export function useBoard() {
     /** The next delivery day's run, if it is planned. */
     nextRun: heroRun(runsOf(nextItems)),
     later,
+    /** Deferred orders that were requested for some other day. */
+    moved: placed.moved,
   };
 }
 
