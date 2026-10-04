@@ -1,8 +1,8 @@
-# ADR 0044: Shared Loader checklist readiness for TRIP_READY
+# ADR 0046: Shared Loader checklist readiness for TRIP_READY
 
 - Status: proposed
 - Date: 2026-10-04
-- Issue / PR: #115
+- Issue / PR: #115 / #124
 - Designathon departure: no
 
 ## Context

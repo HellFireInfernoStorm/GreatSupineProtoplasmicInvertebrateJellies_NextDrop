@@ -12,7 +12,7 @@ const PIN = "2468";
 const DATE = "2026-10-04";
 const clock = new Date("2026-10-04T00:00:00.000Z");
 
-describe.skipIf(!testDatabaseUrl)("TRIP_READY checklist readiness against PostgreSQL (ADR 0044)", () => {
+describe.skipIf(!testDatabaseUrl)("TRIP_READY checklist readiness against PostgreSQL (ADR 0046)", () => {
   let suite: SuiteDatabase;
   let prisma: PrismaClient;
   let app: App;

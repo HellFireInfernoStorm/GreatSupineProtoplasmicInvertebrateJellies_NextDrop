@@ -299,7 +299,7 @@ describe("flags: short and damaged are not statuses", () => {
   });
 });
 
-describe("trip checklist readiness (ADR 0044)", () => {
+describe("trip checklist readiness (ADR 0046)", () => {
   const lines = [
     { lineId: "L1", qtyOrdered: 12 },
     { lineId: "L2", qtyOrdered: 8 },

@@ -35,7 +35,7 @@ Conflict classification is a later issue (#54).
    A lost race retries the event (up to 3 times). Any other server error fails the request with 5xx, so the client retries the batch; replays are idempotent.
 4. **Illegal transitions.** Until #54 classifies conflicts, a fact the reducer calls `ILLEGAL_TRANSITION` is rejected. A late earlier-stage fact is accepted and recorded without moving the status.
 5. **Trip facts.**
-   - `TRIP_READY` moves PLANNED to READY. It is refused while `rules.tripChecklistReadiness` is not ready: every ordered line on every stop must be checked (`qtyLoaded + ΣqtyShort + ΣqtyDamaged >= qtyOrdered`), and no order may have a short line that is unresolved or resolved `HOLD_TRIP` (ADRs 0005, 0044).
+   - `TRIP_READY` moves PLANNED to READY. It is refused while `rules.tripChecklistReadiness` is not ready: every ordered line on every stop must be checked (`qtyLoaded + ΣqtyShort + ΣqtyDamaged >= qtyOrdered`), and no order may have a short line that is unresolved or resolved `HOLD_TRIP` (ADRs 0005, 0046).
    - `TRIP_DEPARTED` moves PLANNED or READY to DEPARTED. In the same transaction it derives a server `ORDER_OUT_FOR_DELIVERY` for each order `rules.ordersGoingOut` returns (ADR 0019). The derived event's actor is the driver.
    - A repeated or late trip fact is recorded without moving the trip. A cancelled trip refuses both.
 6. **Projections.**
