@@ -49,7 +49,7 @@ export function PasswordField({
         <button
           type="button"
           onClick={() => setShown((current) => !current)}
-          className="absolute inset-y-0 right-3.5 text-sm font-semibold text-link"
+          className="absolute inset-y-0 right-3.5 text-sm font-semibold text-info"
         >
           {shown ? hideLabel : showLabel}
         </button>

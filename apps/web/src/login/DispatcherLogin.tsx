@@ -124,7 +124,7 @@ export function DispatcherLogin() {
               </select>
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-sm text-link"
+                className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-sm text-info"
               >
                 ▾
               </span>
@@ -133,7 +133,7 @@ export function DispatcherLogin() {
 
           {/* "Keep me signed in" is drawn here in Figma. It is left out until the login contract has it (ADR 0031). */}
           <div className="flex justify-end">
-            <a href="#dispatcher-help" className="text-sm font-semibold text-link">
+            <a href="#dispatcher-help" className="text-sm font-semibold text-info">
               {t("forgot")}
             </a>
           </div>

@@ -128,9 +128,12 @@
   line-height: 1.25;
   margin: 0 0 6px;
 }
-.dispatch-page-heading p,
 .dispatch-muted {
   color: var(--nd-muted);
+}
+/* On the grey workspace, muted text is 4.4:1; the darker neutral keeps it AA (#134, ADR 0049). */
+.dispatch-page-heading p {
+  color: var(--nd-neutral);
 }
 .dispatch-controls,
 .dispatch-filters,
@@ -144,7 +147,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: var(--nd-muted);
+  color: var(--nd-neutral);
   font-size: 11px;
 }
 .dispatch-frame input:not([type="checkbox"]),
