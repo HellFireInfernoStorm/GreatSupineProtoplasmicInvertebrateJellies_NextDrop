@@ -273,17 +273,19 @@ test.describe("Judge walkthrough (§15.4)", () => {
     await expect(page.getByText("3/4")).toBeVisible();
   });
 
-  // The D4 screens are merged (#128). Waits on the driver's offline deliveries of steps 8 and 9 (#53).
+  // D4 is merged (#128), but no screen edits or cancels a stop of a trip that has left: the plan board drops a
+  // departed trip's stops, and publishing a changed plan waits on #49. Tried on the stack on 4 Oct.
   test.fixme("10. Dispatcher edits a later stop and cancels a stop the driver already delivered offline. D4 shows the vehicle as no signal / last heard.", async () => {});
 
-  // Waits on #53 (driver R1-R3).
+  // The Driver screens are merged (#53). Waits on the plan change and the cancelled stop of step 10.
   test.fixme("11. Driver reconnects: sync progress, plan-changed acknowledgement, and a clash card for the cancelled-but-delivered stop.", async () => {});
 
-  // The exceptions inbox is merged (#128). Waits on the clash that steps 9 to 11 make (#53).
+  // The exceptions inbox is merged (#128). Waits on the clash that steps 10 and 11 make.
   test.fixme("12. Dispatcher exceptions inbox shows the clash with the POD photo; resolve it.", async () => {});
 
-  // The screens are merged (#44), but the step needs a delivery at the hill store, which only steps 7 to 11 make
-  // (#52, #53): no demo preset reaches it yet (#56).
+  // The screens are merged (#44), and steps 8 and 9 deliver at the hill store. Waits on the Loader's step 7 (#52):
+  // without it nothing is recorded as loaded, so the store is told to expect 0 units and the receipt has nothing to
+  // confirm. It also needs the Driver back online (step 11).
   test.fixme("13. Store: sees delivered (double timestamp), confirms receipt of one order, reports a shortage on another.", async () => {});
 
   // Dispute resolution is merged (#128). Waits on the dispute that step 13 opens and on #55 (capacity outlook).
