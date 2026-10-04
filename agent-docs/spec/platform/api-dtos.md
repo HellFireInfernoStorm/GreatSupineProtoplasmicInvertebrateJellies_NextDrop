@@ -1,12 +1,10 @@
 ---
 status: draft
 owner: Dinura
-sources: guide §12; issues 29, 59, 78, 110; accepted ADRs 0024, 0026, 0038, 0041
+sources: guide §12; issues 29, 59, 78, 110; accepted ADRs 0024, 0026, 0038, 0041; proposed ADR 0046
 ---
 
 # API wire DTOs
-
-The dispatcher day response includes required `planningContext`: `vehicleFuel[{vehicleId,usedOtherDaysThisWeekMl}]`, `outletService[{outletId,daysSinceLastServed,deferredLastRun}]`, and `loadedOrders[{orderId,vehicleId,tripNo,reversalRequested}]`. Identities are UUIDs; fuel is nonnegative integer millilitres, service age is a nonnegative integer day count, and trip number is 1 or 2. Context is generated from the existing authoritative planning inputs, scoped to the permitted depot and queue, with explicit zero usage for known vehicles. It is a fetch-time snapshot; server validation on save remains authoritative (ADR 0045 proposal).
 
 This draft documents the wire conventions for [API endpoints](api.md) accepted in [ADR 0024](../../adr/0024-api-wire-contracts.md). Schemas, inferred types, and synthetic web fixtures are exported by `@nextdrop/contracts`. Prisma records stay inside the API.
 
@@ -74,6 +72,8 @@ Reference lists wrap `{ items }`. Optional depot query selection never overrides
 - Cancel and receipt return the order. Issue report returns 201 `{ issueId, order }`. There is no Issue table: issueId, issue.id and the dispatch issue-resolution path ID are the ISSUE_REPORTED event's id. The issue projection's openedAt is that event's receivedAt; resolvedAt is the matching ISSUE_RESOLVED receivedAt, or null before resolution.
 
 ## Dispatch
+
+The dispatcher day response includes required `planningContext`: `vehicleFuel[{vehicleId,usedOtherDaysThisWeekMl}]`, `outletService[{outletId,daysSinceLastServed,deferredLastRun}]`, and `loadedOrders[{orderId,vehicleId,tripNo,reversalRequested}]`. Identities are UUIDs; fuel is nonnegative integer millilitres, service age is a nonnegative integer day count, and trip number is 1 or 2. Context is generated from the existing authoritative planning inputs, scoped to the permitted depot and queue, with explicit zero usage for known vehicles. It is a fetch-time snapshot; server validation on save remains authoritative ([proposed ADR 0046](../../adr/0046-dispatcher-planning-context.md)).
 
 Day paths require a local `date`; day operations take `depot` in query. Day detail includes state, nullable close time/version, queue, demand/capacity stats, and server time. Propose takes `{ revision }`, where revision zero represents no saved draft, and returns `{ draft, stats, trace }`.
 

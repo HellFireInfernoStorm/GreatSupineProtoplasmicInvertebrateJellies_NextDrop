@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DEFAULT_RULES_CONFIG, computeRunSchedule, computeFuel, type ValidationContext } from "@nextdrop/rules";
+import { runUsage, type ValidationContext } from "@nextdrop/rules";
 import { useTranslation } from "react-i18next";
 import { Button, Modal, CapacityBar } from "../../ui";
 import {
@@ -66,29 +66,13 @@ export function AddTrip({
   );
   const plan = toPlan(candidate, orders, date, reference);
   const trip = plan.trips.find((trip) => trip.ref === nextRef);
-  const schedules = slot
-    ? computeRunSchedule(
-        plan.trips.filter(
-          (item) =>
-            item.vehicleId === slot.vehicle.displayId &&
-            item.orders.length > 0 &&
-            item.orders.every((o) => reference.ref.outlets.has(o.outletId)),
-        ),
-        reference.ref,
-      )
-    : [];
-  const schedule = schedules.find((item) => item.trip.ref === nextRef);
-  const budgetClass = schedule?.time.budgetClass;
-  const vehicleMinutes = schedules
-    .filter((item) => item.time.budgetClass === budgetClass)
-    .reduce((sum, item) => sum + item.time.totalMin, 0);
-  const budget =
-    budgetClass === "FRESH" ? DEFAULT_RULES_CONFIG.freshBudgetMin : DEFAULT_RULES_CONFIG.styleTechBudgetMin;
   const rulesVehicle = slot ? reference.ref.vehicles.get(slot.vehicle.displayId) : undefined;
-  const fuel =
-    trip && rulesVehicle && trip.orders.every((order) => reference.ref.outlets.has(order.outletId))
-      ? computeFuel(trip, rulesVehicle, reference.ref).litres
-      : 0;
+  const usage = rulesVehicle ? runUsage(plan.trips, rulesVehicle, reference.ref, context) : undefined;
+  const schedule = usage?.schedules.find((item) => item.trip.ref === nextRef);
+  const budgetClass = schedule?.time.budgetClass;
+  const vehicleMinutes = budgetClass ? usage!.minutesByClass[budgetClass] : 0;
+  const budget = budgetClass ? usage!.budgetByClass[budgetClass] : null;
+  const fuel = (usage?.fuelByTripMl.get(nextRef) ?? 0) / 1000;
   const valid = slot && ids.length > 0 && result.ok && !busy && !disabled;
   return (
     <Modal
@@ -191,19 +175,8 @@ export function AddTrip({
           </p>
           <CapacityBar
             label={t("weeklyFuel")}
-            used={
-              rulesVehicle
-                ? (context.fuelUsedThisWeekMl?.get(rulesVehicle.id) ?? 0) / 1000 +
-                  plan.trips
-                    .filter(
-                      (item) =>
-                        item.vehicleId === rulesVehicle.id &&
-                        item.orders.every((order) => reference.ref.outlets.has(order.outletId)),
-                    )
-                    .reduce((sum, item) => sum + computeFuel(item, rulesVehicle, reference.ref).litres, 0)
-                : 0
-            }
-            capacity={rulesVehicle ? rulesVehicle.weeklyFuelQuotaMl / 1000 : null}
+            used={(usage?.weekFuelMl ?? 0) / 1000}
+            capacity={usage ? usage.fuelQuotaMl / 1000 : null}
             unit={t("units.L")}
           />
         </div>

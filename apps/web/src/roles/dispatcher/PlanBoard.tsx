@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { computeRunSchedule, computeFuel, DEFAULT_RULES_CONFIG, type ValidationContext } from "@nextdrop/rules";
+import { runUsage, type ValidationContext } from "@nextdrop/rules";
 import { Button, CapacityBar, ChilledPill } from "../../ui";
 import { Pill } from "../../ui/StatusPill";
 import {
@@ -49,16 +49,11 @@ export function PlanBoard({
   const [preview, setPreview] = useState<DraftData | null>(null);
   const result = evaluate(preview ?? data, orders, date, reference, unavailable, context);
   const savedResult = evaluate(data, orders, date, reference, unavailable, context);
-  const schedules = [...new Set(savedResult.plan.trips.map((trip) => trip.vehicleId))].flatMap((vehicleId) =>
-    computeRunSchedule(
-      savedResult.plan.trips.filter(
-        (trip) =>
-          trip.vehicleId === vehicleId &&
-          trip.orders.length > 0 &&
-          trip.orders.every((o) => reference.ref.outlets.has(o.outletId)),
-      ),
-      reference.ref,
-    ),
+  const usages = new Map(
+    [...new Set(savedResult.plan.trips.map((trip) => trip.vehicleId))].flatMap((vehicleId) => {
+      const vehicle = reference.ref.vehicles.get(vehicleId);
+      return vehicle ? [[vehicleId, runUsage(savedResult.plan.trips, vehicle, reference.ref, context)] as const] : [];
+    }),
   );
   const minutes = (value: number) =>
     `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
@@ -132,30 +127,18 @@ export function PlanBoard({
           {data.trips.map((trip) => {
             const vehicle = vehicles.find((v) => v.id === trip.vehicleId);
             const rulesTrip = savedResult.plan.trips.find((p) => p.ref === trip.ref);
-            const schedule = schedules.find((s) => s.trip.ref === trip.ref);
+            const usage = rulesTrip ? usages.get(rulesTrip.vehicleId) : undefined;
+            const schedule = usage?.schedules.find((s) => s.trip.ref === trip.ref);
             const assigned = (schedule ? schedule.stops.map((stop) => stop.orderId) : trip.orderIds).flatMap((id) => {
               const order = orders.find((o) => o.id === id);
               return order ? [order] : [];
             });
             const checks = savedResult.trips.get(trip.ref);
             const late = checks?.violations.some((v) => v.code === "LATE_RISK");
-            const budget =
-              schedule?.time.budgetClass === "FRESH"
-                ? DEFAULT_RULES_CONFIG.freshBudgetMin
-                : DEFAULT_RULES_CONFIG.styleTechBudgetMin;
-            const vehicleMinutes = schedules
-              .filter(
-                (item) =>
-                  item.trip.vehicleId === rulesTrip?.vehicleId && item.time.budgetClass === schedule?.time.budgetClass,
-              )
-              .reduce((sum, item) => sum + item.time.totalMin, 0);
-            const fuel =
-              vehicle &&
-              rulesTrip &&
-              rulesTrip.orders.length > 0 &&
-              rulesTrip.orders.every((order) => reference.ref.outlets.has(order.outletId))
-                ? computeFuel(rulesTrip, reference.ref.vehicles.get(vehicle.displayId)!, reference.ref).litres
-                : 0;
+            const budgetClass = schedule?.time.budgetClass;
+            const budget = budgetClass ? usage!.budgetByClass[budgetClass] : null;
+            const vehicleMinutes = budgetClass ? usage!.minutesByClass[budgetClass] : 0;
+            const fuel = (usage?.fuelByTripMl.get(trip.ref) ?? 0) / 1000;
             return (
               <article className="dispatch-card dispatch-trip-column" id={`trip-${trip.ref}`} key={trip.ref}>
                 <header className="dispatch-card-heading">
@@ -196,24 +179,8 @@ export function PlanBoard({
                   />
                   <CapacityBar
                     label={t("weeklyFuel")}
-                    used={
-                      vehicle && rulesTrip
-                        ? (context.fuelUsedThisWeekMl?.get(vehicle.displayId) ?? 0) / 1000 +
-                          savedResult.plan.trips
-                            .filter(
-                              (item) =>
-                                item.vehicleId === rulesTrip.vehicleId &&
-                                item.orders.every((order) => reference.ref.outlets.has(order.outletId)),
-                            )
-                            .reduce(
-                              (sum, item) =>
-                                sum +
-                                computeFuel(item, reference.ref.vehicles.get(vehicle.displayId)!, reference.ref).litres,
-                              0,
-                            )
-                        : 0
-                    }
-                    capacity={vehicle ? vehicle.weeklyFuelQuotaMl / 1000 : null}
+                    used={(usage?.weekFuelMl ?? 0) / 1000}
+                    capacity={usage ? usage.fuelQuotaMl / 1000 : null}
                     unit={t("units.L")}
                   />
                   <small className="dispatch-muted">

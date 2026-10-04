@@ -1,4 +1,4 @@
-# ADR 0045: Dispatcher planning validation context
+# ADR 0046: Dispatcher planning validation context
 
 - Status: proposed
 - Date: 2026-10-04
@@ -15,6 +15,8 @@ Return required `planningContext` in the scoped planning day response. Serialize
 
 The browser converts wire identities through its reference map and supplies this context to both local validators. It displays real weekly fuel totals and service ages. Server validation remains mandatory before saving, and optimistic revisions continue to protect the draft. Context is a fetch-time snapshot, not a guarantee that field events have stopped.
 
+The browser bundles the approved `data/reference/district_travel.csv` and `service_allowance.csv` with Vite's `?raw` imports because these tables have no reference API route. The server reads the database tables seeded from those same CSVs; local checks depend on keeping these copies aligned. A future reference endpoint could supply them dynamically instead. Time and fuel meters use the shared `packages/rules` run-usage helper also used by the validator, including its handling of incomplete references and configured budgets.
+
 ## Alternatives considered
 
 - Empty local context plus server-only rejection: safe at save time, but fails the live-check requirement and hides useful capacity information.
@@ -23,4 +25,4 @@ The browser converts wire identities through its reference map and supplies this
 
 ## Consequences
 
-This is an API DTO change requiring the contract maintainer's review and `contract-change` labels. No stored event payload changes, schemaVersion bump, migration or new service is needed. The contract change must merge before the dependent dispatcher UI; prepare the publication accordingly. The affected spec files are `spec/platform/api-dtos.md` and `spec/planning/flow.md`.
+This is an API DTO change requiring the contract maintainer's review and `contract-change` labels. No stored event payload changes, schemaVersion bump, migration or new service is needed. The API contract and dependent dispatcher UI are bundled in one PR. The affected spec files are `spec/platform/api-dtos.md` and `spec/planning/flow.md`.

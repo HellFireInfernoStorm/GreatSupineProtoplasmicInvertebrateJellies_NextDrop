@@ -4,11 +4,9 @@ import type { LocalDate } from "./calendar";
 import { isOperatingDay } from "./calendar";
 import type { RulesConfig } from "./config";
 import { DEFAULT_RULES_CONFIG } from "./config";
-import type { TripSchedule } from "./etas";
-import { computeRunSchedule } from "./etas";
-import { computeFuel } from "./fuel";
+import { runUsage } from "./run-usage";
 import type { OrderStatus } from "./order-reducer";
-import type { BudgetClass, PlanOrder, PlanTrip } from "./plan";
+import type { PlanOrder, PlanTrip } from "./plan";
 import type { Outlet, ReferenceData, Vehicle } from "./reference";
 import type { Millilitres } from "./units";
 
@@ -259,13 +257,11 @@ function checkRun(
   ctx: ValidationContext,
   cfg: RulesConfig,
 ): void {
-  const timed = trips.filter((t) => t.orders.length > 0 && ref.districts.has(districtOfFirst(t, ref)));
-  const run: TripSchedule[] = computeRunSchedule(timed, ref, cfg);
-
-  const budgets: Record<BudgetClass, number> = { FRESH: cfg.freshBudgetMin, STYLE_TECH: cfg.styleTechBudgetMin };
+  const usage = runUsage(trips, vehicle, ref, ctx);
+  const { timedTrips: timed, schedules: run, budgetByClass: budgets } = usage;
   for (const cls of ["FRESH", "STYLE_TECH"] as const) {
     const inClass = run.filter((s) => s.time.budgetClass === cls);
-    const used = inClass.reduce((s, t) => s + t.time.totalMin, 0);
+    const used = usage.minutesByClass[cls];
     if (used > budgets[cls]) {
       out.add(
         "TIME_BUDGET_EXCEEDED",
@@ -302,19 +298,12 @@ function checkRun(
     }
   }
 
-  const planned = timed.reduce((s, t) => s + computeFuel(t, vehicle, ref, cfg).millilitres, 0);
-  const used = (ctx.fuelUsedThisWeekMl?.get(vehicle.id) ?? 0) + planned;
-  const quota = vehicle.weeklyFuelQuotaMl;
+  const { plannedFuelMl: planned, weekFuelMl: used, fuelQuotaMl: quota } = usage;
   if (used > quota) {
     out.add("FUEL_QUOTA_EXCEEDED", { vehicleId: vehicle.id }, timed.flatMap(ids), { limit: quota, actual: used, date });
   } else if (planned > 0 && (quota - used) * 100 < quota * cfg.lowFuelMarginPct) {
     out.add("LOW_FUEL_MARGIN", { vehicleId: vehicle.id }, timed.flatMap(ids), { limit: quota, actual: used, date });
   }
-}
-
-function districtOfFirst(trip: PlanTrip, ref: ReferenceData): string {
-  const first = trip.orders[0];
-  return (first && ref.outlets.get(first.outletId)?.district) ?? "";
 }
 
 /** ADR 0004: a LOADED order stays on its published vehicle and trip unless a reversal was requested. */
